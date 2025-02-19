@@ -34,9 +34,9 @@ if api_key:
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
         if st.button("Generate NPC"):
-    npc = generate_npc(api_key, npc_prompt)
-    st.markdown("### 🛡️ PNJ Généré")
-    st.markdown(npc)  # Ensure it displays properly formatted markdown
+        npc = generate_npc(api_key, npc_prompt)
+        st.markdown("### 🛡️ PNJ Généré")
+        st.markdown(npc)
 
             
         # Generate Shop
