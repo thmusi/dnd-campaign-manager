@@ -37,10 +37,6 @@ elif page == "Session Logs":
     st.header("📜 Session Logs")
     st.write("Automatically log and summarize your D&D sessions.")
 
-git add main.py
-git commit -m "Added NPC Generator Form"
-git push origin main
-
 # Footer
 st.sidebar.write("---")
 st.sidebar.write("🔮 Powered by AI & Streamlit")
