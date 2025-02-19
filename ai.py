@@ -63,7 +63,6 @@ def generate_npc(api_key, occupation):
     """
     Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs.
     """
-    """
 
     response = client.chat.completions.create(
         model="gpt-4o",
