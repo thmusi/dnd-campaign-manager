@@ -1,6 +1,5 @@
 import streamlit as st
 import openai
-from ai import generate_npc, generate_location, modify_campaign_chapter
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
@@ -25,6 +24,8 @@ if api_key:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
+
+from ai import generate_npc, generate_location, modify_campaign_chapter
 
 # Title of the app
 st.title("📝 AI-Powered D&D Campaign Manager")
