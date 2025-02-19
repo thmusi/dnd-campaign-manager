@@ -1,7 +1,7 @@
 import openai
 
 def generate_npc(api_key, occupation):
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.Client(api_key=api_key)
 
     prompt = f"""
     Crée un PNJ détaillé pour une campagne D&D en respectant les règles de la 5e édition.
