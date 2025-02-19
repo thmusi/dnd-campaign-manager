@@ -7,13 +7,16 @@ def generate_npc(api_key, occupation):
     Crée un PNJ détaillé pour une campagne D&D en respectant les règles de la 5e édition.
     Adapte sa classe en fonction de son occupation : {occupation}. Mélange deux classes ou crée une nouvelle classe si nécessaire, en respectant les mécaniques D&D 5E.
 
-    - **Nom** : [Généré]
-    - **Race** : [Générée selon l’univers]
-    - **Classe** : [Adaptée selon l’occupation]
-    - **Niveau** : [Approprié]
-    - **Alignement** : [Généré selon la personnalité]
+    🛡️ **PNJ Généré**
+
+    **Nom** : [Généré]
+    **Race** : [Générée selon l’univers]
+    **Classe** : [Adaptée selon l’occupation]
+    **Niveau** : [Approprié]
+    **Alignement** : [Généré selon la personnalité]
 
     🛡️ **Statistiques :**
+
     | Statistique | Valeur | Modificateur |
     |------------|--------|-------------|
     | **FOR**    | X      | X           |
@@ -24,44 +27,43 @@ def generate_npc(api_key, occupation):
     | **CHA**    | X      | X           |
 
     📖 **Compétences & Modificateurs :**
-    - Acrobaties (DEX) : X
-    - Arcanes (INT) : X
-    - Athlétisme (FOR) : X
-    - Discrétion (DEX) : X
-    - Dressage (SAG) : X
-    - Escamotage (DEX) : X
-    - Histoire (INT) : X
-    - Intimidation (CHA) : X
-    - Investigation (INT) : X
-    - Médecine (SAG) : X
-    - Nature (INT) : X
-    - Perception (SAG) : X
-    - Persuasion (CHA) : X
-    - Religion (INT) : X
-    - Représentation (CHA) : X
-    - Supercherie (CHA) : X
-    - Survie (SAG) : X
+
+    | Compétence et Modificateur | Compétence et Modificateur | Compétence et Modificateur |
+    |---------------------------|---------------------------|---------------------------|
+    | Acrobaties (DEX) : X     | Arcanes (INT) : X        | Athlétisme (FOR) : X     |
+    | Discrétion (DEX) : X     | Dressage (SAG) : X       | Escamotage (DEX) : X     |
+    | Histoire (INT) : X       | Intimidation (CHA) : X   | Investigation (INT) : X  |
+    | Médecine (SAG) : X       | Nature (INT) : X        | Perception (SAG) : X     |
+    | Persuasion (CHA) : X     | Religion (INT) : X      | Représentation (CHA) : X |
+    | Supercherie (CHA) : X    | Survie (SAG) : X        |                           |
 
     📖 **Capacités & Traits Spéciaux :**
     - [Compétences uniques, talents raciaux, et capacités de classe]
     - [Pouvoirs spéciaux ou capacités de homebrew si pertinent]
 
     🔥 **Sorts connus (si applicable) :**
-    - **Truquages (Sorts mineurs)** : [Liste]
-    - **Niveau 1** : [Liste]
-    - **Niveau 2+** : [Liste adaptée au niveau du PNJ]
+
+    **Sorts mineurs :**
+    - [Liste]
+
+    **Niveau 1 :**
+    - [Liste]
+
+    **Niveau 2+ :**
+    - [Liste adaptée au niveau du PNJ]
+    - **Recharges** : Déterminer si les sorts se récupèrent par **repos court** ou **repos long** en fonction du niveau et de la classe du PNJ.
 
     ⚔️ **Équipement et objets magiques :**
     - [Armes, armures, objets notables]
 
     🎭 **Personnalité et rôle dans l’univers :**
-    - Caractère et motivations : [Traits, ambitions et croyances]
-    - Phrase typique ou tic de langage : [Exemple]
-    - Secrets et conflits internes : [Élément caché intéressant pour les joueurs]
+    - **Caractère et motivations** : [Traits, ambitions et croyances]
+    - **Phrase typique ou tic de langage** : [Exemple]
+    - **Secrets et conflits internes** : [Élément caché intéressant pour les joueurs]
 
     📜 **Histoire et importance en jeu :**
-    - Biographie courte : [Son passé]
-    - Lien avec la campagne : [Pourquoi les joueurs pourraient l’approcher]
+    - **Biographie courte** : [Son passé]
+    - **Lien avec la campagne** : [Pourquoi les joueurs pourraient l’approcher]
     """
 
     response = client.chat.completions.create(
@@ -70,6 +72,7 @@ def generate_npc(api_key, occupation):
     )
 
     return response.choices[0].message.content.strip()
+
 
 
 def generate_location(api_key, prompt=None):
