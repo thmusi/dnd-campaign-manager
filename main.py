@@ -11,10 +11,8 @@ api_key = st.text_input("Enter your OpenAI API Key:", type="password")
 # Proceed only if an API key is entered
 if api_key:
     try:
-        # Initialize OpenAI client with entered key
-        client = openai.OpenAI(api_key=api_key)
-
         # Test API Connection
+        client = openai.OpenAI(api_key=api_key)
         test_response = client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": "Say 'Hello!'"}]
@@ -28,20 +26,20 @@ if api_key:
         # Generate NPC
         st.subheader("🛡️ Generate an NPC")
         if st.button("Create NPC"):
-            npc = generate_npc()
+            npc = generate_npc(api_key)
             st.text_area("Generated NPC:", npc, height=250)
 
         # Generate Location
         st.subheader("🏰 Generate a Location")
         if st.button("Create Location"):
-            location = generate_location()
+            location = generate_location(api_key)
             st.text_area("Generated Location:", location, height=250)
 
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
         user_text = st.text_area("Enter existing chapter text:")
         if st.button("Modify Chapter") and user_text:
-            modified_text = modify_campaign_chapter(user_text)
+            modified_text = modify_campaign_chapter(user_text, api_key)
             st.text_area("Modified Chapter:", modified_text, height=250)
 
     except openai.OpenAIError as e:
