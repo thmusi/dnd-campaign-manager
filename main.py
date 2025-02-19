@@ -13,13 +13,14 @@ if api_key:
         # Initialize OpenAI client with entered key
         client = openai.OpenAI(api_key=api_key)
 
-        # Test API Connection by listing available models
-        response = client.models.list()
-        available_models = [model.id for model in response.data]
+        # Test API Connection by making a simple request to GPT-4o
+        test_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": "Say 'Hello!'"}]
+        )
 
-        st.success("✅ API Key is valid!")
-        st.write("Available OpenAI Models:", available_models)
-
+        st.success("✅ API Key is valid! You can now generate D&D content.")
+        
     except openai.OpenAIError as e:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
 else:
