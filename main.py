@@ -24,25 +24,19 @@ if api_key:
         st.header("📜 Generate D&D Content")
 
         # Generate NPC
-        # Form to enter NPC details
-        with st.form("npc_form"):
-            name = st.text_input("NPC Name", "A mysterious traveler")
-            race = st.selectbox("Race", ["Human", "Elf", "Dwarf", "Orc", "Tiefling", "Halfling"])
-            profession = st.text_input("Profession", "Wandering merchant")
-            backstory = st.text_area("Short Backstory", "A traveler with a hidden past...")
-            
-            # Submit button
-            submitted = st.form_submit_button("Generate NPC")
-        
-        if submitted:
-            npc = generate_npc(api_key)
-            st.text_area("Generated NPC:", npc, height=250)
         st.subheader("🛡️ Generate an NPC")
         if st.button("Create NPC"):
-            npc = generate_npc(api_key)
+            npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
+            npc = generate_npc(api_key) if not npc_prompt else generate_npc(api_key, npc_prompt)
             st.text_area("Generated NPC:", npc, height=250)
 
         # Generate Location
+        st.subheader("🏰 Generate a Location")
+        if st.button("Create Location"):
+            location_prompt = st.text_area("What do you already know about this location? (Optional)")
+            location = generate_location(api_key) if not location_prompt else generate_location(api_key, location_prompt)
+            st.text_area("Generated Location:", location, height=250)
+
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
         shop_type = st.selectbox("Select Shop Type", [
@@ -51,18 +45,16 @@ if api_key:
             "Enchanter", "Herbalist", "Bakery", "Tailor", "Carpenter"
         ])
         if st.button("Create Shop"):
-            shop = generate_location(api_key)
+            shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
+            shop = generate_location(api_key) if not shop_prompt else generate_location(api_key, shop_prompt)
             st.text_area(f"Generated {shop_type}:", shop, height=250)
-        st.subheader("🏰 Generate a Location")
-        if st.button("Create Location"):
-            location = generate_location(api_key)
-            st.text_area("Generated Location:", location, height=250)
 
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
         user_text = st.text_area("Enter existing chapter text:")
         if st.button("Modify Chapter") and user_text:
-            modified_text = modify_campaign_chapter(user_text, api_key)
+            chapter_prompt = st.text_area("What changes should be made? (Optional)")
+            modified_text = modify_campaign_chapter(user_text, api_key) if not chapter_prompt else modify_campaign_chapter(user_text, api_key, chapter_prompt)
             st.text_area("Modified Chapter:", modified_text, height=250)
 
     except openai.OpenAIError as e:
