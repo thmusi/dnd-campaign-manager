@@ -1,5 +1,30 @@
 import streamlit as st
-from ai import generate_npc, generate_location, modify_campaign_chapter
+import streamlit as st
+import openai
+
+# Streamlit UI
+st.title("🔑 OpenAI API Key Input")
+
+# Ask user for API key
+api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+
+# Proceed only if an API key is entered
+if api_key:
+    try:
+        # Initialize OpenAI client with entered key
+        client = openai.OpenAI(api_key=api_key)
+
+        # Test API Connection by listing available models
+        response = client.models.list()
+        available_models = [model.id for model in response.data]
+
+        st.success("✅ API Key is valid!")
+        st.write("Available OpenAI Models:", available_models)
+
+    except openai.OpenAIError as e:
+        st.error(f"❌ Invalid API Key or Connection Error: {e}")
+else:
+    st.warning("Please enter your OpenAI API Key to proceed.")
 
 # Title of the app
 st.title("📝 AI-Powered D&D Campaign Manager")
