@@ -58,6 +58,9 @@ def generate_npc(api_key, occupation):
     📜 **Histoire et importance en jeu :**
     - **Biographie courte** : [Son passé]
     - **Lien avec la campagne** : [Pourquoi les joueurs pourraient l’approcher]
+
+    🗣️ **Description à lire aux joueurs :**
+    """[Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs.]"""
     """
 
     response = client.chat.completions.create(
