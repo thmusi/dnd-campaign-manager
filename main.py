@@ -1,5 +1,12 @@
 import streamlit as st
 
+# Title of the app
+st.title("📝 AI-Powered D&D Campaign Manager")
+
+# Sidebar Navigation
+st.sidebar.header("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "NPC Generator", "Locations", "Session Logs"])
+
 # Main page content
 if page == "Home":
     st.write("Welcome to the AI-Powered D&D Campaign Manager!")
