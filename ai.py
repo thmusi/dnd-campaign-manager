@@ -1,7 +1,7 @@
 import openai
 
 def generate_npc(api_key, occupation):
-    client = openai.Client(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key)
 
     prompt = f"""
     Crée un PNJ détaillé pour une campagne D&D en respectant les règles de la 5e édition.
@@ -60,7 +60,9 @@ def generate_npc(api_key, occupation):
     - **Lien avec la campagne** : [Pourquoi les joueurs pourraient l’approcher]
 
     🗣️ **Description à lire aux joueurs :**
-    """[Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs.]"""
+    """
+    Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs.
+    """
     """
 
     response = client.chat.completions.create(
