@@ -25,8 +25,6 @@ if api_key:
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
 
-from ai import generate_npc, generate_location, modify_campaign_chapter
-
 # Title of the app
 st.title("📝 AI-Powered D&D Campaign Manager")
 
