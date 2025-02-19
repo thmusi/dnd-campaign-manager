@@ -27,16 +27,16 @@ if api_key:
         st.subheader("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         if st.button("Generate NPC"):
-            npc = generate_npc(api_key) if not npc_prompt else generate_npc(api_key, npc_prompt)
+            npc = generate_npc(api_key, npc_prompt)
             st.text_area("Generated NPC:", npc, height=250)
-
+            
         # Generate Location
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
         if st.button("Generate Location"):
-            location = generate_location(api_key) if not location_prompt else generate_location(api_key, location_prompt)
+            location = generate_location(api_key, location_prompt)
             st.text_area("Generated Location:", location, height=250)
-
+            
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
         shop_type = st.selectbox("Select Shop Type", [
@@ -46,15 +46,15 @@ if api_key:
         ])
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
         if st.button("Generate Shop"):
-            shop = generate_location(api_key) if not shop_prompt else generate_location(api_key, shop_prompt)
+            shop = generate_location(api_key, shop_prompt)
             st.text_area(f"Generated {shop_type}:", shop, height=250)
-
+            
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
         user_text = st.text_area("Enter existing chapter text:")
         chapter_prompt = st.text_area("What changes should be made? (Optional)")
         if st.button("Generate Modified Chapter") and user_text:
-            modified_text = modify_campaign_chapter(user_text, api_key) if not chapter_prompt else modify_campaign_chapter(user_text, api_key, chapter_prompt)
+            modified_text = modify_campaign_chapter(user_text, api_key, chapter_prompt)
             st.text_area("Modified Chapter:", modified_text, height=250)
 
     except openai.OpenAIError as e:
