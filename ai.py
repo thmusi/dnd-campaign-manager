@@ -90,4 +90,4 @@ def modify_campaign_chapter(existing_text, api_key, prompt=None):
     ]
     response = client.chat.completions.create(model="gpt-4o", messages=messages)
     return response.choices[0].message.content.strip()
-
+    
