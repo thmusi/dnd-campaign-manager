@@ -1,5 +1,6 @@
 import streamlit as st
 import openai
+from ai import generate_npc, generate_location, modify_campaign_chapter
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
