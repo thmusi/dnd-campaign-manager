@@ -47,11 +47,10 @@ def generate_npc(api_key, occupation):
     - [Liste]
 
     **Niveau 1 :**
-    - [Liste]
+    - [Liste adaptée au niveau du PNJ] **Recharges** : Déterminer si les sorts se récupèrent par **repos court** ou **repos long** en fonction du niveau et de la classe du PNJ.
 
     **Niveau 2+ :**
-    - [Liste adaptée au niveau du PNJ]
-    - **Recharges** : Déterminer si les sorts se récupèrent par **repos court** ou **repos long** en fonction du niveau et de la classe du PNJ.
+    - [Liste adaptée au niveau du PNJ] **Recharges** : Déterminer si les sorts se récupèrent par **repos court** ou **repos long** en fonction du niveau et de la classe du PNJ.
 
     ⚔️ **Équipement et objets magiques :**
     - [Armes, armures, objets notables]
