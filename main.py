@@ -1,3 +1,4 @@
+
 import streamlit as st
 import openai
 from ai import generate_npc, generate_location, modify_campaign_chapter
@@ -28,16 +29,15 @@ if api_key:
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         if st.button("Generate NPC"):
             npc = generate_npc(api_key, npc_prompt)
-            st.text_area("Generated NPC:", npc, height=250)
-            
+            st.markdown("### 🛡️ PNJ Généré")
+            st.markdown(npc)
+     
         # Generate Location
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
-        if st.button("Generate NPC"):
-        npc = generate_npc(api_key, npc_prompt)
-        st.markdown("### 🛡️ PNJ Généré")
-        st.markdown(npc)
-
+        if st.button("Generate Location"):
+            location = generate_location(api_key, location_prompt)
+            st.text_area("Generated Location:", location, height=250)
             
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
