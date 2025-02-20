@@ -107,7 +107,11 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     - Pour chaque objet, fournis **une description détaillée**, en précisant ses effets et caractéristiques.
 
     ## 🔎 **Ce qui rend ce magasin intéressant** :
-    - Ajoute un **élément mystérieux ou unique** à la boutique (une rumeur, un artefact oublié, un passage secret...).
+    - Décris **un élément immédiatement visible ou notable** qui intrigue les visiteurs (ex: un objet qui semble changer d’apparence, une atmosphère inhabituelle, une sensation étrange).
+    - Ajoute **une interaction possible** avec cet élément (ex: si un client touche un certain objet, il se passe quelque chose).
+    - Donne **une explication que le propriétaire peut donner** (ou refuser de donner).
+    - Si pertinent, mentionne **une conséquence en jeu** si les joueurs s'intéressent à cet élément.
+
 
     ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
     - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...) et, si applicable, en décrivant les jets de sauvegarde nécessaire et les dégats.
