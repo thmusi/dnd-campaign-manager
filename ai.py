@@ -49,10 +49,10 @@ def generate_npc(api_key, occupation):
 - **Sorts mineurs (utilisation illimitée) :**
   - [Liste]
 - **Sorts à emplacements (X/Repos Long) :**
-  - **Niveau 1 :** [Liste] (X/Repos Long)
-  - **Niveau 2 :** [Liste] (X/Repos Long)
-  - **Niveau 3 :** [Liste] (X/Repos Long)
-  - **Niveau X :** (niveau de sort disponible en fonction du niveau du personnage/NPJ) [Liste] (X/Repos Long)
+  - **Niveau 1 (X/Repos Long) :** [Liste] 
+  - **Niveau 2 (X/Repos Long) :** [Liste] 
+  - **Niveau 3 (X/Repos Long) :** [Liste] 
+  - **Niveau X (X = niveau de sort disponible en fonction du niveau du personnage/NPJ) (X/Repos Long) :** [Liste] 
 
     **Attaques (si applicable) :**
     - Armes ou autres (précision) +X : XdX dégâts de (type de dégâts)
