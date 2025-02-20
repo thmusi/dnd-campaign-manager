@@ -1,6 +1,7 @@
 import dropbox
 import os
 import streamlit as st
+st.write("🔍 Streamlit Secrets:", st.secrets)  # Debugging step
 import obsidian  # Import the Obsidian Dropbox module
 
 # Load environment variables from Streamlit Secrets
