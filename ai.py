@@ -1,4 +1,6 @@
 import openai
+import obsidian  # Import Dropbox integration for saving AI-generated content
+
 
 def generate_npc(api_key, occupation):
     client = openai.OpenAI(api_key=api_key)
@@ -72,6 +74,12 @@ def generate_npc(api_key, occupation):
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
+  
+    # Save to Dropbox (Obsidian) with correct Markdown formatting
+    npc_content = response.choices[0].message.content.strip()
+    markdown_content = f"# {occupation}\n\n{npc_content}"
+    obsidian.write_note(f"NPC_{occupation.replace(' ', '_')}.md", markdown_content)
+    print(f"✅ NPC '{occupation}' saved to Obsidian via Dropbox.")
 
     return response.choices[0].message.content.strip()
 
@@ -129,6 +137,12 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
+    # Save to Dropbox (Obsidian) with correct Markdown formatting
+    shop_content = response.choices[0].message.content.strip()
+    markdown_content = f"# {shop_type}\n\n{shop_content}"
+    obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", markdown_content)
+    print(f"✅ Shop '{shop_type}' saved to Obsidian via Dropbox.")
+
 
     return response.choices[0].message.content.strip()
 
@@ -140,5 +154,13 @@ def modify_campaign_chapter(existing_text, api_key, prompt=None):
         {"role": "user", "content": f"{prompt if prompt else 'Rewrite this chapter to match past events and world changes:'}\n\n{existing_text}"}
     ]
     response = client.chat.completions.create(model="gpt-4o", messages=messages)
+
+    # Save modified chapter to Dropbox (Obsidian) with correct Markdown formatting
+    campaign_content = response.choices[0].message.content.strip()
+    markdown_content = f"# Modified Chapter\n\n{campaign_content}"
+    obsidian.write_note("Modified_Campaign_Chapter.md", markdown_content)
+    print("✅ Modified campaign chapter saved to Obsidian via Dropbox.")
+
     return response.choices[0].message.content.strip()
+
 
