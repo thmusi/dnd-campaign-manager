@@ -107,10 +107,10 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     - Pour chaque objet, fournis **une description détaillée**, en précisant ses effets et caractéristiques.
 
    ## 🔎 **Ce qui rend ce magasin intéressant** :
-    - Choisis **un élément étrange, une caractéristique unique ou une anomalie** propre à cette boutique (ex: une horloge sans aiguilles qui fonctionne malgré tout, un client qui semble toujours être là quelle que soit l'heure de la journée, un objet qui apparaît différemment selon la personne qui le regarde).
-    - Décris **comment les joueurs le remarquent immédiatement** (ex: une sensation de déjà-vu, une ombre qui ne correspond pas, une impression de murmure à la limite de l’audible).
-    - Fournis **une explication plausible ou mystérieuse** donnée par le propriétaire (ex: "C'est un vieux mécanisme elfique" ou "Personne ne sait vraiment pourquoi, mais cela ne semble pas dangereux...").
-    - Ajoute **une conséquence possible en jeu** si les joueurs interagissent avec cet élément (ex: l'objet leur murmure un secret, la boutique semble légèrement changer à leur prochaine visite, le propriétaire leur demande de ne plus poser de questions).
+    - Ajoute **une ou plusieurs particularités visibles et concrètes du magasin** (ex: un comptoir avec des marques profondes comme si quelqu'un y avait frappé un énorme poing, une vitrine avec une seule place vide et une étiquette indiquant "Réservé", des marchandises étiquetées dans une langue inconnue).
+    - Décris **une interaction directe possible avec cet élément** (ex: si les joueurs demandent ce qu’il y avait sur la place vide de la vitrine, le propriétaire change de sujet, ou une personne entre soudainement et se met en colère de voir l’étagère toujours vide).
+    - Donne **une explication logique et utilisable en jeu** que le propriétaire peut fournir **(ou refuser de donner avec une raison claire)** (ex: "Cette marque sur le comptoir ? Un géant en colère voulait un remboursement.").
+    - Fournis **un élément exploitable pour le MJ** (ex: si un joueur touche une arme spécifique, le propriétaire les observe plus attentivement, ou leur propose immédiatement un travail).
 
     ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
     - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...) et, si applicable, en décrivant les jets de sauvegarde nécessaire et les dégats.
