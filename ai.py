@@ -1,9 +1,8 @@
 import openai
 
-  def generate\_npc(api\_key, occupation):
-    client = openai.OpenAI(api\_key=api\_key)
+def generate_npc(api_key, occupation):
+    client = openai.OpenAI(api_key=api_key)
 
-    ```
     prompt = f"""
     Crée un PNJ détaillé pour une campagne D&D en respectant les règles de la 5e édition.
     Adapte sa classe en fonction de son occupation : {occupation}. Si la classe n'est pas naturellement magique, ne lui attribue pas de sorts.
@@ -40,16 +39,16 @@ import openai
     🔥 **Sorts connus / Attaques connues (en fonction de la / des classes du NPC) :**
 
     **Sorts (si applicable, uniquement pour classes magiques) :**
-      - **Sorts mineurs :**
-        - [Liste]
-      - **Niveau 1 ou plus :**
-        - [Liste] (X / Repos Long ou Repos Court selon la classe)
+    - **Sorts mineurs :**
+      - [Liste]
+    - **Niveau 1 ou plus :**
+      - [Liste] (X / Repos Long ou Repos Court selon la classe)
 
     **Attaques (si applicable) :**
-      - Armes ou autres (précision) +X : XdX dégâts de (type de dégâts)
+    - Armes ou autres (précision) +X : XdX dégâts de (type de dégâts)
 
     ⚔️ **Équipement et objets magiques :**
-      - [Armures, objets notables, objets magiques (si applicable)]
+    - [Armures, objets notables, objets magiques (si applicable)]
 
     🎭 **Personnalité et rôle dans l’univers :**
     - **Caractère et motivations** : [Traits, ambitions et croyances]
@@ -64,15 +63,13 @@ import openai
     "Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs."
     """
 
-  response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": prompt}]
-)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}]
+    )
 
-return response.choices[0].message.content.strip()
-```
-
-
+    return response.choices[0].message.content.strip()
+  
 
 def generate_location(api_key, prompt=None):
     """Generates a town, shop, or dungeon with optional customization."""
