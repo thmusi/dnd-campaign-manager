@@ -112,6 +112,12 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     - Donne **une explication logique et utilisable en jeu** que le propriétaire peut fournir **(ou refuser de donner avec une raison claire)** (ex: "Cette marque sur le comptoir ? Un géant en colère voulait un remboursement.").
     - Fournis **un élément exploitable pour le MJ** (ex: si un joueur touche une arme spécifique, le propriétaire les observe plus attentivement, ou leur propose immédiatement un travail).
 
+        ### 🔍 **Explication pour le MJ** :
+        - Décrit **ce qui est réellement en train de se passer** derrière cette particularité du magasin.
+        - Explique **l’origine ou la cause** (ex: pourquoi cette vitrine est toujours vide, pourquoi l’enclume runique brille).
+        - Indique **les effets concrets en jeu**, si les joueurs interagissent avec cet élément.
+
+
     ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
     - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...) et, si applicable, en décrivant les jets de sauvegarde nécessaire et les dégats.
     - Décris **comment le propriétaire réagirait** si un vol était tenté.
