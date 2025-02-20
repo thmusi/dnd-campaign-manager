@@ -48,7 +48,7 @@ if api_key:
         ])
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
         if st.button("Generate Shop"):
-            shop = generate_location(api_key, shop_prompt)
+            shop = generate_shop(api_key, shop_type, shop_prompt)
             st.text_area(f"Generated {shop_type}:", shop, height=250)
             
         # Modify Campaign Chapter
