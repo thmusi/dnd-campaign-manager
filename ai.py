@@ -106,12 +106,11 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     - Utilise les objets **officiels de D&D 5e** et inclut leurs **prix standards**.
     - Pour chaque objet, fournis **une description détaillée**, en précisant ses effets et caractéristiques.
 
-    ## 🔎 **Ce qui rend ce magasin intéressant** :
-    - Décris **un élément immédiatement visible ou notable** qui intrigue les visiteurs (ex: un objet qui semble changer d’apparence, une atmosphère inhabituelle, une sensation étrange).
-    - Ajoute **une interaction possible** avec cet élément (ex: si un client touche un certain objet, il se passe quelque chose).
-    - Donne **une explication que le propriétaire peut donner** (ou refuser de donner).
-    - Si pertinent, mentionne **une conséquence en jeu** si les joueurs s'intéressent à cet élément.
-
+   ## 🔎 **Ce qui rend ce magasin intéressant** :
+    - Choisis **un élément étrange, une caractéristique unique ou une anomalie** propre à cette boutique (ex: une horloge sans aiguilles qui fonctionne malgré tout, un client qui semble toujours être là quelle que soit l'heure de la journée, un objet qui apparaît différemment selon la personne qui le regarde).
+    - Décris **comment les joueurs le remarquent immédiatement** (ex: une sensation de déjà-vu, une ombre qui ne correspond pas, une impression de murmure à la limite de l’audible).
+    - Fournis **une explication plausible ou mystérieuse** donnée par le propriétaire (ex: "C'est un vieux mécanisme elfique" ou "Personne ne sait vraiment pourquoi, mais cela ne semble pas dangereux...").
+    - Ajoute **une conséquence possible en jeu** si les joueurs interagissent avec cet élément (ex: l'objet leur murmure un secret, la boutique semble légèrement changer à leur prochaine visite, le propriétaire leur demande de ne plus poser de questions).
 
     ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
     - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...) et, si applicable, en décrivant les jets de sauvegarde nécessaire et les dégats.
