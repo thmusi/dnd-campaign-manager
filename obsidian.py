@@ -1,15 +1,14 @@
 import dropbox
 import os
 import streamlit as st
-DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
 import obsidian  # Import the Obsidian Dropbox module
 
-# Load environment variables
-load_dotenv()
-DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+# Load environment variables from Streamlit Secrets
+DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
 DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
 
 def list_notes():
     """List all markdown files in the Obsidian vault stored in Dropbox."""
