@@ -36,6 +36,11 @@ def generate_npc(api_key, occupation):
     | Persuasion (CHA) : X     | Religion (INT) : X      | Représentation (CHA) : X |
     | Supercherie (CHA) : X    | Survie (SAG) : X        |                           |
 
+    🏅 **Capacités et Traits :**
+    - [Capacités spéciales liées à la classe et au niveau]
+    - [Traits raciaux spécifiques]
+    - [Talents ou capacités uniques du PNJ]
+
     🔥 **Sorts connus / Attaques connues (en fonction de la / des classes du NPC) :**
 
     **Sorts (si applicable, uniquement pour classes magiques) :**
@@ -69,7 +74,7 @@ def generate_npc(api_key, occupation):
     )
 
     return response.choices[0].message.content.strip()
-  
+
 
 def generate_location(api_key, prompt=None):
     """Generates a town, shop, or dungeon with optional customization."""
