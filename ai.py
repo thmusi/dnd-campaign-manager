@@ -110,7 +110,7 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     - Ajoute un **élément mystérieux ou unique** à la boutique (une rumeur, un artefact oublié, un passage secret...).
 
     ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
-    - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...).
+    - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...) et, si applicable, en décrivant les jets de sauvegarde nécessaire et les dégats.
     - Décris **comment le propriétaire réagirait** si un vol était tenté.
 
     {f"- Instructions spécifiques : {custom_prompt}" if custom_prompt else ""}
