@@ -59,10 +59,9 @@ def generate_npc(api_key, occupation):
     - **Biographie courte** : [Son passé]
     - **Lien avec la campagne** : [Pourquoi les joueurs pourraient l’approcher]
 
-    
     🗣️ **Description à lire aux joueurs :**
-    Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs.
-
+    """Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs."""
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -90,4 +89,4 @@ def modify_campaign_chapter(existing_text, api_key, prompt=None):
     ]
     response = client.chat.completions.create(model="gpt-4o", messages=messages)
     return response.choices[0].message.content.strip()
-    
+
