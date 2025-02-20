@@ -1,6 +1,7 @@
 import dropbox
 import os
-from dotenv import load_dotenv
+import streamlit as st
+DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
 import obsidian  # Import the Obsidian Dropbox module
 
 # Load environment variables
