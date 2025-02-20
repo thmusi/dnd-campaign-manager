@@ -75,8 +75,6 @@ def generate_npc(api_key, occupation):
 
     return response.choices[0].message.content.strip()
 
-import openai
-
 def generate_shop(api_key, shop_type, prompt=None):
     """Generates a detailed D&D shop description including inventory, owner, and special items."""
     client = openai.OpenAI(api_key=api_key)
