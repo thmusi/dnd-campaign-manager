@@ -75,25 +75,50 @@ def generate_npc(api_key, occupation):
 
     return response.choices[0].message.content.strip()
 
-def generate_shop(api_key, shop_type, prompt=None):
-    """Generates a detailed D&D shop description including inventory, owner, and special items."""
+def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
+    """Generates a detailed D&D shop description, including inventory, owner, security measures, and lore."""
+
+    # List of allowed shop types
+    allowed_shop_types = [
+        "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern",
+        "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher"
+    ]
+
+    # Validate shop type
+    if shop_type not in allowed_shop_types:
+        return f"❌ Erreur : Le type de boutique '{shop_type}' n'est pas valide. Choisissez parmi {', '.join(allowed_shop_types)}."
+
     client = openai.OpenAI(api_key=api_key)
 
-    shop_prompt = f"""
-    Crée une boutique détaillée pour une campagne D&D en fonction du type de boutique : {shop_type}.
+    prompt = f"""
+    Crée une boutique immersive pour une campagne D&D en respectant les règles de la 5e édition.
     Décris les éléments suivants :
-    - **Nom du magasin** (créatif et immersif)
-    - **Propriétaire** (Nom, race, personnalité, secrets cachés)
-    - **Inventaire principal** (articles courants et spéciaux)
-    - **Atmosphère et disposition du magasin**
-    - **Prix et marchandage** (prix typiques, possibilités de réduction)
-    - **Rumeurs et interactions possibles avec les joueurs**
-    {f"- Instructions supplémentaires : {prompt}" if prompt else ""}
+
+    **📜 Nom du magasin** : Choisis un nom unique et thématique en fonction du type de boutique ({shop_type}).
+
+    **👤 Propriétaire** : Décris son nom, sa race et sa personnalité.
+
+    🗣️ **Description à lire aux joueurs :**
+    "Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs."
+
+    ## 🛍️ **Inventaire Principal (D&D 5e)** :
+    - Liste **5 à 10 objets**, incluant des **objets magiques et non magiques** correspondant au type de boutique ({shop_type}).
+    - Utilise les objets **officiels de D&D 5e** et inclut leurs **prix standards**.
+    - Pour chaque objet, fournis **une description détaillée**, en précisant ses effets et caractéristiques.
+
+    ## 🔎 **Ce qui rend ce magasin intéressant** :
+    - Ajoute un **élément mystérieux ou unique** à la boutique (une rumeur, un artefact oublié, un passage secret...).
+
+    ## 🔐 **Mesures de sécurité et réactions en cas de vol** :
+    - Précise **les protections contre le vol** (runes magiques, golems de garde, sorts...).
+    - Décris **comment le propriétaire réagirait** si un vol était tenté.
+
+    {f"- Instructions spécifiques : {custom_prompt}" if custom_prompt else ""}
     """
 
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[{"role": "user", "content": shop_prompt}]
+        messages=[{"role": "user", "content": prompt}]
     )
 
     return response.choices[0].message.content.strip()
