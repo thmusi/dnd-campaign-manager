@@ -76,14 +76,27 @@ def generate_npc(api_key, occupation):
     return response.choices[0].message.content.strip()
 
 
-def generate_location(api_key, prompt=None):
-    """Generates a town, shop, or dungeon with optional customization."""
+def generate_shop(api_key, shop_type, prompt=None):
+    """Generates a detailed D&D shop description including inventory, owner, and special items."""
     client = openai.OpenAI(api_key=api_key)
-    messages = [
-        {"role": "system", "content": "You are an expert D&D worldbuilder."},
-        {"role": "user", "content": prompt if prompt else "Generate a detailed D&D town description with notable NPCs and shops."}
-    ]
-    response = client.chat.completions.create(model="gpt-4o", messages=messages)
+
+    shop_prompt = f"""
+    Crée une boutique détaillée pour une campagne D&D en fonction du type de boutique : {shop_type}.
+    Décris les éléments suivants :
+    - **Nom du magasin** (créatif et immersif)
+    - **Propriétaire** (Nom, race, personnalité, secrets cachés)
+    - **Inventaire principal** (articles courants et spéciaux)
+    - **Atmosphère et disposition du magasin**
+    - **Prix et marchandage** (prix typiques, possibilités de réduction)
+    - **Rumeurs et interactions possibles avec les joueurs**
+    {f"- Instructions supplémentaires : {prompt}" if prompt else ""}
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": shop_prompt}]
+    )
+
     return response.choices[0].message.content.strip()
 
 def modify_campaign_chapter(existing_text, api_key, prompt=None):
