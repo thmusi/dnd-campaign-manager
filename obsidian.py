@@ -5,7 +5,7 @@ import obsidian  # Import the Obsidian Dropbox module
 
 # Load environment variables
 load_dotenv()
-DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+DROPBOX_ACCESS_TOKEN = os.getenv("b2a259qsha239dg")
 DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
