@@ -46,10 +46,13 @@ def generate_npc(api_key, occupation):
     🔥 **Sorts connus / Attaques connues (en fonction de la / des classes du NPC) :**
 
     **Sorts (si applicable, uniquement pour classes magiques) :**
-    - **Sorts mineurs :**
-      - [Liste]
-    - **Niveau 1 ou plus :**
-      - [Liste] (X / Repos Long ou Repos Court selon la classe)
+- **Sorts mineurs (utilisation illimitée) :**
+  - [Liste]
+- **Sorts à emplacements (X/Repos Long) :**
+  - **Niveau 1 :** [Liste] (X/Repos Long)
+  - **Niveau 2 :** [Liste] (X/Repos Long)
+  - **Niveau 3 :** [Liste] (X/Repos Long)
+  - **Niveau X :** (niveau de sort disponible en fonction du niveau du personnage/NPJ) [Liste] (X/Repos Long)
 
     **Attaques (si applicable) :**
     - Armes ou autres (précision) +X : XdX dégâts de (type de dégâts)
