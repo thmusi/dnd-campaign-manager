@@ -6,7 +6,7 @@ import obsidian  # Import the Obsidian Dropbox module
 
 # Use Streamlit secrets for Dropbox authentication
 DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
-dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 def test_dropbox_upload():
     file_path = "/Obsidian-Test/test_file.md"  # Adjust to match your Obsidian folder
