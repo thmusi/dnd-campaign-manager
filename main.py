@@ -33,8 +33,8 @@ if api_key:
             st.markdown("### 🛡️ PNJ Généré")
             st.markdown(npc)
         
-           if "generated_npc" in st.session_state and st.session_state.generated_npc:
-                if st.button("Send to Vault!"):
+        if "generated_npc" in st.session_state and st.session_state.generated_npc:
+            if st.button("Send to Vault!"):
                 # Extract NPC name safely
                 npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
     
@@ -46,7 +46,7 @@ if api_key:
                     st.success(f"✅ NPC '{npc_name}' saved to 'To Sort Later' in Obsidian Vault!")
                 else:
                     st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
-     
+
         # Generate Location
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
@@ -55,7 +55,6 @@ if api_key:
             st.session_state.generated_location = location  # Store generated location
             st.text_area("Generated Location:", location, height=250)
             
-
         if "generated_location" in st.session_state and st.session_state.generated_location:
             if st.button("Send to Vault!"):
                 location_name = st.session_state.generated_location.split("**📜 Nom de la location** : ")[-1].split("\n")[0].replace(" ", "_")
@@ -69,13 +68,12 @@ if api_key:
                 else:
                     st.error("❌ Failed to save Location to Obsidian Vault. Check your Dropbox connection.")
 
-            
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
         shop_type = st.selectbox("Select Shop Type", [
             "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
             "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Bookstore", "Stable",
-            "Enchanter", "Herbalist", "Bakery", "Tailor", "Carpenter"
+            "Enchanter", "Herbalist", "Bakery", "Tailor",
         ])
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
         if st.button("Generate Shop"):
@@ -87,8 +85,8 @@ if api_key:
             if st.button("Send to Vault!"):
                 import re
 
-                 # Extract AI-generated shop name using regex
-                  shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
+                # Extract AI-generated shop name using regex
+                shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
 
                 # If found, use extracted name; otherwise, use "Generated_Shop"
                 shop_name = shop_match.group(1).strip().replace(" ", "_") if shop_match else "Generated_Shop"
@@ -101,24 +99,7 @@ if api_key:
                     st.success(f"✅ Shop '{shop_name}' saved to 'To Sort Later' in Obsidian Vault!")
                 else:
                     st.error("❌ Failed to save Shop to Obsidian Vault. Check your Dropbox connection.")
-
-            
-        # Modify Campaign Chapter
-        st.subheader("📖 Modify a Campaign Chapter")
-        user_text = st.text_area("Enter existing chapter text:")
-        chapter_prompt = st.text_area("What changes should be made? (Optional)")
-        if st.button("Generate Modified Chapter") and user_text:
-            modified_text = modify_campaign_chapter(user_text, api_key, chapter_prompt)
-            st.session_state.generated_chapter = modified_text  # Store generated chapter
-            st.text_area("Modified Chapter:", modified_text, height=250)
-        
-        if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
-            if st.button("Send to Vault!"):
-                write_note("ToSortLater.md", st.session_state.generated_chapter)
-                st.success("✅ Modified campaign chapter saved to 'To Sort Later' in Obsidian Vault!")
-
     except openai.OpenAIError as e:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
-
