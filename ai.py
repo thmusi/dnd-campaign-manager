@@ -1,6 +1,23 @@
 import openai
 from obsidian import write_note  # Ensure this is present at the top
 
+def ai_search_campaign_notes(query, campaign_notes):
+    """Uses AI to process campaign notes and answer user queries."""
+    combined_notes = "\n".join(campaign_notes)  # Combine notes for AI analysis
+    prompt = f"""You are an AI assisting a Dungeon Master. 
+    Answer the following question based on these campaign notes:
+    
+    {combined_notes}
+    
+    Question: {query}
+    
+    Answer:"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": prompt}]
+    )
+    return response["choices"][0]["message"]["content"]
 
 def save_ai_generated_content(file_name, content):
     """Uploads AI-generated content to the Obsidian vault on Dropbox."""
