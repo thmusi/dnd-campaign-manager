@@ -3,6 +3,9 @@ import os
 import streamlit as st
 st.write("🔍 Streamlit Secrets:", st.secrets)  # Debugging step
 import obsidian  # Import the Obsidian Dropbox module
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Use Streamlit secrets for Dropbox authentication
 DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
@@ -86,3 +89,23 @@ def list_dropbox_files():
         return [file.name for file in files]
     except Exception as e:
         return f"Error: {e}"
+
+def list_campaign_files():
+    """Lists all campaign-related files in the Dropbox folder."""
+    try:
+        result = dbx.files_list_folder(DROPBOX_FOLDER_PATH)
+        files = [entry.name for entry in result.entries if isinstance(entry, dropbox.files.FileMetadata)]
+        return files
+    except Exception as e:
+        print(f"Error listing files: {e}")
+        return []
+
+def fetch_note_content(file_name):
+    """Fetches the content of a campaign note from Dropbox."""
+    file_path = f"{DROPBOX_FOLDER_PATH}/{file_name}"
+    try:
+        metadata, res = dbx.files_download(file_path)
+        return res.content.decode("utf-8")
+    except Exception as e:
+        print(f"Error fetching note: {e}")
+        return None
