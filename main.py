@@ -1,4 +1,3 @@
-
 import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
@@ -54,10 +53,10 @@ if api_key:
         if st.button("Generate Shop"):
             shop = generate_shop(api_key, shop_type, shop_prompt)
             st.text_area(f"Generated {shop_type}:", shop, height=250)
-        if "generated_shop" in st.session_state and st.session_state.generated_shop:
-            if st.button("Send to Vault!"):
-                obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", st.session_state.generated_shop)
-                st.success(f"✅ '{shop_type}' saved to Obsidian Vault!")
+          if "generated_shop" in st.session_state and st.session_state.generated_shop:
+              if st.button("Send to Vault!"):
+                  obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", st.session_state.generated_shop)
+                  st.success(f"✅ '{shop_type}' saved to Obsidian Vault!")
 
             
         # Modify Campaign Chapter
@@ -68,9 +67,9 @@ if api_key:
             modified_text = modify_campaign_chapter(user_text, api_key, chapter_prompt)
             st.text_area("Modified Chapter:", modified_text, height=250)
           if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
-            if st.button("Send to Vault!"):
-                obsidian.write_note("Modified_Campaign_Chapter.md", st.session_state.generated_chapter)
-                st.success("✅ Modified campaign chapter saved to Obsidian Vault!")
+              if st.button("Send to Vault!"):
+                  obsidian.write_note("Modified_Campaign_Chapter.md", st.session_state.generated_chapter)
+                  st.success("✅ Modified campaign chapter saved to Obsidian Vault!")
 
     except openai.OpenAIError as e:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
