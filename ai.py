@@ -80,14 +80,22 @@ def generate_npc(api_key, occupation):
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
-  
-    # Save to Dropbox (Obsidian) with correct Markdown formatting
-    npc_content = response.choices[0].message.content.strip()
-    markdown_content = f"# {occupation}\n\n{npc_content}"
-    obsidian.write_note(f"NPC_{occupation.replace(' ', '_')}.md", markdown_content)
-    print(f"✅ NPC '{occupation}' saved to Obsidian via Dropbox.")
 
-    return response.choices[0].message.content.strip()
+    npc_content = response.choices[0].message.content.strip()
+
+    if not npc_content:
+        return "❌ AI failed to generate NPC."
+
+    markdown_content = f"# {occupation}\n\n{npc_content}"
+    
+    success = write_note(f"NPC_{occupation.replace(' ', '_')}.md", markdown_content)
+    
+    if success:
+        print(f"✅ NPC '{occupation}' saved to Obsidian via Dropbox.")
+    else:
+        print("❌ Failed to save NPC to Dropbox.")
+    
+    return npc_content
 
 def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     """Generates a detailed D&D shop description, including inventory, owner, security measures, and lore."""
@@ -143,14 +151,47 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
-    # Save to Dropbox (Obsidian) with correct Markdown formatting
+
     shop_content = response.choices[0].message.content.strip()
+
+    if not shop_content:
+        return "❌ AI failed to generate Shop."
+
     markdown_content = f"# {shop_type}\n\n{shop_content}"
-    obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", markdown_content)
-    print(f"✅ Shop '{shop_type}' saved to Obsidian via Dropbox.")
+
+    success = write_note(f"Shop_{shop_type.replace(' ', '_')}.md", markdown_content)
+    
+    if success:
+        print(f"✅ Shop '{shop_type}' saved to Obsidian via Dropbox.")
+    else:
+        print("❌ Failed to save Shop to Dropbox.")
+
+    return shop_content
+
+def generate_location(api_key, prompt=None):
+    client = openai.OpenAI(api_key=api_key)
+
+    ai_prompt = "Crée un lieu immersif pour une campagne D&D en respectant les règles de la 5e édition."
+    if prompt:
+        ai_prompt += f" {prompt}"
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": ai_prompt}]
+    )
+
+    location_content = response.choices[0].message.content.strip()
+
+    if not location_content:
+        return "❌ AI failed to generate Location."
+
+    markdown_content = f"# Location\n\n{location_content}"
+    
+    success = write_note("Location_Generated.md", markdown_content)
+    
+    return location_content if success else "❌ Failed to save Location."
 
 
-    return response.choices[0].message.content.strip()
 
 def modify_campaign_chapter(existing_text, api_key, prompt=None):
     """Modifies a campaign chapter with optional custom changes."""
