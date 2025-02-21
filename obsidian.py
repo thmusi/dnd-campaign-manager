@@ -54,3 +54,10 @@ if __name__ == "__main__":
     test_content = "# Test NPC\n- Name: Eldrin the Wise\n- Race: Elf\n- Class: Wizard"
     write_note(sample_note, test_content)
     print("Reading back:", read_note(sample_note))
+
+def list_dropbox_files():
+    try:
+        files = dbx.files_list_folder("").entries
+        return [file.name for file in files]
+    except Exception as e:
+        return f"Error: {e}"
