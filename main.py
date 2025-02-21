@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
+import obsidian  # Ensure obsidian module is imported
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
@@ -28,19 +29,27 @@ if api_key:
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         if st.button("Generate NPC"):
             npc = generate_npc(api_key, npc_prompt)
+            st.session_state.generated_npc = npc  # Store generated NPC
             st.markdown("### 🛡️ PNJ Généré")
             st.markdown(npc)
-         if "generated_npc" in st.session_state and st.session_state.generated_npc:
-              if st.button("Send to Vault!"):
-                  obsidian.write_note(f"NPC_{npc_name.replace(' ', '_')}.md", st.session_state.generated_npc)
-                  st.success(f"✅ '{npc_name}' saved to Obsidian Vault!")
+        
+        if "generated_npc" in st.session_state and st.session_state.generated_npc:
+            if st.button("Send to Vault!"):
+                obsidian.write_note(f"NPC_{npc_prompt.replace(' ', '_')}.md", st.session_state.generated_npc)
+                st.success(f"✅ '{npc_prompt}' saved to Obsidian Vault!")
      
         # Generate Location
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
         if st.button("Generate Location"):
             location = generate_location(api_key, location_prompt)
+            st.session_state.generated_location = location  # Store generated location
             st.text_area("Generated Location:", location, height=250)
+        
+        if "generated_location" in st.session_state and st.session_state.generated_location:
+            if st.button("Send to Vault!"):
+                obsidian.write_note(f"Location_{location_prompt.replace(' ', '_')}.md", st.session_state.generated_location)
+                st.success(f"✅ '{location_prompt}' saved to Obsidian Vault!")
             
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
@@ -52,12 +61,13 @@ if api_key:
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
         if st.button("Generate Shop"):
             shop = generate_shop(api_key, shop_type, shop_prompt)
+            st.session_state.generated_shop = shop  # Store generated shop
             st.text_area(f"Generated {shop_type}:", shop, height=250)
-          if "generated_shop" in st.session_state and st.session_state.generated_shop:
-              if st.button("Send to Vault!"):
-                  obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", st.session_state.generated_shop)
-                  st.success(f"✅ '{shop_type}' saved to Obsidian Vault!")
-
+        
+        if "generated_shop" in st.session_state and st.session_state.generated_shop:
+            if st.button("Send to Vault!"):
+                obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", st.session_state.generated_shop)
+                st.success(f"✅ '{shop_type}' saved to Obsidian Vault!")
             
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
@@ -65,13 +75,16 @@ if api_key:
         chapter_prompt = st.text_area("What changes should be made? (Optional)")
         if st.button("Generate Modified Chapter") and user_text:
             modified_text = modify_campaign_chapter(user_text, api_key, chapter_prompt)
+            st.session_state.generated_chapter = modified_text  # Store generated chapter
             st.text_area("Modified Chapter:", modified_text, height=250)
-          if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
-              if st.button("Send to Vault!"):
-                  obsidian.write_note("Modified_Campaign_Chapter.md", st.session_state.generated_chapter)
-                  st.success("✅ Modified campaign chapter saved to Obsidian Vault!")
+        
+        if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
+            if st.button("Send to Vault!"):
+                obsidian.write_note("Modified_Campaign_Chapter.md", st.session_state.generated_chapter)
+                st.success("✅ Modified campaign chapter saved to Obsidian Vault!")
 
     except openai.OpenAIError as e:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
+
