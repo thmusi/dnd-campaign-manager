@@ -4,8 +4,19 @@ import streamlit as st
 st.write("🔍 Streamlit Secrets:", st.secrets)  # Debugging step
 import obsidian  # Import the Obsidian Dropbox module
 
-# Load environment variables from Streamlit Secrets
+# Use Streamlit secrets for Dropbox authentication
 DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
+dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+def test_dropbox_upload():
+    file_path = "/Obsidian-Test/test_file.md"  # Adjust to match your Obsidian folder
+    content = "### Dropbox Test\nThis is a test file upload."
+
+    try:
+        dbx.files_upload(content.encode(), file_path, mode=dropbox.files.WriteMode("overwrite"))
+        return f"✅ Uploaded successfully: {file_path}"
+    except Exception as e:
+        return f"❌ Upload failed: {e}"
 DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
