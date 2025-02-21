@@ -1,17 +1,7 @@
 import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
-from obsidian import test_dropbox_upload  # Import the function from obsidian.py
-
-if st.button("🔄 Test Dropbox Upload"):
-    result = test_dropbox_upload()
-    st.write(result)
-
-    st.write("📂 Checking Dropbox Files...")
-
-if st.button("🔄 List Dropbox Files"):
-    files = list_dropbox_files()
-    st.write(files)  # Display file list
+from obsidian import test_dropbox_upload  # Remove list_dropbox_files import
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
@@ -45,8 +35,8 @@ if api_key:
         
         if "generated_npc" in st.session_state and st.session_state.generated_npc:
             if st.button("Send to Vault!"):
-                obsidian.write_note(f"NPC_{npc_prompt.replace(' ', '_')}.md", st.session_state.generated_npc)
-                st.success(f"✅ '{npc_prompt}' saved to Obsidian Vault!")
+                obsidian.write_note("ToSortLater.md", st.session_state.generated_npc)
+                st.success("✅ NPC saved to 'ToSortLater.md' in Obsidian Vault!")
      
         # Generate Location
         st.subheader("🏰 Generate a Location")
@@ -58,8 +48,8 @@ if api_key:
         
         if "generated_location" in st.session_state and st.session_state.generated_location:
             if st.button("Send to Vault!"):
-                obsidian.write_note(f"Location_{location_prompt.replace(' ', '_')}.md", st.session_state.generated_location)
-                st.success(f"✅ '{location_prompt}' saved to Obsidian Vault!")
+                obsidian.write_note("ToSortLater.md", st.session_state.generated_location)
+                st.success("✅ Location saved to 'ToSortLater.md' in Obsidian Vault!")
             
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
@@ -76,8 +66,8 @@ if api_key:
         
         if "generated_shop" in st.session_state and st.session_state.generated_shop:
             if st.button("Send to Vault!"):
-                obsidian.write_note(f"Shop_{shop_type.replace(' ', '_')}.md", st.session_state.generated_shop)
-                st.success(f"✅ '{shop_type}' saved to Obsidian Vault!")
+                obsidian.write_note("ToSortLater.md", st.session_state.generated_shop)
+                st.success("✅ Shop saved to 'ToSortLater.md' in Obsidian Vault!")
             
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
@@ -90,14 +80,10 @@ if api_key:
         
         if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
             if st.button("Send to Vault!"):
-                obsidian.write_note("Modified_Campaign_Chapter.md", st.session_state.generated_chapter)
-                st.success("✅ Modified campaign chapter saved to Obsidian Vault!")
+                obsidian.write_note("ToSortLater.md", st.session_state.generated_chapter)
+                st.success("✅ Modified campaign chapter saved to 'ToSortLater.md' in Obsidian Vault!")
 
     except openai.OpenAIError as e:
         st.error(f"❌ Invalid API Key or Connection Error: {e}")
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
-
-st.write("📂 Checking Dropbox Files...")
-files = list_dropbox_files()
-st.write(files)
