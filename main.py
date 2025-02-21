@@ -1,7 +1,11 @@
 import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
-from obsidian import test_dropbox_upload  # Remove list_dropbox_files import
+from obsidian import test_dropbox_upload, write_note  # Remove list_dropbox_files import
+
+if st.button("🔄 Test Dropbox Upload"):
+    result = test_dropbox_upload()
+    st.write(result)
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
@@ -35,7 +39,7 @@ if api_key:
         
         if "generated_npc" in st.session_state and st.session_state.generated_npc:
             if st.button("Send to Vault!"):
-                obsidian.write_note("ToSortLater.md", st.session_state.generated_npc)
+                write_note("ToSortLater.md", st.session_state.generated_npc)
                 st.success("✅ NPC saved to 'ToSortLater.md' in Obsidian Vault!")
      
         # Generate Location
@@ -48,7 +52,7 @@ if api_key:
         
         if "generated_location" in st.session_state and st.session_state.generated_location:
             if st.button("Send to Vault!"):
-                obsidian.write_note("ToSortLater.md", st.session_state.generated_location)
+                write_note("ToSortLater.md", st.session_state.generated_location)
                 st.success("✅ Location saved to 'ToSortLater.md' in Obsidian Vault!")
             
         # Generate Shop
@@ -66,7 +70,7 @@ if api_key:
         
         if "generated_shop" in st.session_state and st.session_state.generated_shop:
             if st.button("Send to Vault!"):
-                obsidian.write_note("ToSortLater.md", st.session_state.generated_shop)
+                write_note("ToSortLater.md", st.session_state.generated_shop)
                 st.success("✅ Shop saved to 'ToSortLater.md' in Obsidian Vault!")
             
         # Modify Campaign Chapter
@@ -80,7 +84,7 @@ if api_key:
         
         if "generated_chapter" in st.session_state and st.session_state.generated_chapter:
             if st.button("Send to Vault!"):
-                obsidian.write_note("ToSortLater.md", st.session_state.generated_chapter)
+                write_note("ToSortLater.md", st.session_state.generated_chapter)
                 st.success("✅ Modified campaign chapter saved to 'ToSortLater.md' in Obsidian Vault!")
 
     except openai.OpenAIError as e:
