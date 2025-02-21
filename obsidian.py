@@ -52,6 +52,7 @@ def read_note(note_name):
 def write_note(note_name, content):
     """Write or update a note in Dropbox."""
     file_path = f"{DROPBOX_VAULT_PATH}{note_name}"
+    print(f"Attempting to save: {file_path}")  # Debugging output
     try:
         db.files_upload(content.encode("utf-8"), file_path, mode=dropbox.files.WriteMode("overwrite"))
         print(f"✅ Successfully updated {note_name} in Dropbox.")
@@ -62,6 +63,7 @@ def write_note(note_name, content):
     except Exception as e:
         print(f"❌ Error writing {note_name}: {e}")
         return False
+
 
 def save_ai_generated_content(title, content):
     """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
