@@ -1,11 +1,10 @@
 import openai
-from obsidian import upload_to_obsidian  # Import Dropbox function
 from obsidian import write_note  # Ensure this is present at the top
 
 
 def save_ai_generated_content(file_name, content):
     """Uploads AI-generated content to the Obsidian vault on Dropbox."""
-    return upload_to_obsidian(file_name, content)
+    return write_note(note_name, content)
 
 def generate_npc(api_key, occupation):
     client = openai.OpenAI(api_key=api_key)
