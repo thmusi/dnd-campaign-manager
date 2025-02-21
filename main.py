@@ -33,19 +33,19 @@ if api_key:
             st.markdown("### 🛡️ PNJ Généré")
             st.markdown(npc)
         
-       if "generated_npc" in st.session_state and st.session_state.generated_npc:
-            if st.button("Send to Vault!"):
-            # Extract NPC name safely
-            npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
-
-            # Save to Dropbox
-            success = write_note(f"To Sort Later/{npc_name}.md", st.session_state.generated_npc)
+           if "generated_npc" in st.session_state and st.session_state.generated_npc:
+                if st.button("Send to Vault!"):
+                # Extract NPC name safely
+                npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
+    
+                # Save to Dropbox
+                success = write_note(f"To Sort Later/{npc_name}.md", st.session_state.generated_npc)
         
-            # Notify the user
-            if success:
-                st.success(f"✅ NPC '{npc_name}' saved to 'To Sort Later' in Obsidian Vault!")
-            else:
-                st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
+                # Notify the user
+                if success:
+                    st.success(f"✅ NPC '{npc_name}' saved to 'To Sort Later' in Obsidian Vault!")
+                else:
+                    st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
      
         # Generate Location
         st.subheader("🏰 Generate a Location")
