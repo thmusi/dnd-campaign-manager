@@ -71,8 +71,6 @@ if api_key:
             if st.button("Send to Vault!"):
                 # Extract AI-generated shop name using regex
                 shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
-                # Extract AI-generated shop name using regex
-                shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
 
                 # If found, use extracted name; otherwise, use "Generated_Shop"
                 shop_name = shop_match.group(1).strip().replace(" ", "_") if shop_match else "Generated_Shop"
