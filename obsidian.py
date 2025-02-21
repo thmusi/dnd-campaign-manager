@@ -17,7 +17,7 @@ def test_dropbox_upload():
         return f"✅ Uploaded successfully: {file_path}"
     except Exception as e:
         return f"❌ Upload failed: {e}"
-DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
+DROPBOX_VAULT_PATH = "Apps/obsidian-db/ObsidianVault/To Sort Later"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
@@ -50,7 +50,7 @@ def read_note(note_name):
         return None
 
 def write_note(note_name, content):
-    """Write or update a note in Dropbox and handle errors properly."""
+    """Write or update a note in Dropbox."""
     file_path = f"{DROPBOX_VAULT_PATH}{note_name}"
     try:
         db.files_upload(content.encode("utf-8"), file_path, mode=dropbox.files.WriteMode("overwrite"))
