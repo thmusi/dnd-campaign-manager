@@ -92,7 +92,7 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     # List of allowed shop types
     allowed_shop_types = [
         "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern",
-        "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Tailor"
+        "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Tailor", "Enchanter"
     ]
 
     # Validate shop type
