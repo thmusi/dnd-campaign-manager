@@ -7,7 +7,7 @@ if st.button("🔄 Test Dropbox Upload"):
     result = test_dropbox_upload()
     st.write(result)
 
-  st.write("📂 Checking Dropbox Files...")
+    st.write("📂 Checking Dropbox Files...")
 
 if st.button("🔄 List Dropbox Files"):
     files = list_dropbox_files()
