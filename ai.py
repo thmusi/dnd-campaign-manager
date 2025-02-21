@@ -77,18 +77,14 @@ def generate_npc(api_key, occupation):
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}]
     )
+  
+    # Save to Dropbox (Obsidian) with correct Markdown formatting
+    npc_content = response.choices[0].message.content.strip()
+    markdown_content = f"# {occupation}\n\n{npc_content}"
+    obsidian.write_note(f"NPC_{occupation.replace(' ', '_')}.md", markdown_content)
+    print(f"✅ NPC '{occupation}' saved to Obsidian via Dropbox.")
 
-    npc_content = response.choices[0].message.content
-
-    # Extract AI-generated name from content
-    ai_name = npc_content.split("\n")[0].strip("# ").replace(" ", "_")
-
-    # Save correctly formatted name
-    note_name = f"NPC_{ai_name}.md" if ai_name else "NPC.md"
-    
-    obsidian.write_note(note_name, npc_content)  # Now saves with the correct name!
-
-    return npc_content
+    return response.choices[0].message.content.strip()
 
 def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     """Generates a detailed D&D shop description, including inventory, owner, security measures, and lore."""
