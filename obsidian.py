@@ -50,24 +50,26 @@ def read_note(note_name):
         return None
 
 def write_note(note_name, content):
-    """Write or update a note in Dropbox."""
+    """Write or update a note in Dropbox and handle errors properly."""
     file_path = f"{DROPBOX_VAULT_PATH}{note_name}"
     try:
         db.files_upload(content.encode("utf-8"), file_path, mode=dropbox.files.WriteMode("overwrite"))
-        print(f"Successfully updated {note_name} in Dropbox.")
+        print(f"✅ Successfully updated {note_name} in Dropbox.")
+        return True
+    except dropbox.exceptions.AuthError:
+        print("❌ Dropbox authentication failed. Check your access token.")
+        return False
     except Exception as e:
-        print(f"Error writing {note_name}: {e}")
+        print(f"❌ Error writing {note_name}: {e}")
+        return False
 
-def upload_to_obsidian(file_name, content):
-    """Uploads a Markdown file to the user's Obsidian vault on Dropbox."""
-    file_path = f"/Apps/Obsidian/MyVault/{file_name}"  # Adjust for your Dropbox setup
+def save_ai_generated_content(title, content):
+    """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
+    note_name = f"{title.replace(' ', '_')}.md"
+    markdown_content = f"# {title}\n\n{content}"
+    obsidian.write_note(note_name, markdown_content)
+    print(f"AI-generated content saved: {note_name}")
 
-    try:
-        dbx.files_upload(content.encode(), file_path, mode=dropbox.files.WriteMode("overwrite"))
-        return f"✅ Successfully uploaded {file_name} to Dropbox"
-    except dropbox.exceptions.ApiError as e:
-        return f"❌ Dropbox API Error: {e}"
-        
 if __name__ == "__main__":
     # Test Dropbox Integration
     print("Listing notes:", list_notes())
