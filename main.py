@@ -1,6 +1,6 @@
 import streamlit as st
 import openai
-from ai import generate_npc, generate_shop, modify_campaign_chapter, save_ai_generated_content
+from ai import generate_npc, generate_shop, modify_campaign_chapter
 from obsidian import test_dropbox_upload, write_note  # Remove list_dropbox_files import
 
 # Streamlit UI
@@ -33,11 +33,19 @@ if api_key:
             st.markdown("### 🛡️ PNJ Généré")
             st.markdown(npc)
         
-        if "generated_npc" in st.session_state and st.session_state.generated_npc:
-            if st.button("Send to Vault!"):
-                npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
-                write_note(f"To Sort Later/{npc_name}.md", st.session_state.generated_npc)
-                st.success("✅ NPC saved to 'To Sort Later' in Obsidian Vault!")
+       if "generated_npc" in st.session_state and st.session_state.generated_npc:
+    if st.button("Send to Vault!"):
+        # Extract NPC name safely
+        npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
+
+        # Save to Dropbox
+        success = write_note(f"To Sort Later/{npc_name}.md", st.session_state.generated_npc)
+        
+        # Notify the user
+        if success:
+            st.success(f"✅ NPC '{npc_name}' saved to 'To Sort Later' in Obsidian Vault!")
+        else:
+            st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
      
         # Generate Location
         st.subheader("🏰 Generate a Location")
@@ -46,12 +54,21 @@ if api_key:
             location = generate_location(api_key, location_prompt)
             st.session_state.generated_location = location  # Store generated location
             st.text_area("Generated Location:", location, height=250)
-        
+            
+
         if "generated_location" in st.session_state and st.session_state.generated_location:
             if st.button("Send to Vault!"):
                 location_name = st.session_state.generated_location.split("**📜 Nom de la location** : ")[-1].split("\n")[0].replace(" ", "_")
-                write_note(f"To Sort Later/{location_name}.md", st.session_state.generated_location)
-                st.success("✅ Location saved to 'To Sort Later' in Obsidian Vault!")
+
+                # Save to Dropbox
+                success = write_note(f"To Sort Later/{location_name}.md", st.session_state.generated_location)
+
+                # Notify the user
+                if success:
+                    st.success(f"✅ Location '{location_name}' saved to 'To Sort Later' in Obsidian Vault!")
+                else:
+                    st.error("❌ Failed to save Location to Obsidian Vault. Check your Dropbox connection.")
+
             
         # Generate Shop
         st.subheader("🛒 Generate a Shop")
@@ -70,14 +87,21 @@ if api_key:
             if st.button("Send to Vault!"):
                 import re
 
-                # Extract AI-generated shop name using regex
-                shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
+                 # Extract AI-generated shop name using regex
+                  shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
 
                 # If found, use extracted name; otherwise, use "Generated_Shop"
                 shop_name = shop_match.group(1).strip().replace(" ", "_") if shop_match else "Generated_Shop"
 
-                write_note(f"To Sort Later/{shop_name}.md", st.session_state.generated_shop)
-                st.success("✅ Shop saved to 'To Sort Later' in Obsidian Vault!")
+                # Save to Dropbox
+                success = write_note(f"To Sort Later/{shop_name}.md", st.session_state.generated_shop)
+
+                # Notify the user
+                if success:
+                    st.success(f"✅ Shop '{shop_name}' saved to 'To Sort Later' in Obsidian Vault!")
+                else:
+                    st.error("❌ Failed to save Shop to Obsidian Vault. Check your Dropbox connection.")
+
             
         # Modify Campaign Chapter
         st.subheader("📖 Modify a Campaign Chapter")
