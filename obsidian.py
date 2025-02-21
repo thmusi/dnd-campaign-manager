@@ -21,6 +21,13 @@ DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault struct
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
+def list_dropbox_files():
+    """Lists files in the root folder of the Dropbox account."""
+    try:
+        files = dbx.files_list_folder("").entries
+        return [file.name for file in files]  # Returns a list of file names
+    except Exception as e:
+        return f"Error: {e}"
 
 def list_notes():
     """List all markdown files in the Obsidian vault stored in Dropbox."""
