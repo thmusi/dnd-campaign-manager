@@ -58,13 +58,16 @@ def write_note(note_name, content):
     except Exception as e:
         print(f"Error writing {note_name}: {e}")
 
-def save_ai_generated_content(title, content):
-    """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
-    note_name = f"{title.replace(' ', '_')}.md"
-    markdown_content = f"# {title}\n\n{content}"
-    obsidian.write_note(note_name, markdown_content)
-    print(f"AI-generated content saved: {note_name}")
+def upload_to_obsidian(file_name, content):
+    """Uploads a Markdown file to the user's Obsidian vault on Dropbox."""
+    file_path = f"/Apps/Obsidian/MyVault/{file_name}"  # Adjust for your Dropbox setup
 
+    try:
+        dbx.files_upload(content.encode(), file_path, mode=dropbox.files.WriteMode("overwrite"))
+        return f"✅ Successfully uploaded {file_name} to Dropbox"
+    except dropbox.exceptions.ApiError as e:
+        return f"❌ Dropbox API Error: {e}"
+        
 if __name__ == "__main__":
     # Test Dropbox Integration
     print("Listing notes:", list_notes())
