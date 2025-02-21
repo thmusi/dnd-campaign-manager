@@ -7,6 +7,12 @@ if st.button("🔄 Test Dropbox Upload"):
     result = test_dropbox_upload()
     st.write(result)
 
+  st.write("📂 Checking Dropbox Files...")
+
+if st.button("🔄 List Dropbox Files"):
+    files = list_dropbox_files()
+    st.write(files)  # Display file list
+
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
 
