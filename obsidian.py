@@ -60,10 +60,21 @@ def write_note(note_name, content):
 
 def save_ai_generated_content(title, content):
     """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
-    note_name = f"{title.replace(' ', '_')}.md"
+    ai_name = content.split("\n")[0].strip("# ").replace(" ", "_")  # Extract first line as title
+    note_name = f"{title}_{ai_name}.md" if ai_name else f"{title}.md"
     markdown_content = f"# {title}\n\n{content}"
+    
+    # Debugging
+    if ai_name:
+        print(f"✅ AI-generated filename: {note_name}")  # Success!
+    else:
+        print("❌ AI name extraction failed. Using fallback title.")
+
+    # Save to Dropbox with new path
+    file_path = f"/ObsidianVault/{note_name}"
     obsidian.write_note(note_name, markdown_content)
-    print(f"AI-generated content saved: {note_name}")
+    print(f"AI-generated content saved: {file_path}")
+
 
 if __name__ == "__main__":
     # Test Dropbox Integration
