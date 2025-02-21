@@ -17,7 +17,7 @@ def test_dropbox_upload():
         return f"✅ Uploaded successfully: {file_path}"
     except Exception as e:
         return f"❌ Upload failed: {e}"
-DROPBOX_VAULT_PATH = "Apps/obsidian-db/ObsidianVault/To Sort Later"  # Modify this based on your vault structure
+DROPBOX_VAULT_PATH = "/Apps/obsidian-db/ObsidianVault/To Sort Later"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
