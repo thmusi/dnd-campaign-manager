@@ -3,6 +3,8 @@ import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
 from obsidian import test_dropbox_upload # Remove list_dropbox_files import
 from obsidian import write_note
+from obsidian import list_campaign_files, fetch_note_content
+from ai import ai_search_campaign_notes
 
 
 # Streamlit UI
