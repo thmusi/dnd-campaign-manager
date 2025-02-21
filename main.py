@@ -1,4 +1,4 @@
-    import streamlit as st
+import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
 from obsidian import test_dropbox_upload, write_note  # Remove list_dropbox_files import
