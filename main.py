@@ -88,3 +88,6 @@ if api_key:
 else:
     st.warning("Please enter your OpenAI API Key to proceed.")
 
+st.write("📂 Checking Dropbox Files...")
+files = list_dropbox_files()
+st.write(files)
