@@ -27,11 +27,17 @@ if api_key:
         # Generate NPC
         st.subheader("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
+        
         if st.button("Generate NPC"):
-            npc = generate_npc(api_key, npc_prompt)
-            st.session_state.generated_npc = npc  # Store generated NPC
-            st.markdown("### 🛡️ PNJ Généré")
-            st.markdown(npc)
+            npc_content = generate_npc(api_key, npc_prompt)
+
+            # Extract AI name correctly
+            ai_name = npc_content.split("\n")[0].strip("# ").replace(" ", "_")
+            note_name = f"NPC_{ai_name}.md" if ai_name else "NPC.md"
+    
+            write_note(note_name, npc_content)  # Now saves with correct naming!
+
+            st.success(f"✅ NPC Generated & Saved as {note_name}!")
         
         if "generated_npc" in st.session_state and st.session_state.generated_npc:
             if st.button("Send to Vault!"):
