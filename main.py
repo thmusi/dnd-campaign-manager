@@ -1,5 +1,6 @@
 import streamlit as st
 import openai
+import re
 from ai import generate_npc, generate_shop, modify_campaign_chapter
 from obsidian import test_dropbox_upload, write_note  # Remove list_dropbox_files import
 
@@ -68,8 +69,12 @@ if api_key:
         
         if "generated_shop" in st.session_state and st.session_state.generated_shop:
             if st.button("Send to Vault!"):
-                shop_name = st.session_state.generated_shop.split("**📜 Nom du magasin** : ")[-1].split("\n")[0].replace(" ", "_")
+                # Extract AI-generated shop name using regex
+                shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
+                shop_name = shop_match.group(1).replace(" ", "_") if shop_match else "Generated_Shop"
+
                 write_note(f"To Sort Later/{shop_name}.md", st.session_state.generated_shop)
+
                 st.success("✅ Shop saved to 'To Sort Later' in Obsidian Vault!")
             
         # Modify Campaign Chapter
