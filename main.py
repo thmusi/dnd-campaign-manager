@@ -1,7 +1,11 @@
 import streamlit as st
 import openai
 from ai import generate_npc, generate_shop, modify_campaign_chapter
-import obsidian  # Ensure obsidian module is imported
+from obsidian import test_dropbox_upload  # Import the function from obsidian.py
+
+if st.button("🔄 Test Dropbox Upload"):
+    result = test_dropbox_upload()
+    st.write(result)
 
 # Streamlit UI
 st.title("🔑 OpenAI API Key Input")
