@@ -1,7 +1,6 @@
 import openai
 from obsidian import write_note  # Ensure this is present at the top
 from ai import summarize_text  # Ensure summarize_text is defined in ai.py
-from ai_utils import summarize_text  # Import from a new helper file
 
 def get_summarized_relevant_notes(query, vault_path):
     notes = get_relevant_notes(query, vault_path)
@@ -243,5 +242,4 @@ def modify_campaign_chapter(existing_text, api_key, prompt=None):
     print("✅ Modified campaign chapter saved to Obsidian via Dropbox.")
 
     return response.choices[0].message.content.strip()
-
 
