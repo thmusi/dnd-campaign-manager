@@ -7,7 +7,11 @@ from ai import generate_npc, generate_shop, generate_location, modify_campaign_c
 from obsidian import test_dropbox_upload, write_note, list_campaign_files, fetch_note_content
 from ai import ai_search_campaign_notes
 
-DROPBOX_ACCESS_TOKEN = "your-dropbox-access-token"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 CART_FILE = "/Apps/DnDManager/cart.json"
 
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
