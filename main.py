@@ -39,7 +39,7 @@ def api_key_page():
         if api_key:
             st.session_state.api_key = api_key
             st.success("API Key set successfully!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Please enter a valid API key.")
 
