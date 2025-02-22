@@ -65,7 +65,8 @@ def create_npc_page():
         npc = generate_npc(st.session_state.api_key, npc_prompt)
         st.session_state.generated_npc = npc
         st.markdown("### 🛡️ PNJ Généré")
-        st.markdown(npc)
+        with st.expander("Show NPC Details"):
+            st.markdown(npc)
       
     if "generated_npc" in st.session_state and st.session_state.generated_npc:
             if st.button("Send to Vault!"):
@@ -92,7 +93,8 @@ def create_shop_page():
     if st.button("Generate Shop"):
         shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)
         st.session_state.generated_shop = shop
-        st.text_area(f"Generated {shop_type}:", shop, height=250)
+        with st.expander(f"Generated {shop_type} Details"):
+            st.text_area(f"Generated {shop_type}:", shop, height=250)
       
     if "generated_shop" in st.session_state and st.session_state.generated_shop:
             if st.button("Send to Vault!"):
@@ -119,7 +121,8 @@ def create_location_page():
     if st.button("Generate Location"):
         location = generate_location(st.session_state.api_key, location_prompt)
         st.session_state.generated_location = location
-        st.text_area("Generated Location:", location, height=250)
+        with st.expander("Generated Location Details"):
+            st.text_area("Generated Location:", location, height=250)
       
     if "generated_location" in st.session_state and st.session_state.generated_location:
             if st.button("Send to Vault!"):
