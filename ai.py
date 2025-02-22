@@ -1,6 +1,6 @@
 import openai
 from obsidian import write_note  # Ensure this is present at the top
-from ai import summarize_text  # Ensure summarize_text is defined in ai.py
+from utils import summarize_text
 
 def get_summarized_relevant_notes(query, vault_path):
     notes = get_relevant_notes(query, vault_path)
