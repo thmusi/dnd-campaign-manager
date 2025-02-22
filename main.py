@@ -10,6 +10,14 @@ from ai import ai_search_campaign_notes
 DROPBOX_ACCESS_TOKEN = "your-dropbox-access-token"
 CART_FILE = "/Apps/DnDManager/cart.json"
 
+dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+try:
+    account_info = dbx.users_get_current_account()
+    print(f"✅ Connected to Dropbox as {account_info.name.display_name}")
+except dropbox.exceptions.AuthError:
+    print("❌ Invalid Dropbox token! Check your credentials.")
+
 # Initialize session state
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
