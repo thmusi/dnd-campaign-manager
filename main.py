@@ -4,9 +4,23 @@ from ai import generate_npc, generate_shop, generate_location, modify_campaign_c
 from obsidian import test_dropbox_upload, write_note, list_campaign_files, fetch_note_content
 from ai import ai_search_campaign_notes
 
-# Initialize session state for API key
+# Initialize session state for API key and generated content
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
+
+if 'generated_content' not in st.session_state:
+    st.session_state.generated_content = {
+        "npc": None,
+        "shop": None,
+        "location": None,
+        "chapter": None,
+        "campaign_assistant": None,
+        "encounter": None,
+        "dungeon": None,
+        "quest": None,
+        "worldbuilding": None,
+        "session": None
+    }
 
 def api_key_page():
     st.title("API Key Input")
@@ -22,52 +36,42 @@ def api_key_page():
 
 def main_menu():
     st.title("Main Menu")
-    # Navigation Sidebar
-    menu_options = [
-        "Create NPC", 
-        "Create Shop", 
-        "Create Location", 
-        "Adapt Chapter to Campaign", 
-        "Campaign Assistant", 
-        "Encounter Generator", 
-        "Dungeon Generator", 
-        "Quest Generator", 
-        "Worldbuilding Expansion", 
-        "Session Work Tools"
-    ]
-    choice = st.sidebar.radio("Navigate", menu_options)
+    tabs = st.tabs([
+        "Create NPC", "Create Shop", "Create Location", "Adapt Chapter to Campaign",
+        "Campaign Assistant", "Encounter Generator", "Dungeon Generator",
+        "Quest Generator", "Worldbuilding Expansion", "Session Work Tools"
+    ])
 
-    if choice == "Create NPC":
+    with tabs[0]:
         create_npc_page()
-    elif choice == "Create Shop":
+    with tabs[1]:
         create_shop_page()
-    elif choice == "Create Location":
+    with tabs[2]:
         create_location_page()
-    elif choice == "Adapt Chapter to Campaign":
+    with tabs[3]:
         adapt_chapter_page()
-    elif choice == "Campaign Assistant":
+    with tabs[4]:
         campaign_assistant_page()
-    elif choice == "Encounter Generator":
+    with tabs[5]:
         encounter_generator_page()
-    elif choice == "Dungeon Generator":
+    with tabs[6]:
         dungeon_generator_page()
-    elif choice == "Quest Generator":
+    with tabs[7]:
         quest_generator_page()
-    elif choice == "Worldbuilding Expansion":
+    with tabs[8]:
         worldbuilding_page()
-    elif choice == "Session Work Tools":
+    with tabs[9]:
         session_work_tools_page()
-  
+
 def create_npc_page():
     st.header("🛡️ Generate an NPC")
     npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
     if st.button("Generate NPC"):
-        npc = generate_npc(st.session_state.api_key, npc_prompt)
-        st.session_state.generated_npc = npc
-        st.markdown("### 🛡️ PNJ Généré")
-        with st.expander("Show NPC Details"):
-            st.markdown(npc)
-      
+        st.session_state.generated_content["npc"] = generate_npc(st.session_state.api_key, npc_prompt)
+    if st.session_state.generated_content["npc"]:
+        with st.expander("🛡️ View Generated NPC"):
+            st.markdown(st.session_state.generated_content["npc"])
+
     if "generated_npc" in st.session_state and st.session_state.generated_npc:
             if st.button("Send to Vault!"):
                 # Extract NPC name safely
