@@ -118,7 +118,7 @@ def create_shop_page():
 def cart_page():
     st.header("🛒 Your Cart")
     categories = list(st.session_state.cart.keys())
-      selected_category = st.selectbox("📂 Select Folder", categories)
+    selected_category = st.selectbox("📂 Select Folder", categories)
     files = st.session_state.cart[selected_category]
     selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
     if selected_file:
