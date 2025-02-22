@@ -8,16 +8,10 @@ from ai import ai_search_campaign_notes
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 
-# Sidebar Navigation
-st.sidebar.title("Navigation")
-menu_options = [
-    "Home", "Generate NPC", "Generate Shop", "Generate Location", "Modify Campaign Chapter"
-]
-choice = st.sidebar.radio("Select a feature", menu_options)
-
 def api_key_page():
-    st.title("🔑 OpenAI API Key Input")
-    api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+    st.title("API Key Input")
+    st.write("Please enter your OpenAI API Key to proceed.")
+    api_key = st.text_input("OpenAI API Key", type="password")
     if st.button("Submit API Key"):
         if api_key:
             st.session_state.api_key = api_key
@@ -27,10 +21,44 @@ def api_key_page():
             st.error("Please enter a valid API key.")
 
 def main_menu():
-    st.title("📜 D&D Campaign Manager")
-    st.write("Select a feature from the sidebar.")
+    st.title("Main Menu")
+    # Navigation Sidebar
+    menu_options = [
+        "Create NPC", 
+        "Create Shop", 
+        "Create Location", 
+        "Adapt Chapter to Campaign", 
+        "Campaign Assistant", 
+        "Encounter Generator", 
+        "Dungeon Generator", 
+        "Quest Generator", 
+        "Worldbuilding Expansion", 
+        "Session Work Tools"
+    ]
+    choice = st.sidebar.radio("Navigate", menu_options)
 
-def generate_npc_page():
+    if choice == "Create NPC":
+        create_npc_page()
+    elif choice == "Create Shop":
+        create_shop_page()
+    elif choice == "Create Location":
+        create_location_page()
+    elif choice == "Adapt Chapter to Campaign":
+        adapt_chapter_page()
+    elif choice == "Campaign Assistant":
+        campaign_assistant_page()
+    elif choice == "Encounter Generator":
+        encounter_generator_page()
+    elif choice == "Dungeon Generator":
+        dungeon_generator_page()
+    elif choice == "Quest Generator":
+        quest_generator_page()
+    elif choice == "Worldbuilding Expansion":
+        worldbuilding_page()
+    elif choice == "Session Work Tools":
+        session_work_tools_page()
+  
+def create_npc_page():
     st.header("🛡️ Generate an NPC")
     npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
     if st.button("Generate NPC"):
@@ -53,7 +81,7 @@ def generate_npc_page():
                 else:
                     st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
 
-def generate_shop_page():
+def create_shop_page():
     st.header("🛒 Generate a Shop")
     shop_type = st.selectbox("Select Shop Type", [
         "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
@@ -85,7 +113,7 @@ def generate_shop_page():
                 else:
                     st.error("❌ Failed to save Shop to Obsidian Vault. Check your Dropbox connection.")
 
-def generate_location_page():
+def create_location_page():
     st.header("🏰 Generate a Location")
     location_prompt = st.text_area("What do you already know about this location? (Optional)")
     if st.button("Generate Location"):
@@ -155,15 +183,12 @@ def session_work_tools_page():
     st.text_input("Session Details (e.g., S01):")
     st.button("Load Session History")
 
-# Main execution logic
-if st.session_state.api_key is None:
-    api_key_page()
-else:
-    if choice == "Home":
+# Main execution: choose the page to display
+def main():
+    if st.session_state.api_key is None:
+        api_key_page()
+    else:
         main_menu()
-    elif choice == "Generate NPC":
-        generate_npc_page()
-    elif choice == "Generate Shop":
-        generate_shop_page()
-    elif choice == "Generate Location":
-        generate_location_page()
+
+if __name__ == "__main__":
+    main()
