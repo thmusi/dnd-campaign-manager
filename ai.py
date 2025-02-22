@@ -1,5 +1,20 @@
 import openai
 from obsidian import write_note  # Ensure this is present at the top
+from ai import summarize_text  # Ensure summarize_text is defined in ai.py
+
+def get_summarized_relevant_notes(query, vault_path):
+    notes = get_relevant_notes(query, vault_path)
+    summarized_notes = []
+    for note in notes:
+        # Summarize the note content; this could be an API call or a local function.
+        summary = summarize_text(note["content"])
+        summarized_notes.append({
+            "file_path": note["file_path"],
+            "summary": summary,
+            "score": note["score"]
+        })
+    return summarized_notes
+
 
 def ai_search_campaign_notes(query, campaign_notes):
     """Uses AI to process campaign notes and answer user queries."""
