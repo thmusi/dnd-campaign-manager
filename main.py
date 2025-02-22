@@ -31,6 +31,18 @@ def load_cart():
     except dropbox.exceptions.ApiError:
         st.warning("No saved cart found.")
 
+def api_key_page():
+    st.title("API Key Input")
+    st.write("Please enter your OpenAI API Key to proceed.")
+    api_key = st.text_input("OpenAI API Key", type="password")
+    if st.button("Submit API Key"):
+        if api_key:
+            st.session_state.api_key = api_key
+            st.success("API Key set successfully!")
+            st.experimental_rerun()
+        else:
+            st.error("Please enter a valid API key.")
+
 # Main navigation menu
 def main_menu():
     st.title("Main Menu")
