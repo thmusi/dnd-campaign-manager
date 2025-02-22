@@ -4,6 +4,7 @@ import streamlit as st
 st.write("🔍 Streamlit Secrets:", st.secrets)  # Debugging step
 import obsidian  # Import the Obsidian Dropbox module
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -23,6 +24,55 @@ def test_dropbox_upload():
 DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+def build_index(vault_path, keywords, keyword_weights):
+    """
+    Scan the Obsidian vault directory and compute a relevance score for each .md file.
+    """
+    index = []
+    for root, dirs, files in os.walk(vault_path):
+        for file in files:
+            if file.endswith(".md"):
+                file_path = os.path.join(root, file)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                last_modified = os.path.getmtime(file_path)
+                score = compute_keyword_score(content, file_path, last_modified, keywords, keyword_weights)
+                index.append({
+                    "file_path": file_path,
+                    "score": score,
+                    "last_modified": last_modified,
+                    "content": content
+                })
+    # Sort the index in descending order by score
+    index.sort(key=lambda x: x["score"], reverse=True)
+    return index
+
+def compute_keyword_score(content, file_path, last_modified, keywords, keyword_weights):
+    """
+    Compute a relevance score for the note based on:
+      - Keyword frequency (weighted)
+      - Folder-based weighting (bonus if file path contains target folder names)
+      - Recency (more recent notes score higher)
+    """
+    score = 0
+    # Calculate base score from keyword frequency
+    for keyword in keywords:
+        count = content.lower().count(keyword.lower())
+        weight = keyword_weights.get(keyword, 1)
+        score += count * weight
+    
+    # Folder-based bonus example: if the file is in a folder named "Whitestone"
+    if "Whitestone" in file_path:
+        score *= 1.5
+    
+    # Recency factor: calculate how many days ago the note was modified
+    days_since_modified = (datetime.now().timestamp() - last_modified) / 86400
+    # Use a decay function: full weight for notes modified within 1 year, then decreasing.
+    recency_multiplier = max(0.5, 1 - (days_since_modified / 365))
+    score *= recency_multiplier
+    
+    return score
 
 def list_dropbox_files():
     """Lists files in the root folder of the Dropbox account."""
@@ -67,7 +117,6 @@ def write_note(note_name, content):
         print(f"❌ Error writing {note_name}: {e}")
         return False
 
-
 def save_ai_generated_content(title, content):
     """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
     note_name = f"{title.replace(' ', '_')}.md"
@@ -99,6 +148,28 @@ def list_campaign_files():
     except Exception as e:
         print(f"Error listing files: {e}")
         return []
+
+def get_relevant_notes(query, vault_path):
+    # Extract keywords from the query; here we simply split the query, but you can enhance this.
+    keywords = query.split()
+    
+    # Define keyword weights – adjust these values based on importance.
+    keyword_weights = {
+        "Whitestone": 2,
+        "NPC": 1.5,
+        # Add other keywords and their weights as needed.
+    }
+    
+    # Build the index for the current vault
+    index = build_index(vault_path, keywords, keyword_weights)
+    
+    # Optional: filter out notes below a certain score threshold
+    threshold = 5  # Adjust this threshold as needed
+    relevant_notes = [note for note in index if note["score"] >= threshold]
+    
+    # Limit to top 5 results (or any number you prefer)
+    return relevant_notes[:5]
+
 
 def fetch_note_content(file_name):
     """Fetches the content of a campaign note from Dropbox."""
