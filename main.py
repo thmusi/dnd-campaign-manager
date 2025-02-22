@@ -36,6 +36,8 @@ def load_cart():
     try:
         _, res = dbx.files_download(CART_FILE)
         st.session_state.cart = json.loads(res.content.decode("utf-8"))
+    except dropbox.exceptions.AuthError:
+        st.error("❌ Dropbox authentication failed! Check your access token.")
     except dropbox.exceptions.ApiError:
         st.warning("No saved cart found.")
 
