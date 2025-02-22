@@ -1,45 +1,43 @@
 import streamlit as st
 import openai
+import json
+import dropbox
+from dropbox.files import WriteMode
 from ai import generate_npc, generate_shop, generate_location, modify_campaign_chapter
 from obsidian import test_dropbox_upload, write_note, list_campaign_files, fetch_note_content
 from ai import ai_search_campaign_notes
 
-# Initialize session state for API key and generated content
+DROPBOX_ACCESS_TOKEN = "your-dropbox-access-token"
+CART_FILE = "/Apps/DnDManager/cart.json"
+
+# Initialize session state
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
+if 'cart' not in st.session_state:
+    st.session_state.cart = {"npc": [], "shop": [], "location": [], "chapter": [], "campaign_assistant": [], "encounter": [], "dungeon": [], "quest": [], "worldbuilding": [], "session": []}
 
-if 'generated_content' not in st.session_state:
-    st.session_state.generated_content = {
-        "npc": None,
-        "shop": None,
-        "location": None,
-        "chapter": None,
-        "campaign_assistant": None,
-        "encounter": None,
-        "dungeon": None,
-        "quest": None,
-        "worldbuilding": None,
-        "session": None
-    }
+# Functions for saving/loading cart data
+def save_cart():
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    json_data = json.dumps(st.session_state.cart)
+    dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
+    st.success("Cart saved!")
 
-def api_key_page():
-    st.title("API Key Input")
-    st.write("Please enter your OpenAI API Key to proceed.")
-    api_key = st.text_input("OpenAI API Key", type="password")
-    if st.button("Submit API Key"):
-        if api_key:
-            st.session_state.api_key = api_key
-            st.success("API Key set successfully!")
-            st.experimental_rerun()
-        else:
-            st.error("Please enter a valid API key.")
+def load_cart():
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    try:
+        _, res = dbx.files_download(CART_FILE)
+        st.session_state.cart = json.loads(res.content.decode("utf-8"))
+    except dropbox.exceptions.ApiError:
+        st.warning("No saved cart found.")
 
+# Main navigation menu
 def main_menu():
     st.title("Main Menu")
     tabs = st.tabs([
         "Create NPC", "Create Shop", "Create Location", "Adapt Chapter to Campaign",
         "Campaign Assistant", "Encounter Generator", "Dungeon Generator",
-        "Quest Generator", "Worldbuilding Expansion", "Session Work Tools"
+        "Quest Generator", "Worldbuilding Expansion", "Session Work Tools", "🛒 Cart"
     ])
 
     with tabs[0]:
@@ -62,62 +60,50 @@ def main_menu():
         worldbuilding_page()
     with tabs[9]:
         session_work_tools_page()
+    with tabs[10]:
+        cart_page()
+
 
 def create_npc_page():
     st.header("🛡️ Generate an NPC")
     npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
     if st.button("Generate NPC"):
-        st.session_state.generated_content["npc"] = generate_npc(st.session_state.api_key, npc_prompt)
-    if st.session_state.generated_content["npc"]:
-        with st.expander("🛡️ View Generated NPC"):
-            st.markdown(st.session_state.generated_content["npc"])
-
-    if "generated_npc" in st.session_state and st.session_state.generated_npc:
-            if st.button("Send to Vault!"):
-                # Extract NPC name safely
-                npc_name = st.session_state.generated_npc.split("**📜 Nom du PNJ** : ")[-1].split("\n")[0].replace(" ", "_")
-    
-                # Save to Dropbox
-                success = write_note(f"To Sort Later/{npc_name}.md", st.session_state.generated_npc)
-        
-                # Notify the user
-                if success:
-                    st.success(f"✅ NPC '{npc_name}' saved to 'To Sort Later' in Obsidian Vault!")
-                else:
-                    st.error("❌ Failed to save NPC to Obsidian Vault. Check your Dropbox connection.")
+        npc = generate_npc(st.session_state.api_key, npc_prompt)
+        st.session_state.generated_content = npc
+    if "generated_content" in st.session_state:
+        with st.expander("🛡️ View & Edit NPC"):
+            st.session_state.generated_content = st.text_area("Modify NPC", value=st.session_state.generated_content, height=250)
+        if st.button("🛒 Add to Cart"):
+            st.session_state.cart["npc"].append(st.session_state.generated_content)
+            save_cart()
+            st.success("Added to Cart!")
 
 def create_shop_page():
     st.header("🛒 Generate a Shop")
-    shop_type = st.selectbox("Select Shop Type", [
-        "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
-        "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Bookstore", "Stable",
-        "Enchanter", "Herbalist", "Bakery", "Tailor",
-    ])
     shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
     if st.button("Generate Shop"):
-        shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)
-        st.session_state.generated_shop = shop
-        with st.expander(f"Generated {shop_type} Details"):
-            st.text_area(f"Generated {shop_type}:", shop, height=250)
-      
-    if "generated_shop" in st.session_state and st.session_state.generated_shop:
-            if st.button("Send to Vault!"):
-                import re
+        shop = generate_shop(st.session_state.api_key, shop_prompt)
+        st.session_state.generated_content = shop
+    if "generated_content" in st.session_state:
+        with st.expander("🛒 View & Edit Shop"):
+            st.session_state.generated_content = st.text_area("Modify Shop", value=st.session_state.generated_content, height=250)
+        if st.button("🛒 Add to Cart"):
+            st.session_state.cart["shop"].append(st.session_state.generated_content)
+            save_cart()
+            st.success("Added to Cart!")
 
-                # Extract AI-generated shop name using regex
-                shop_match = re.search(r"\*\*📜 Nom du magasin\*\* : (.+)", st.session_state.generated_shop)
-
-                # If found, use extracted name; otherwise, use "Generated_Shop"
-                shop_name = shop_match.group(1).strip().replace(" ", "_") if shop_match else "Generated_Shop"
-
-                # Save to Dropbox
-                success = write_note(f"To Sort Later/{shop_name}.md", st.session_state.generated_shop)
-
-                # Notify the user
-                if success:
-                    st.success(f"✅ Shop '{shop_name}' saved to 'To Sort Later' in Obsidian Vault!")
-                else:
-                    st.error("❌ Failed to save Shop to Obsidian Vault. Check your Dropbox connection.")
+def cart_page():
+    st.header("🛒 Your Cart")
+    categories = list(st.session_state.cart.keys())
+    selected_category = st.selectbox("Choose a category", categories)
+    if selected_category:
+        for idx, item in enumerate(st.session_state.cart[selected_category]):
+            with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
+                st.markdown(item)
+                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}"):
+                    if selected_category == "shop":
+                        st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
+                        st.success("NPC Generated from Shop Details!")
 
 def create_location_page():
     st.header("🏰 Generate a Location")
@@ -190,12 +176,14 @@ def session_work_tools_page():
     st.text_input("Session Details (e.g., S01):")
     st.button("Load Session History")
 
-# Main execution: choose the page to display
+
 def main():
     if st.session_state.api_key is None:
         api_key_page()
     else:
+        load_cart()
         main_menu()
 
 if __name__ == "__main__":
     main()
+
