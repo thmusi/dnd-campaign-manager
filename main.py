@@ -2,13 +2,12 @@ import streamlit as st
 import openai
 import json
 import dropbox
+import os
 from dropbox.files import WriteMode
+from dotenv import load_dotenv
 from ai import generate_npc, generate_shop, generate_location, modify_campaign_chapter
 from obsidian import test_dropbox_upload, write_note, list_campaign_files, fetch_note_content
 from ai import ai_search_campaign_notes
-
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
@@ -57,36 +56,34 @@ def api_key_page():
         else:
             st.error("Please enter a valid API key.")
 
-# Main navigation menu
 def main_menu():
     st.title("Main Menu")
-    tabs = st.tabs([
-        "Create NPC", "Create Shop", "Create Location", "Adapt Chapter to Campaign",
-        "Campaign Assistant", "Encounter Generator", "Dungeon Generator",
-        "Quest Generator", "Worldbuilding Expansion", "Session Work Tools", "🛒 Cart"
-    ])
-
-    with tabs[0]:
+    page = st.selectbox("📜 Select Section", ["Create NPC", "Create Shop", "Create Location", "Adapt Chapter to Campaign",
+                                            "Campaign Assistant", "Encounter Generator", "Dungeon Generator",
+                                            "Quest Generator", "Worldbuilding Expansion", "Session Work Tools", "🛒 Cart"])
+    st.markdown("<div style='position: absolute; top: 10px; right: 20px;'>🛒 [Go to Cart](#)</div>", unsafe_allow_html=True)
+    
+    if page == "Create NPC":
         create_npc_page()
-    with tabs[1]:
+    elif page == "Create Shop":
         create_shop_page()
-    with tabs[2]:
+    elif page == "Create Location":
         create_location_page()
-    with tabs[3]:
+    elif page == "Adapt Chapter to Campaign":
         adapt_chapter_page()
-    with tabs[4]:
+    elif page == "Campaign Assistant":
         campaign_assistant_page()
-    with tabs[5]:
+    elif page == "Encounter Generator":
         encounter_generator_page()
-    with tabs[6]:
+    elif page == "Dungeon Generator":
         dungeon_generator_page()
-    with tabs[7]:
+    elif page == "Quest Generator":
         quest_generator_page()
-    with tabs[8]:
+    elif page == "Worldbuilding Expansion":
         worldbuilding_page()
-    with tabs[9]:
+    elif page == "Session Work Tools":
         session_work_tools_page()
-    with tabs[10]:
+    elif page == "🛒 Cart":
         cart_page()
 
 
@@ -121,15 +118,22 @@ def create_shop_page():
 def cart_page():
     st.header("🛒 Your Cart")
     categories = list(st.session_state.cart.keys())
-    selected_category = st.selectbox("Choose a category", categories)
-    if selected_category:
-        for idx, item in enumerate(st.session_state.cart[selected_category]):
-            with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
-                st.markdown(item)
-                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}"):
-                    if selected_category == "shop":
-                        st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
-                        st.success("NPC Generated from Shop Details!")
+      selected_category = st.selectbox("📂 Select Folder", categories)
+    files = st.session_state.cart[selected_category]
+    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+    if selected_file:
+        st.markdown("### 📖 Preview")
+        st.markdown(selected_file)
+
+def quick_actions_sidebar():
+    st.sidebar.title("⚡ Quick Actions")
+    st.sidebar.button("🛡️ Generate NPC")
+    st.sidebar.button("🛒 Generate Shop")
+    st.sidebar.button("🏰 Generate Location")
+    st.sidebar.markdown("### 🔄 Recent Items")
+    for item in st.session_state.cart.keys():
+        for entry in st.session_state.cart[item][-3:]:
+            st.sidebar.markdown(f"- {entry}")
 
 def create_location_page():
     st.header("🏰 Generate a Location")
@@ -201,9 +205,9 @@ def session_work_tools_page():
     st.write("Tools for session intros and note assistance.")
     st.text_input("Session Details (e.g., S01):")
     st.button("Load Session History")
-
-
+    
 def main():
+    quick_actions_sidebar()
     if st.session_state.api_key is None:
         api_key_page()
     else:
@@ -212,4 +216,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
