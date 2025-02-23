@@ -129,7 +129,7 @@ categories = {
 }
 
 # Page Routing Based on Selected Tool
-page = st.selectbox("Select Tool", sum(categories.values(), []))
+page = 
 
 if page == "🧙 Create NPC":
     st.header("🧑‍🎤 NPC Generator")
@@ -202,7 +202,6 @@ with st.expander("🧠 Campaign AI Assistant"):
         ai_response = "(AI Response Here)"  # Placeholder for AI function
         st.write(ai_response)
 
-st.sidebar.button("💾 Save Cart to Dropbox", on_click=lambda: st.write("(Saving logic needed)"))
 
 if page == "🛒 View Cart":
     st.header("🛒 Your Cart")
@@ -220,6 +219,3 @@ if page == "🛒 View Cart":
                         st.success("NPC Generated from Shop Details!")
     if st.button("Save Cart"):
         save_cart()
-
-st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
-
