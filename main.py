@@ -68,11 +68,11 @@ if st.session_state.api_key is None or st.session_state.api_key == "":
     api_key_input = st.text_input("API Key", type="password")
     if st.button("Save API Key"):
         st.session_state.api_key = api_key_input
-    st.session_state.api_key = api_key_input
-    os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
-    st.success("API Key Saved! Reloading...")
-    st.rerun()
+        os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
+        st.success("API Key Saved! Reloading...")
+        st.rerun()
         st.session_state.api_key = api_key_input
+        os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
         st.success("API Key Saved! Reloading...")
         st.rerun()
     st.stop()
