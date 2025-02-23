@@ -17,6 +17,7 @@ CART_FILE = "/Apps/DnDManager/cart.json"
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 # Initialize session state for API key and cart if not set
+
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 if 'cart' not in st.session_state:
@@ -29,7 +30,21 @@ def save_cart():
     st.success("Cart saved!")
 
 # Function to load cart from Dropbox
-load_cart()  # Auto-load cart when the app starts
+
+def load_cart():
+    try:
+        _, res = dbx.files_download(CART_FILE)
+        st.session_state.cart = json.loads(res.content.decode("utf-8"))
+    except dropbox.exceptions.AuthError:
+        st.error("❌ Dropbox authentication failed! Check your access token.")
+    except dropbox.exceptions.ApiError:
+        st.warning("No saved cart found.")
+
+# Auto-load cart when the app starts
+if 'cart_loaded' not in st.session_state:
+    load_cart()
+    st.session_state.cart_loaded = True
+
 def load_cart():
     try:
         _, res = dbx.files_download(CART_FILE)
@@ -195,3 +210,4 @@ if page == "🛒 View Cart":
         save_cart()
 
 st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
+
