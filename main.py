@@ -29,7 +29,6 @@ if st.session_state.api_key is None or st.session_state.api_key == "":
     api_key_input = st.text_input("API Key", type="password")
     if st.button("Save API Key"):
         st.session_state.api_key = api_key_input
-        st.success("API Key Saved!")
         st.success("API Key Saved! Reloading...")
         st.rerun()
     st.stop()
@@ -120,21 +119,21 @@ elif page == "Quests":
             st.session_state.cart.setdefault("Quests", []).append(quest_result)
 
 elif page == "Encounters":
-    st.header("⚔️ Encounter Generator")
-    encounter_prompt = st.text_area("Describe encounter details")
+   st.header("⚔️ Encounter Generator")
+    encounter_input = st.text_area("Describe your encounter (optional)")
     if st.button("Generate Encounter"):
-        encounter_result = "(AI Encounter Result Here)"  # Placeholder for AI function
+        encounter_result = "(AI-generated encounter content here)"
         st.write(encounter_result)
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Encounters", []).append(encounter_result)
         if st.button("Create Quest from Encounter"):
             st.session_state.cart.setdefault("Quests", []).append(encounter_result)
 
-elif page == "Dungeon Generator":
+elif page == "🏰 Dungeon Generator":
     st.header("🏰 Dungeon Generator")
-    dungeon_prompt = st.text_area("Describe your dungeon")
+    dungeon_input = st.text_area("Describe your dungeon (optional)")
     if st.button("Generate Dungeon"):
-        dungeon_result = "(AI Dungeon Result Here)"  # Placeholder for AI function
+        dungeon_result = "(AI-generated dungeon content here)"
         st.write(dungeon_result)
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Dungeons", []).append(dungeon_result)
