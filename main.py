@@ -68,12 +68,11 @@ menu_options = {
 }
 
 
-
 selected_tool = st.sidebar.radio("🛠 Select Page", sum(menu_options.values(), []))
 
 
 # Page Routing
-if page == "🧙 Create NPC":
+if selected_tool == "🧙 Create NPC":
     st.header("🧑‍🎤 NPC Generator")
     npc_input = st.text_area("Describe your NPC (optional)")
     if st.button("Generate NPC"):
@@ -84,7 +83,7 @@ if page == "🧙 Create NPC":
         if st.button("Send to Quest Generator"):
             st.session_state.cart.setdefault("Quests", []).append(npc_result)
 
-elif page == "🏪 Create Shop":
+elif selected_tool == "🏪 Create Shop":
     st.header("🏪 Shop Generator")
     shop_type = st.selectbox("Select Shop Type", ["General Store", "Blacksmith", "Magic Shop", "Tavern"])
     shop_input = st.text_area("Describe your shop (optional)")
@@ -97,7 +96,7 @@ elif page == "🏪 Create Shop":
             st.session_state.cart.setdefault("NPCs", []).append(shop_result)
 
 # Additional functionality for other tools follows the same pattern...
-elif page == "Quests":
+elif selected_tool == "Quests":
     st.header("📜 Quest Generator")
     quest_prompt = st.text_area("Describe your quest")
     if st.button("Generate Quest"):
@@ -106,7 +105,7 @@ elif page == "Quests":
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Quests", []).append(quest_result)
 
-elif page == "Encounters":
+elif selected_tool == "Encounters":
     st.header("⚔️ Encounter Generator")
     encounter_input = st.text_area("Describe your encounter (optional)")
     if st.button("Generate Encounter"):
@@ -117,7 +116,7 @@ elif page == "Encounters":
         if st.button("Create Quest from Encounter"):
             st.session_state.cart.setdefault("Quests", []).append(encounter_result)
 
-elif page == "🏰 Dungeon Generator":
+elif selected_tool == "🏰 Dungeon Generator":
     st.header("🏰 Dungeon Generator")
     dungeon_input = st.text_area("Describe your dungeon (optional)")
     if st.button("Generate Dungeon"):
@@ -126,15 +125,15 @@ elif page == "🏰 Dungeon Generator":
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Dungeons", []).append(dungeon_result)
 
-elif page == "Worldbuilding":
+elif selected_tool == "Worldbuilding":
     st.header("🌍 Worldbuilding Expansion")
     st.write("Generate factions, cultures, and auto-filled lore.")
 
-elif page == "Session Management":
+elif selected_tool == "Session Management":
     st.header("📝 Session Work Tools")
     st.write("Assist with session logs, summaries, and planning.")
 
-elif page == "Settings":
+elif selected_tool == "Settings":
     st.header("⚙️ Settings")
 
 # Collapsible AI Assistant Panel
@@ -146,7 +145,7 @@ with st.expander("🧠 Campaign AI Assistant"):
 
 
 
-if page == "🛒 View Cart":
+if selected_tool == "🛒 View Cart":
     st.header("🛒 Your Cart")
     if st.button("Load Cart"):
         load_cart()
@@ -156,7 +155,7 @@ if page == "🛒 View Cart":
         for idx, item in enumerate(st.session_state.cart[selected_category]):
             with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
                 st.markdown(item)
-                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{page}"):
+                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{selected_tool}"):
                     if selected_category == "shop":
                         st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
                         st.success("NPC Generated from Shop Details!")
