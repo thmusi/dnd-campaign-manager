@@ -147,8 +147,6 @@ with st.expander("🧠 Campaign AI Assistant"):
         ai_response = "(AI Response Here)"  # Placeholder for AI function
         st.write(ai_response)
 
-
-
 elif selected_tool == "View Cart":
     st.header("🛒 Your Cart")
     if st.button("Load Cart"):
