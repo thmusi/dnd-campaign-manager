@@ -99,23 +99,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Top Bar Navigation with Dropdown Categories
-st.markdown("""
-    <div class='top-bar'>
-        <span>🏰 D&D Campaign Manager</span>
-        <select id='dropdown' onchange='location = this.value;'>
-            <option value='' selected disabled>📂 Select Category</option>
-            <option value='npc'>🧑 Characters & Shops</option>
-            <option value='story'>📜 Story & Campaign Tools</option>
-            <option value='encounters'>⚔️ Encounters & Dungeons</option>
-            <option value='quests'>🎭 Quests & Worldbuilding</option>
-            <option value='session'>🗒 Session Management</option>
-            <option value='cart'>🛒 Cart</option>
-            <option value='settings'>⚙️ Settings & Customization</option>
-        </select>
-        <span>🔍 <input type='text' placeholder='Search campaign notes, NPCs, and quests'></span>
-        <span>🛒 Cart</span>
-    </div>
-""", unsafe_allow_html=True)
+
 
 # Dictionary for Category-Based Page Routing
 categories = {
@@ -129,7 +113,7 @@ categories = {
 }
 
 # Page Routing Based on Selected Tool
-page = st.selectbox("Select a Page", list(categories.keys()))
+page = selected_category = st.sidebar.selectbox("📂 Select Category", list(categories.keys()))
 if page == "🧙 Create NPC":
     st.header("🧑‍🎤 NPC Generator")
     npc_input = st.text_area("Describe your NPC (optional)")
@@ -219,6 +203,3 @@ if page == "🛒 View Cart":
                         st.success("NPC Generated from Shop Details!")
     if st.button("Save Cart"):
         save_cart()
-
-
-
