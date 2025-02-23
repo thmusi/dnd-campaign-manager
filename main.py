@@ -68,7 +68,11 @@ menu_options = {
 }
 
 
-selected_tool = st.sidebar.radio("🛠 Select Page", sum(menu_options.values(), []))
+selected_tool = st.sidebar.radio("🛠 Select Page", [
+    "Create NPC", "Create Shop", "Adapt Chapter to Campaign", "Campaign Assistant",
+    "Encounter Generator", "Dungeon Generator", "Quest Generator", "Worldbuilding Expansion",
+    "Session Work Tools", "View Cart", "API Key Input", "Theme Customization"
+])
 
 
 # Page Routing
