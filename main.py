@@ -119,7 +119,7 @@ elif page == "Quests":
             st.session_state.cart.setdefault("Quests", []).append(quest_result)
 
 elif page == "Encounters":
-   st.header("⚔️ Encounter Generator")
+    st.header("⚔️ Encounter Generator")
     encounter_input = st.text_area("Describe your encounter (optional)")
     if st.button("Generate Encounter"):
         encounter_result = "(AI-generated encounter content here)"
