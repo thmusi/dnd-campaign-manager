@@ -22,6 +22,30 @@ if 'api_key' not in st.session_state:
 if 'cart' not in st.session_state:
     st.session_state.cart = {}
 
+# Popup for API Key Input
+if st.session_state.api_key is None:
+    st.markdown("""
+        <style>
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2E2E2E;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    st.markdown("<div class='popup'><h3>🔑 Enter Your OpenAI API Key</h3></div>", unsafe_allow_html=True)
+    api_key_input = st.text_input("Enter OpenAI API Key", type="password")
+    if st.button("Save API Key"):
+        st.session_state.api_key = api_key_input
+        st.success("API Key Saved!")
+        st.experimental_rerun()
+
 # UI Styling and Top Bar Navigation
 st.markdown("""
     <style>
@@ -43,23 +67,31 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Top Bar Navigation Menu
+st.markdown("""
+    <div class='top-bar'>
+        <span>🏰 D&D Campaign Manager</span>
+        <span>🔍 <input type='text' placeholder='Search campaign notes, NPCs, and quests'></span>
+        <span>🛒 Cart</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# Sidebar with Dropdown Categories
+categories = {
+    "🧑 Characters & Shops": ["🧙 Create NPC", "🏪 Create Shop"],
+    "📜 Story & Campaign Tools": ["📖 Adapt Chapter to Campaign", "🧠 Campaign Assistant (AI-Powered Q&A)"],
+    "⚔️ Encounters & Dungeons": ["🐉 Encounter Generator", "🏰 Dungeon Generator"],
+    "🎭 Quests & Worldbuilding": ["📜 Quest Generator", "🌍 Worldbuilding Expansion & Auto-Filled Lore"],
+    "🗒 Session Management": ["📝 Session Work Tools"],
+    "⚙️ Settings & Customization": ["🔑 API Key Input", "🎨 Theme Customization"]
+}
+
 st.sidebar.title("🧙 D&D Campaign Manager")
-page = st.sidebar.radio("Navigation", ["Home", "Create NPC", "Create Shop", "Quests", "Encounters", "Dungeon Generator", "Worldbuilding", "Session Management", "Settings"])
+selected_category = st.sidebar.selectbox("Select Category", list(categories.keys()))
+selected_tool = st.sidebar.radio("Select Tool", categories[selected_category])
 
-# Search Bar with AI-Driven Bilingual Rules Lookup
-search_query = st.text_input("🔍 Quick Search (Spells, NPCs, etc.)")
-if search_query:
-    search_results = ai_search_campaign_notes(search_query)
-    st.write("### Search Results")
-    for result in search_results:
-        st.write(result)
-
-# Page Routing
-if page == "Home":
-    st.title("🏰 Welcome to Your D&D Campaign Manager")
-    st.write("Manage your world, generate content, and plan your sessions seamlessly.")
-
-elif page == "Create NPC":
+# Page Routing Based on Selected Tool
+if selected_tool == "🧙 Create NPC":
     st.header("🧑‍🎤 NPC Generator")
     npc_input = st.text_area("Describe your NPC (optional)")
     if st.button("Generate NPC"):
@@ -70,7 +102,7 @@ elif page == "Create NPC":
         if st.button("Send to Quest Generator"):
             st.session_state.cart.setdefault("Quests", []).append(npc_result)
 
-elif page == "Create Shop":
+elif selected_tool == "🏪 Create Shop":
     st.header("🏪 Shop Generator")
     shop_type = st.selectbox("Select Shop Type", ["General Store", "Blacksmith", "Magic Shop", "Tavern"])
     shop_input = st.text_area("Describe your shop (optional)")
@@ -82,7 +114,8 @@ elif page == "Create Shop":
         if st.button("Generate NPC from Shop Owner"):
             st.session_state.cart.setdefault("NPCs", []).append(shop_result)
 
-elif page == "Quests":
+# Additional functionality for other tools follows the same pattern...
+elif selected_tool == "Quests":
     st.header("📜 Quest Generator")
     quest_prompt = st.text_area("Describe your quest")
     if st.button("Generate Quest"):
@@ -91,7 +124,7 @@ elif page == "Quests":
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Quests", []).append(quest_result)
 
-elif page == "Encounters":
+elif selected_tool == "Encounters":
     st.header("⚔️ Encounter Generator")
     encounter_prompt = st.text_area("Describe encounter details")
     if st.button("Generate Encounter"):
@@ -102,7 +135,7 @@ elif page == "Encounters":
         if st.button("Create Quest from Encounter"):
             st.session_state.cart.setdefault("Quests", []).append(encounter_result)
 
-elif page == "Dungeon Generator":
+elif selected_tool == "Dungeon Generator":
     st.header("🏰 Dungeon Generator")
     dungeon_prompt = st.text_area("Describe your dungeon")
     if st.button("Generate Dungeon"):
@@ -111,20 +144,16 @@ elif page == "Dungeon Generator":
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Dungeons", []).append(dungeon_result)
 
-elif page == "Worldbuilding":
+elif selected_tool == "Worldbuilding":
     st.header("🌍 Worldbuilding Expansion")
     st.write("Generate factions, cultures, and auto-filled lore.")
 
-elif page == "Session Management":
+elif selected_tool == "Session Management":
     st.header("📝 Session Work Tools")
     st.write("Assist with session logs, summaries, and planning.")
 
-elif page == "Settings":
+elif selected_tool == "Settings":
     st.header("⚙️ Settings")
-    api_key_input = st.text_input("Enter OpenAI API Key", type="password")
-    if st.button("Save API Key"):
-        st.session_state.api_key = api_key_input
-        st.success("API Key Saved!")
 
 # Collapsible AI Assistant Panel
 with st.expander("🧠 Campaign AI Assistant"):
