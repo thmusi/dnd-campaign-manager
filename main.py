@@ -69,8 +69,8 @@ menu_options = {
 
 
 
-selected_category = st.sidebar.radio("📂 Select Category", list(menu_options.keys()))
-selected_tool = st.sidebar.radio("🛠 Select Tool", menu_options[selected_category])
+selected_tool = st.sidebar.radio("🛠 Select Page", sum(menu_options.values(), []))
+
 
 # Page Routing
 if page == "🧙 Create NPC":
