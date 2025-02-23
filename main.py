@@ -17,7 +17,6 @@ CART_FILE = "/Apps/DnDManager/cart.json"
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 # Initialize session state for API key and cart if not set
-load_cart()  # Auto-load cart when the app starts
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 if 'cart' not in st.session_state:
@@ -30,6 +29,7 @@ def save_cart():
     st.success("Cart saved!")
 
 # Function to load cart from Dropbox
+load_cart()  # Auto-load cart when the app starts
 def load_cart():
     try:
         _, res = dbx.files_download(CART_FILE)
