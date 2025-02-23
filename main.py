@@ -31,7 +31,7 @@ if st.session_state.api_key is None or st.session_state.api_key == "":
         st.session_state.api_key = api_key_input
         st.success("API Key Saved!")
         st.success("API Key Saved! Reloading...")
-        st.experimental_rerun()
+        st.rerun()
     st.stop()
 
 # UI Styling and Top Bar Navigation with Dropdown Categories
