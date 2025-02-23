@@ -12,6 +12,10 @@ from ai import ai_search_campaign_notes
 # Load environment variables
 load_dotenv()
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+if not DROPBOX_ACCESS_TOKEN:
+    st.error("❌ Dropbox API Key is missing! Please check your environment variables.")
+else:
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 CART_FILE = "/Apps/DnDManager/cart.json"
 
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
@@ -32,6 +36,9 @@ def save_cart():
 # Function to load cart from Dropbox
 
 def load_cart():
+    if not DROPBOX_ACCESS_TOKEN:
+        st.error("❌ Dropbox API Key is missing!")
+        return
     try:
         _, res = dbx.files_download(CART_FILE)
         st.session_state.cart = json.loads(res.content.decode("utf-8"))
@@ -60,6 +67,10 @@ if st.session_state.api_key is None or st.session_state.api_key == "":
     st.write("Please enter your OpenAI API Key to proceed.")
     api_key_input = st.text_input("API Key", type="password")
     if st.button("Save API Key"):
+    st.session_state.api_key = api_key_input
+    os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
+    st.success("API Key Saved! Reloading...")
+    st.rerun()
         st.session_state.api_key = api_key_input
         st.success("API Key Saved! Reloading...")
         st.rerun()
