@@ -67,21 +67,10 @@ menu_options = {
     "Settings": ["API Key Input", "Theme Customization"]
 }
 
-st.markdown("""
-    <style>
-    .top-bar {
-        background-color: #2E2E2E;
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: white;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
-selected_category = st.selectbox("📂 Select Category", list(menu_options.keys()))
-selected_tool = st.selectbox("🛠 Select Tool", menu_options[selected_category])
+
+selected_category = st.sidebar.radio("📂 Select Category", list(menu_options.keys()))
+selected_tool = st.sidebar.radio("🛠 Select Tool", menu_options[selected_category])
 
 # Page Routing
 if page == "🧙 Create NPC":
