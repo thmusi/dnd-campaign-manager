@@ -149,6 +149,21 @@ with st.expander("🧠 Campaign AI Assistant"):
 
 elif selected_tool == "View Cart":
     st.header("🛒 Your Cart")
+    if st.button("Load Cart"):
+        load_cart()
+    categories = list(st.session_state.cart.keys())
+    selected_category = st.selectbox("Choose a category", categories)
+    if selected_category:
+        for idx, item in enumerate(st.session_state.cart[selected_category]):
+            with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
+                st.markdown(item)
+                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{selected_tool}"):
+                    if selected_category == "shop":
+                        st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
+                        st.success("NPC Generated from Shop Details!")
+    if st.button("Save Cart"):
+        save_cart()
+    st.header("🛒 Your Cart")
 if st.button("Load Cart"):
     load_cart()
 categories = list(st.session_state.cart.keys())
@@ -165,4 +180,5 @@ if st.button("Save Cart"):
     save_cart()
 
 st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
+
 
