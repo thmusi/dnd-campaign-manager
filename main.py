@@ -46,7 +46,7 @@ st.markdown("""
 st.sidebar.title("🧙 D&D Campaign Manager")
 page = st.sidebar.radio("Navigation", ["Home", "Create NPC", "Create Shop", "Quests", "Encounters", "Dungeon Generator", "Worldbuilding", "Session Management", "Settings"])
 
-# Search Bar
+# Search Bar with AI-Driven Bilingual Rules Lookup
 search_query = st.text_input("🔍 Quick Search (Spells, NPCs, etc.)")
 if search_query:
     search_results = ai_search_campaign_notes(search_query)
@@ -67,6 +67,8 @@ elif page == "Create NPC":
         st.write(npc_result)
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("NPCs", []).append(npc_result)
+        if st.button("Send to Quest Generator"):
+            st.session_state.cart.setdefault("Quests", []).append(npc_result)
 
 elif page == "Create Shop":
     st.header("🏪 Shop Generator")
@@ -77,6 +79,8 @@ elif page == "Create Shop":
         st.write(shop_result)
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Shops", []).append(shop_result)
+        if st.button("Generate NPC from Shop Owner"):
+            st.session_state.cart.setdefault("NPCs", []).append(shop_result)
 
 elif page == "Quests":
     st.header("📜 Quest Generator")
@@ -95,6 +99,8 @@ elif page == "Encounters":
         st.write(encounter_result)
         if st.button("Save to Cart"):
             st.session_state.cart.setdefault("Encounters", []).append(encounter_result)
+        if st.button("Create Quest from Encounter"):
+            st.session_state.cart.setdefault("Quests", []).append(encounter_result)
 
 elif page == "Dungeon Generator":
     st.header("🏰 Dungeon Generator")
