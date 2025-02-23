@@ -18,27 +18,20 @@ else:
     dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 CART_FILE = "/Apps/DnDManager/cart.json"
 
-dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-
-# Initialize session state for API key and cart if not set
-
+# Initialize session state
 if 'api_key' not in st.session_state:
     st.session_state.api_key = None
 if 'cart' not in st.session_state:
     st.session_state.cart = {}
 
-# Function to save cart to Dropbox
+# Function to save and load cart
+
 def save_cart():
     json_data = json.dumps(st.session_state.cart)
     dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
     st.success("Cart saved!")
 
-# Function to load cart from Dropbox
-
 def load_cart():
-    if not DROPBOX_ACCESS_TOKEN:
-        st.error("❌ Dropbox API Key is missing!")
-        return
     try:
         _, res = dbx.files_download(CART_FILE)
         st.session_state.cart = json.loads(res.content.decode("utf-8"))
@@ -47,19 +40,9 @@ def load_cart():
     except dropbox.exceptions.ApiError:
         st.warning("No saved cart found.")
 
-# Auto-load cart when the app starts
 if 'cart_loaded' not in st.session_state:
     load_cart()
     st.session_state.cart_loaded = True
-
-def load_cart():
-    try:
-        _, res = dbx.files_download(CART_FILE)
-        st.session_state.cart = json.loads(res.content.decode("utf-8"))
-    except dropbox.exceptions.AuthError:
-        st.error("❌ Dropbox authentication failed! Check your access token.")
-    except dropbox.exceptions.ApiError:
-        st.warning("No saved cart found.")
 
 # First Page: API Key Input
 if st.session_state.api_key is None or st.session_state.api_key == "":
@@ -71,13 +54,19 @@ if st.session_state.api_key is None or st.session_state.api_key == "":
         os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
         st.success("API Key Saved! Reloading...")
         st.rerun()
-        st.session_state.api_key = api_key_input
-        os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
-        st.success("API Key Saved! Reloading...")
-        st.rerun()
     st.stop()
 
-# UI Styling and Top Bar Navigation with Dropdown Categories
+# Top Dropdown Navigation Menu
+menu_options = {
+    "Characters & Shops": ["Create NPC", "Create Shop"],
+    "Story & Campaign Tools": ["Adapt Chapter to Campaign", "Campaign Assistant"],
+    "Encounters & Dungeons": ["Encounter Generator", "Dungeon Generator"],
+    "Quests & Worldbuilding": ["Quest Generator", "Worldbuilding Expansion"],
+    "Session Management": ["Session Work Tools"],
+    "Cart": ["View Cart"],
+    "Settings": ["API Key Input", "Theme Customization"]
+}
+
 st.markdown("""
     <style>
     .top-bar {
@@ -88,32 +77,13 @@ st.markdown("""
         align-items: center;
         color: white;
     }
-    .dropdown {
-        padding: 8px;
-        background-color: #3E3E3E;
-        border-radius: 5px;
-        color: white;
-        cursor: pointer;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# Top Bar Navigation with Dropdown Categories
+selected_category = st.selectbox("📂 Select Category", list(menu_options.keys()))
+selected_tool = st.selectbox("🛠 Select Tool", menu_options[selected_category])
 
-
-# Dictionary for Category-Based Page Routing
-categories = {
-    "npc": ["🧙 Create NPC", "🏪 Create Shop"],
-    "story": ["📖 Adapt Chapter to Campaign", "🧠 Campaign Assistant (AI-Powered Q&A)"],
-    "encounters": ["🐉 Encounter Generator", "🏰 Dungeon Generator"],
-    "quests": ["📜 Quest Generator", "🌍 Worldbuilding Expansion & Auto-Filled Lore"],
-    "session": ["📝 Session Work Tools"],
-    "cart": ["🛒 View Cart"],
-    "settings": ["🔑 API Key Input", "🎨 Theme Customization"]
-}
-
-# Page Routing Based on Selected Tool
-page = selected_category = st.sidebar.selectbox("📂 Select Category", list(categories.keys()))
+# Page Routing
 if page == "🧙 Create NPC":
     st.header("🧑‍🎤 NPC Generator")
     npc_input = st.text_area("Describe your NPC (optional)")
@@ -203,3 +173,6 @@ if page == "🛒 View Cart":
                         st.success("NPC Generated from Shop Details!")
     if st.button("Save Cart"):
         save_cart()
+
+st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
+
