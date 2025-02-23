@@ -186,7 +186,7 @@ if page == "🛒 View Cart":
         for idx, item in enumerate(st.session_state.cart[selected_category]):
             with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
                 st.markdown(item)
-                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}"):
+                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{page}"):
                     if selected_category == "shop":
                         st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
                         st.success("NPC Generated from Shop Details!")
