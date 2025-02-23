@@ -22,29 +22,17 @@ if 'api_key' not in st.session_state:
 if 'cart' not in st.session_state:
     st.session_state.cart = {}
 
-# Popup for API Key Input
-if st.session_state.api_key is None:
-    st.markdown("""
-        <style>
-        .popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #2E2E2E;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    st.markdown("<div class='popup'><h3>🔑 Enter Your OpenAI API Key</h3></div>", unsafe_allow_html=True)
-    api_key_input = st.text_input("Enter OpenAI API Key", type="password")
+# First Page: API Key Input
+if st.session_state.api_key is None or st.session_state.api_key == "":
+    st.title("🔑 Enter Your OpenAI API Key")
+    st.write("Please enter your OpenAI API Key to proceed.")
+    api_key_input = st.text_input("API Key", type="password")
     if st.button("Save API Key"):
         st.session_state.api_key = api_key_input
         st.success("API Key Saved!")
+        st.success("API Key Saved! Reloading...")
         st.experimental_rerun()
+    st.stop()
 
 # UI Styling and Top Bar Navigation with Dropdown Categories
 st.markdown("""
