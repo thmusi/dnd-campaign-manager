@@ -22,6 +22,22 @@ if 'api_key' not in st.session_state:
 if 'cart' not in st.session_state:
     st.session_state.cart = {}
 
+# Function to save cart to Dropbox
+def save_cart():
+    json_data = json.dumps(st.session_state.cart)
+    dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
+    st.success("Cart saved!")
+
+# Function to load cart from Dropbox
+def load_cart():
+    try:
+        _, res = dbx.files_download(CART_FILE)
+        st.session_state.cart = json.loads(res.content.decode("utf-8"))
+    except dropbox.exceptions.AuthError:
+        st.error("❌ Dropbox authentication failed! Check your access token.")
+    except dropbox.exceptions.ApiError:
+        st.warning("No saved cart found.")
+
 # First Page: API Key Input
 if st.session_state.api_key is None or st.session_state.api_key == "":
     st.title("🔑 Enter Your OpenAI API Key")
