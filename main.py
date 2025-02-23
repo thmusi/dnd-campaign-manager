@@ -149,8 +149,8 @@ with st.expander("🧠 Campaign AI Assistant"):
 
 elif selected_tool == "View Cart":
     st.header("🛒 Your Cart")
-    if st.button("Load Cart"):
-        load_cart()
+        if st.button("Load Cart"):
+            load_cart()
     categories = list(st.session_state.cart.keys())
     selected_category = st.selectbox("Choose a category", categories)
     if selected_category:
