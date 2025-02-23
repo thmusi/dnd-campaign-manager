@@ -193,4 +193,4 @@ if page == "🛒 View Cart":
     if st.button("Save Cart"):
         save_cart()
 
-st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart)
+st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
