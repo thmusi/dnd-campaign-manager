@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_extras.switch_page_button import switch_page
 import openai  # Ensure OpenAI API is properly integrated
 import os
 import json
@@ -25,6 +24,8 @@ if "api_key" not in st.session_state:
     st.session_state.api_key = None
 if "cart" not in st.session_state:
     st.session_state.cart = {}
+if "page" not in st.session_state:
+    st.session_state.page = "API Key"
 
 # Function to save and load cart
 def save_cart():
@@ -40,78 +41,65 @@ def load_cart():
     except Exception as e:
         st.warning("No saved cart found.")
 
-# Function to check API Key and proceed
-def check_api_key():
-    api_key = st.session_state.get("api_key", "")
-    if api_key:
-        switch_page("Main Menu")
-    else:
-        st.warning("Please enter a valid API Key to continue.")
+# Function to change pages
+def navigate_to(page_name):
+    st.session_state.page = page_name
 
-# 1st Page: API Key Input
-if "api_key" not in st.session_state:
+# Page Navigation Logic
+if st.session_state.page == "API Key":
     st.title("D&D AI Campaign Manager")
     st.text_input("Enter your OpenAI API Key:", type="password", key="api_key")
-    st.button("Submit", on_click=check_api_key)
-else:
-    # 2nd Page: Main Menu
+    if st.button("Submit"):
+        if st.session_state.api_key:
+            navigate_to("Main Menu")
+        else:
+            st.warning("Please enter a valid API Key to continue.")
+
+elif st.session_state.page == "Main Menu":
     st.title("Main Menu")
     st.sidebar.title("Navigation")
     
     # Main navigation buttons
     if st.button("🧙 Create NPC"):
-        st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
-        if st.button("Generate NPC"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
-                st.session_state.generated_npc = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_npc" in st.session_state:
-            st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
-    
+        navigate_to("Create NPC")
     if st.button("🏪 Create Shop"):
-        st.session_state.shop_input = st.text_area("Describe the shop or leave blank for AI generation:")
-        if st.button("Generate Shop"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_shop(st.session_state.shop_input, st.session_state.api_key)
-                st.session_state.generated_shop = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_shop" in st.session_state:
-            st.text_area("Generated Shop:", value=st.session_state.generated_shop, height=200)
-    
+        navigate_to("Create Shop")
     if st.button("📍 Create Location"):
-        st.session_state.location_input = st.text_area("Describe the location or leave blank for AI generation:")
-        if st.button("Generate Location"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_location(st.session_state.location_input, st.session_state.api_key)
-                st.session_state.generated_location = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_location" in st.session_state:
-            st.text_area("Generated Location:", value=st.session_state.generated_location, height=200)
-    
+        navigate_to("Create Location")
     if st.button("📖 Adapt Chapter to Campaign"):
-        switch_page("Adapt Chapter")
+        navigate_to("Adapt Chapter")
     if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
-        switch_page("Campaign Assistant")
+        navigate_to("Campaign Assistant")
     if st.button("⚔️ Encounter Generator"):
-        switch_page("Encounter Generator")
+        navigate_to("Encounter Generator")
     if st.button("🏰 Dungeon Generator"):
-        switch_page("Dungeon Generator")
+        navigate_to("Dungeon Generator")
     if st.button("📜 Quest Generator"):
-        switch_page("Quest Generator")
+        navigate_to("Quest Generator")
     if st.button("🌍 Worldbuilding Expansion & Auto-Filled Lore"):
-        switch_page("Worldbuilding")
+        navigate_to("Worldbuilding")
     if st.button("🗒 Session Management"):
-        switch_page("Session Management")
+        navigate_to("Session Management")
     
     # Cart actions
     if st.sidebar.button("Save Cart"):
         save_cart()
     if st.sidebar.button("Load Cart"):
         load_cart()
+
+elif st.session_state.page == "Create NPC":
+    st.title("🧙 Create NPC")
+    st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
+    if st.button("Generate NPC"):
+        if "api_key" in st.session_state and st.session_state.api_key:
+            response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
+            st.session_state.generated_npc = response
+        else:
+            st.warning("Please enter a valid API Key to generate content.")
+    if "generated_npc" in st.session_state:
+        st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
+    if st.button("Back to Menu"):
+        navigate_to("Main Menu")
 
 # Keep styling similar to landing.css using Streamlit's built-in styles
 st.markdown(
