@@ -47,6 +47,17 @@ def navigate_to(page_name):
 
 # Sidebar Navigation (visible on all pages except API Key and Landing Page)
 def render_sidebar():
+    if st.session_state.page not in ["API Key"]:
+        with st.sidebar:
+            st.title("Navigation")
+            if st.button("🏠 Home"):
+                navigate_to("Main Menu")
+            if st.button("🛒 Cart"):
+                navigate_to("Cart")
+            st.markdown("---")
+
+# Sidebar Navigation (visible on all pages except API Key and Landing Page)
+def render_sidebar():
     if st.session_state.page not in ["API Key", "Main Menu"]:
         with st.sidebar:
             st.title("Navigation")
@@ -88,38 +99,12 @@ else:
     
     # Main navigation buttons
     if st.button("🧙 Create NPC"):
-        st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
-        if st.button("Generate NPC"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
-                st.session_state.generated_npc = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_npc" in st.session_state:
-            st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
-    
+        switch_page("Generate NPC")
     if st.button("🏪 Create Shop"):
-        st.session_state.shop_input = st.text_area("Describe the shop or leave blank for AI generation:")
-        if st.button("Generate Shop"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_shop(st.session_state.shop_input, st.session_state.api_key)
-                st.session_state.generated_shop = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_shop" in st.session_state:
-            st.text_area("Generated Shop:", value=st.session_state.generated_shop, height=200)
-    
+        switch_page("Generate Shop")
     if st.button("📍 Create Location"):
-        st.session_state.location_input = st.text_area("Describe the location or leave blank for AI generation:")
+        switch_page("Generate Location")
         if st.button("Generate Location"):
-            if "api_key" in st.session_state and st.session_state.api_key:
-                response = generate_location(st.session_state.location_input, st.session_state.api_key)
-                st.session_state.generated_location = response
-            else:
-                st.warning("Please enter a valid API Key to generate content.")
-        if "generated_location" in st.session_state:
-            st.text_area("Generated Location:", value=st.session_state.generated_location, height=200)
-    
     if st.button("📖 Adapt Chapter to Campaign"):
         switch_page("Adapt Chapter")
     if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
@@ -134,6 +119,7 @@ else:
         switch_page("Worldbuilding")
     if st.button("🗒 Session Management"):
         switch_page("Session Management")
+
 
 # Keep styling similar to landing.css using Streamlit's built-in styles
 st.markdown(
