@@ -89,7 +89,7 @@ if st.session_state.page == "API Key":
 elif st.session_state.page == "Landing Page":
     st.title("D&D AI Campaign Manager - Landing Page")
     # Keep original landing page layout and menu
- if st.button("🧙 Create NPC"):
+     if st.button("🧙 Create NPC"):
         st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
         if st.button("Generate NPC"):
             if "api_key" in st.session_state and st.session_state.api_key:
