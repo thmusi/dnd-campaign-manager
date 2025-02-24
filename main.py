@@ -1,13 +1,15 @@
 import streamlit as st
-import openai
+from streamlit_extras.switch_page_button import switch_page
+import openai  # Ensure OpenAI API is properly integrated
+import os
 import json
 import dropbox
-import os
 from dropbox.files import WriteMode
 from dotenv import load_dotenv
-from ai import generate_npc, generate_shop, generate_location, modify_campaign_chapter
+
+# Import AI and Obsidian functionalities
+from ai import generate_npc, generate_shop, generate_location, modify_campaign_chapter, ai_search_campaign_notes
 from obsidian import test_dropbox_upload, write_note, list_campaign_files, fetch_note_content
-from ai import ai_search_campaign_notes
 
 # Load environment variables
 load_dotenv()
@@ -19,13 +21,12 @@ else:
 CART_FILE = "/Apps/DnDManager/cart.json"
 
 # Initialize session state
-if 'api_key' not in st.session_state:
+if "api_key" not in st.session_state:
     st.session_state.api_key = None
-if 'cart' not in st.session_state:
+if "cart" not in st.session_state:
     st.session_state.cart = {}
 
 # Function to save and load cart
-
 def save_cart():
     json_data = json.dumps(st.session_state.cart)
     dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
@@ -34,151 +35,94 @@ def save_cart():
 def load_cart():
     try:
         _, res = dbx.files_download(CART_FILE)
-        st.session_state.cart = json.loads(res.content.decode("utf-8"))
-    except dropbox.exceptions.AuthError:
-        st.error("❌ Dropbox authentication failed! Check your access token.")
-    except dropbox.exceptions.ApiError:
+        st.session_state.cart = json.loads(res.content)
+        st.success("Cart loaded!")
+    except Exception as e:
         st.warning("No saved cart found.")
 
-if 'cart_loaded' not in st.session_state:
-    load_cart()
-    st.session_state.cart_loaded = True
+# Function to check API Key and proceed
+def check_api_key():
+    api_key = st.session_state.get("api_key", "")
+    if api_key:
+        switch_page("Main Menu")
+    else:
+        st.warning("Please enter a valid API Key to continue.")
 
-# First Page: API Key Input
-if st.session_state.api_key is None or st.session_state.api_key == "":
-    st.title("🔑 Enter Your OpenAI API Key")
-    st.write("Please enter your OpenAI API Key to proceed.")
-    api_key_input = st.text_input("API Key", type="password")
-    if st.button("Save API Key"):
-        st.session_state.api_key = api_key_input
-        os.environ["DROPBOX_ACCESS_TOKEN"] = api_key_input  # Persist API key
-        st.success("API Key Saved! Reloading...")
-        st.rerun()
-    st.stop()
-
-# Top Dropdown Navigation Menu
-menu_options = {
-    "Characters & Shops": ["Create NPC", "Create Shop"],
-    "Story & Campaign Tools": ["Adapt Chapter to Campaign", "Campaign Assistant"],
-    "Encounters & Dungeons": ["Encounter Generator", "Dungeon Generator"],
-    "Quests & Worldbuilding": ["Quest Generator", "Worldbuilding Expansion"],
-    "Session Management": ["Session Work Tools"],
-    "Cart": ["View Cart"],
-    "Settings": ["API Key Input", "Theme Customization"]
-}
-
-
-selected_tool = st.sidebar.radio("🛠 Select Page", [
-    "Create NPC", "Create Shop", "Adapt Chapter to Campaign", "Campaign Assistant",
-    "Encounter Generator", "Dungeon Generator", "Quest Generator", "Worldbuilding Expansion",
-    "Session Work Tools", "View Cart", "API Key Input", "Theme Customization"
-])
-
-
-# Page Routing
-if selected_tool == "Create NPC":
-    st.header("🧑‍🎤 NPC Generator")
-    npc_input = st.text_area("Describe your NPC (optional)")
-    if st.button("Generate NPC"):
-        npc_result = generate_npc(st.session_state.api_key, npc_input)
-        st.write(npc_result)
-        if st.button("Save to Cart"):
-            st.session_state.cart.setdefault("NPCs", []).append(npc_result)
-        if st.button("Send to Quest Generator"):
-            st.session_state.cart.setdefault("Quests", []).append(npc_result)
-
-elif selected_tool == "Create Shop":
-    st.header("🏪 Shop Generator")
-    shop_type = st.selectbox("Select Shop Type", ["General Store", "Blacksmith", "Magic Shop", "Tavern"])
-    shop_input = st.text_area("Describe your shop (optional)")
-    if st.button("Generate Shop"):
-        shop_result = generate_shop(st.session_state.api_key, shop_type, shop_input)
-        st.write(shop_result)
-        if st.button("Save to Cart"):
-            st.session_state.cart.setdefault("Shops", []).append(shop_result)
-        if st.button("Generate NPC from Shop Owner"):
-            st.session_state.cart.setdefault("NPCs", []).append(shop_result)
-
-# Additional functionality for other tools follows the same pattern...
-elif selected_tool == "Quest Generator":
-    st.header("📜 Quest Generator")
-    quest_prompt = st.text_area("Describe your quest")
-    if st.button("Generate Quest"):
-        quest_result = "(AI Quest Result Here)"  # Placeholder for AI quest generation function
-        st.write(quest_result)
-        if st.button("Save to Cart"):
-            st.session_state.cart.setdefault("Quests", []).append(quest_result)
-
-elif selected_tool == "Encounter Generator":
-    st.header("⚔️ Encounter Generator")
-    encounter_input = st.text_area("Describe your encounter (optional)")
-    if st.button("Generate Encounter"):
-        encounter_result = "(AI-generated encounter content here)"
-        st.write(encounter_result)
-        if st.button("Save to Cart"):
-            st.session_state.cart.setdefault("Encounters", []).append(encounter_result)
-        if st.button("Create Quest from Encounter"):
-            st.session_state.cart.setdefault("Quests", []).append(encounter_result)
-
-elif selected_tool == "Dungeon Generator":
-    st.header("🏰 Dungeon Generator")
-    dungeon_input = st.text_area("Describe your dungeon (optional)")
-    if st.button("Generate Dungeon"):
-        dungeon_result = "(AI-generated dungeon content here)"
-        st.write(dungeon_result)
-        if st.button("Save to Cart"):
-            st.session_state.cart.setdefault("Dungeons", []).append(dungeon_result)
-
-elif selected_tool == "Worldbuilding Expansion":
-    st.header("🌍 Worldbuilding Expansion")
-    st.write("Generate factions, cultures, and auto-filled lore.")
-
-elif selected_tool == "Session Work Tools":
-    st.header("📝 Session Work Tools")
-    st.write("Assist with session logs, summaries, and planning.")
-
-elif selected_tool == "API Key Input" or selected_tool == "Theme Customization":
-    st.header("⚙️ Settings")
-
-# Collapsible AI Assistant Panel
-with st.expander("🧠 Campaign AI Assistant"):
-    assistant_query = st.text_input("Ask the AI about your campaign")
-    if assistant_query:
-        ai_response = "(AI Response Here)"  # Placeholder for AI function
-        st.write(ai_response)
-
-elif selected_tool == "View Cart":
-    st.header("🛒 Your Cart")
-    if st.button("Load Cart"):
-        load_cart()
-    categories = list(st.session_state.cart.keys())
-    selected_category = st.selectbox("Choose a category", categories)
-    if selected_category:
-        for idx, item in enumerate(st.session_state.cart[selected_category]):
-            with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
-                st.markdown(item)
-                if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{selected_tool}"):
-                    if selected_category == "shop":
-                        st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
-                        st.success("NPC Generated from Shop Details!")
-    if st.button("Save Cart"):
+# 1st Page: API Key Input
+if "api_key" not in st.session_state:
+    st.title("D&D AI Campaign Manager")
+    st.text_input("Enter your OpenAI API Key:", type="password", key="api_key")
+    st.button("Submit", on_click=check_api_key)
+else:
+    # 2nd Page: Main Menu
+    st.title("Main Menu")
+    st.sidebar.title("Navigation")
+    
+    # Main navigation buttons
+    if st.button("🧙 Create NPC"):
+        st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
+        if st.button("Generate NPC"):
+            if "api_key" in st.session_state and st.session_state.api_key:
+                response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
+                st.session_state.generated_npc = response
+            else:
+                st.warning("Please enter a valid API Key to generate content.")
+        if "generated_npc" in st.session_state:
+            st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
+    
+    if st.button("🏪 Create Shop"):
+        st.session_state.shop_input = st.text_area("Describe the shop or leave blank for AI generation:")
+        if st.button("Generate Shop"):
+            if "api_key" in st.session_state and st.session_state.api_key:
+                response = generate_shop(st.session_state.shop_input, st.session_state.api_key)
+                st.session_state.generated_shop = response
+            else:
+                st.warning("Please enter a valid API Key to generate content.")
+        if "generated_shop" in st.session_state:
+            st.text_area("Generated Shop:", value=st.session_state.generated_shop, height=200)
+    
+    if st.button("📍 Create Location"):
+        st.session_state.location_input = st.text_area("Describe the location or leave blank for AI generation:")
+        if st.button("Generate Location"):
+            if "api_key" in st.session_state and st.session_state.api_key:
+                response = generate_location(st.session_state.location_input, st.session_state.api_key)
+                st.session_state.generated_location = response
+            else:
+                st.warning("Please enter a valid API Key to generate content.")
+        if "generated_location" in st.session_state:
+            st.text_area("Generated Location:", value=st.session_state.generated_location, height=200)
+    
+    if st.button("📖 Adapt Chapter to Campaign"):
+        switch_page("Adapt Chapter")
+    if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
+        switch_page("Campaign Assistant")
+    if st.button("⚔️ Encounter Generator"):
+        switch_page("Encounter Generator")
+    if st.button("🏰 Dungeon Generator"):
+        switch_page("Dungeon Generator")
+    if st.button("📜 Quest Generator"):
+        switch_page("Quest Generator")
+    if st.button("🌍 Worldbuilding Expansion & Auto-Filled Lore"):
+        switch_page("Worldbuilding")
+    if st.button("🗒 Session Management"):
+        switch_page("Session Management")
+    
+    # Cart actions
+    if st.sidebar.button("Save Cart"):
         save_cart()
-    st.header("🛒 Your Cart")
-if st.button("Load Cart"):
-    load_cart()
-categories = list(st.session_state.cart.keys())
-selected_category = st.selectbox("Choose a category", categories)
-if selected_category:
-    for idx, item in enumerate(st.session_state.cart[selected_category]):
-        with st.expander(f"📝 {selected_category.capitalize()} {idx+1}"):
-            st.markdown(item)
-            if st.button(f"Generate Related Content from {selected_category.capitalize()} {idx+1}", key=f"generate_{selected_category}_{idx}_{selected_tool}"):
-                if selected_category == "shop":
-                    st.session_state.generated_content = generate_npc(st.session_state.api_key, item)
-                    st.success("NPC Generated from Shop Details!")
-if st.button("Save Cart"):
-    save_cart()
+    if st.sidebar.button("Load Cart"):
+        load_cart()
 
-st.sidebar.button("💾 Save Cart to Dropbox", on_click=save_cart, key="save_cart_button")
-
-
+# Keep styling similar to landing.css using Streamlit's built-in styles
+st.markdown(
+    """
+    <style>
+    .stButton>button {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
