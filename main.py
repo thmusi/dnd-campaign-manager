@@ -47,33 +47,34 @@ def navigate_to(page_name):
 
 # Sidebar Navigation (visible on all pages except API Key and Landing Page)
 def render_sidebar():
-    with st.sidebar:
-        st.title("Navigation")
-        if st.button("🏠 Home"):
-            navigate_to("Main Menu")
-        if st.button("🛒 Cart"):
-            navigate_to("Cart")
-        st.markdown("---")
-        if st.button("🧙 Create NPC"):
-            navigate_to("Create NPC")
-        if st.button("🏪 Create Shop"):
-            navigate_to("Create Shop")
-        if st.button("📍 Create Location"):
-            navigate_to("Create Location")
-        if st.button("📖 Adapt Chapter to Campaign"):
-            navigate_to("Adapt Chapter")
-        if st.button("🧠 Campaign Assistant"):
-            navigate_to("Campaign Assistant")
-        if st.button("⚔️ Encounter Generator"):
-            navigate_to("Encounter Generator")
-        if st.button("🏰 Dungeon Generator"):
-            navigate_to("Dungeon Generator")
-        if st.button("📜 Quest Generator"):
-            navigate_to("Quest Generator")
-        if st.button("🌍 Worldbuilding"):
-            navigate_to("Worldbuilding")
-        if st.button("🗒 Session Management"):
-            navigate_to("Session Management")
+    if st.session_state.page not in ["API Key", "Landing Page"]:
+        with st.sidebar:
+            st.title("Navigation")
+            if st.button("🏠 Home"):
+                navigate_to("Main Menu")
+            if st.button("🛒 Cart"):
+                navigate_to("Cart")
+            st.markdown("---")
+            if st.button("🧙 Create NPC"):
+                navigate_to("Create NPC")
+            if st.button("🏪 Create Shop"):
+                navigate_to("Create Shop")
+            if st.button("📍 Create Location"):
+                navigate_to("Create Location")
+            if st.button("📖 Adapt Chapter to Campaign"):
+                navigate_to("Adapt Chapter")
+            if st.button("🧠 Campaign Assistant"):
+                navigate_to("Campaign Assistant")
+            if st.button("⚔️ Encounter Generator"):
+                navigate_to("Encounter Generator")
+            if st.button("🏰 Dungeon Generator"):
+                navigate_to("Dungeon Generator")
+            if st.button("📜 Quest Generator"):
+                navigate_to("Quest Generator")
+            if st.button("🌍 Worldbuilding"):
+                navigate_to("Worldbuilding")
+            if st.button("🗒 Session Management"):
+                navigate_to("Session Management")
 
 # Page Navigation Logic
 if st.session_state.page == "API Key":
@@ -85,8 +86,12 @@ if st.session_state.page == "API Key":
         else:
             st.warning("Please enter a valid API Key to continue.")
 
+elif st.session_state.page == "Landing Page":
+    st.title("D&D AI Campaign Manager - Landing Page")
+    # Keep original landing page layout and menu
+
 else:
-    render_sidebar()  # Sidebar visible on all pages except API Key
+    render_sidebar()  # Sidebar visible on all pages except API Key and Landing Page
     if st.session_state.page == "Main Menu":
         st.title("Main Menu")
     elif st.session_state.page == "Create NPC":
