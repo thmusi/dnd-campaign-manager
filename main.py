@@ -47,7 +47,7 @@ def navigate_to(page_name):
 
 # Sidebar Navigation (visible on all pages except API Key and Landing Page)
 def render_sidebar():
-    if st.session_state.page not in ["API Key", "Landing Page"]:
+    if st.session_state.page not in ["API Key", "Main Menu"]:
         with st.sidebar:
             st.title("Navigation")
             if st.button("🏠 Home"):
@@ -86,7 +86,7 @@ if st.session_state.page == "API Key":
         else:
             st.warning("Please enter a valid API Key to continue.")
 
-elif st.session_state.page == "Landing Page":
+elif st.session_state.page == "Main Menu":
     st.title("D&D AI Campaign Manager - Landing Page")
     # Keep original landing page layout and menu
 
