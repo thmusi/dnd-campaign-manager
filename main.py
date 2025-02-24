@@ -45,6 +45,36 @@ def load_cart():
 def navigate_to(page_name):
     st.session_state.page = page_name
 
+# Sidebar Navigation (visible on all pages except API Key and Landing Page)
+def render_sidebar():
+    with st.sidebar:
+        st.title("Navigation")
+        if st.button("🏠 Home"):
+            navigate_to("Main Menu")
+        if st.button("🛒 Cart"):
+            navigate_to("Cart")
+        st.markdown("---")
+        if st.button("🧙 Create NPC"):
+            navigate_to("Create NPC")
+        if st.button("🏪 Create Shop"):
+            navigate_to("Create Shop")
+        if st.button("📍 Create Location"):
+            navigate_to("Create Location")
+        if st.button("📖 Adapt Chapter to Campaign"):
+            navigate_to("Adapt Chapter")
+        if st.button("🧠 Campaign Assistant"):
+            navigate_to("Campaign Assistant")
+        if st.button("⚔️ Encounter Generator"):
+            navigate_to("Encounter Generator")
+        if st.button("🏰 Dungeon Generator"):
+            navigate_to("Dungeon Generator")
+        if st.button("📜 Quest Generator"):
+            navigate_to("Quest Generator")
+        if st.button("🌍 Worldbuilding"):
+            navigate_to("Worldbuilding")
+        if st.button("🗒 Session Management"):
+            navigate_to("Session Management")
+
 # Page Navigation Logic
 if st.session_state.page == "API Key":
     st.title("D&D AI Campaign Manager")
@@ -55,51 +85,21 @@ if st.session_state.page == "API Key":
         else:
             st.warning("Please enter a valid API Key to continue.")
 
-elif st.session_state.page == "Main Menu":
-    st.title("Main Menu")
-    st.sidebar.title("Navigation")
-    
-    # Main navigation buttons
-    if st.button("🧙 Create NPC"):
-        navigate_to("Create NPC")
-    if st.button("🏪 Create Shop"):
-        navigate_to("Create Shop")
-    if st.button("📍 Create Location"):
-        navigate_to("Create Location")
-    if st.button("📖 Adapt Chapter to Campaign"):
-        navigate_to("Adapt Chapter")
-    if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
-        navigate_to("Campaign Assistant")
-    if st.button("⚔️ Encounter Generator"):
-        navigate_to("Encounter Generator")
-    if st.button("🏰 Dungeon Generator"):
-        navigate_to("Dungeon Generator")
-    if st.button("📜 Quest Generator"):
-        navigate_to("Quest Generator")
-    if st.button("🌍 Worldbuilding Expansion & Auto-Filled Lore"):
-        navigate_to("Worldbuilding")
-    if st.button("🗒 Session Management"):
-        navigate_to("Session Management")
-    
-    # Cart actions
-    if st.sidebar.button("Save Cart"):
-        save_cart()
-    if st.sidebar.button("Load Cart"):
-        load_cart()
-
-elif st.session_state.page == "Create NPC":
-    st.title("🧙 Create NPC")
-    st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
-    if st.button("Generate NPC"):
-        if "api_key" in st.session_state and st.session_state.api_key:
-            response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
-            st.session_state.generated_npc = response
-        else:
-            st.warning("Please enter a valid API Key to generate content.")
-    if "generated_npc" in st.session_state:
-        st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
-    if st.button("Back to Menu"):
-        navigate_to("Main Menu")
+else:
+    render_sidebar()  # Sidebar visible on all pages except API Key
+    if st.session_state.page == "Main Menu":
+        st.title("Main Menu")
+    elif st.session_state.page == "Create NPC":
+        st.title("🧙 Create NPC")
+        st.session_state.npc_input = st.text_area("Describe the NPC or leave blank for AI generation:")
+        if st.button("Generate NPC"):
+            if "api_key" in st.session_state and st.session_state.api_key:
+                response = generate_npc(st.session_state.npc_input, st.session_state.api_key)
+                st.session_state.generated_npc = response
+            else:
+                st.warning("Please enter a valid API Key to generate content.")
+        if "generated_npc" in st.session_state:
+            st.text_area("Generated NPC:", value=st.session_state.generated_npc, height=200)
 
 # Keep styling similar to landing.css using Streamlit's built-in styles
 st.markdown(
