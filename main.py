@@ -170,22 +170,23 @@ def main():
         st.title("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         if st.button("Generate NPC"):
-            npc = generate_npc(api_key, npc_prompt)
+            npc = generate_npc(st.session_state.api_key, npc_prompt)  # Fix: Use the correct variable
             st.session_state.generated_npc = npc  # Store generated NPC
             st.markdown("### 🛡️ PNJ Généré")
             st.markdown(npc)
 
-        if "generated_content" in st.session_state:
+        if "generated_npc" in st.session_state:  # Fix: Check for the correct key
             with st.expander("🛡️ View & Edit NPC"):
-                st.session_state.generated_content = st.text_area("Modify NPC", value=st.session_state.generated_content, height=250)
+                st.session_state.generated_npc = st.text_area("Modify NPC", value=st.session_state.generated_npc, height=250)
             if st.button("🛒 Add to Cart"):
-                st.session_state.cart["npc"].append(st.session_state.generated_content)
+                st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  # Fix: Ensure the list exists
+                st.session_state.cart["npc"].append(st.session_state.generated_npc)
                 save_cart()
                 st.success("Added to Cart!")
 
-    # Additional page rendering logic can be added here
-    elif st.session_stage.page == "Cart":
-        st.title ("🛒 Your Cart")
+    # Cart page rendering
+    elif st.session_state.page == "Cart":
+        st.title("🛒 Your Cart")
         categories = list(st.session_state.cart.keys())
         selected_category = st.selectbox("📂 Select Folder", categories)
         files = st.session_state.cart[selected_category]
@@ -193,7 +194,6 @@ def main():
         if selected_file:
             st.markdown("### 📖 Preview")
             st.markdown(selected_file)
-
 
 if __name__ == "__main__":
     main()
