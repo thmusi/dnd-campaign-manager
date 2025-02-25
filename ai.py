@@ -1,6 +1,25 @@
 import openai
 from obsidian import write_note  # Ensure this is present at the top
 from utils import summarize_text
+import streamlit as st
+
+@st.cache_data(ttl=1800)  # Cache summaries for 30 minutes
+def cached_summarize_text(text):
+    return summarize_text(text)
+
+def get_summarized_relevant_notes(query, vault_path):
+    notes = get_relevant_notes(query, vault_path)
+    summarized_notes = []
+    
+    for note in notes:
+        summary = cached_summarize_text(note["content"])  # Use cached version
+        summarized_notes.append({
+            "file_path": note["file_path"],
+            "summary": summary
+        })
+    
+    return summarized_notes
+
 
 def get_summarized_relevant_notes(query, vault_path):
     notes = get_relevant_notes(query, vault_path)
@@ -15,12 +34,6 @@ def get_summarized_relevant_notes(query, vault_path):
         })
     return summarized_notes
 
-@st.cache_data(ttl=300)  # Cache file list for 5 minutes
-def cached_list_campaign_files():
-    return list_campaign_files()
-
-# Use cached function
-files = cached_list_campaign_files()
 
 def ai_search_campaign_notes(query, campaign_notes):
     """Uses AI to process campaign notes and answer user queries."""
