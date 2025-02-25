@@ -73,23 +73,21 @@ def save_to_vault(content, filename="generated_content.md"):
     vault_path = "obsidian_vault"
     os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
     
-    # ✅ Extract only the first 50 characters of filename to prevent length issues
-    filename = filename[:50]
-    
+    # ✅ Ensure filename has a reasonable length limit (max 50 chars, excluding extension)
+    base_filename, ext = os.path.splitext(filename)
+    base_filename = base_filename[:50]  # Trim name to avoid system limit
+    filename = f"{base_filename}{ext or '.md'}"  # Ensure .md extension
+
     # ✅ Remove special characters and spaces from filename
     filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename)
-    
-    # ✅ Ensure filename has only one .md extension
-    if not filename.endswith(".md"):
-        filename += ".md"
 
     file_path = os.path.join(vault_path, filename)
 
-    # Save locally before upload
+    # ✅ Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    upload_file(file_path)  # Upload to Google Drive
+    upload_file(file_path)  # ✅ Upload to Google Drive
     st.success(f"✅ File saved successfully to Google Drive: {filename}")
 
 # Retained non-Dropbox functions from original obsidian.py
