@@ -6,7 +6,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
 import streamlit as st
 
-credentials_info = json.loads(st.secrets["google_drive"])
+credentials_info = dict(st.secrets["google_drive"])  # ✅ Convert to dictionary directly
 credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
 drive_service = build("drive", "v3", credentials=credentials)
