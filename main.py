@@ -259,21 +259,27 @@ def main():
                 st.success("Added to Cart!")
 
 
-### Chapter Adaptation
+    ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
         st.subheader("📖 Adapt Chapter to Campaign")
         st.write("Modify your campaign text dynamically.")
         col1, col2, col3 = st.columns(3)
+        
         with col1:
-             st.text_area("Original Chapter", height=500, width=300)
-             st.button("Load")
+            original_chapter = st.text_area("Original Chapter", height=500)
+            if st.button("Load"):
+                # Load functionality would go here
+                pass
+        
         with col2:
-            st.text_area("Edits Input", height=500, width=300)
-            st.button("What do you think ?")
+            edits_input = st.text_area("Edits Input", height=500)
+            if st.button("What do you think?"):
+                # Feedback functionality would go here
+                pass
+        
         with col3:
-            st.text_area("AI Output", height=500)
-            
-
+            ai_output = st.text_area("AI Output", height=500)
+    
 
     ### Campaign AI Asst.
     elif st.session_state.page == "Campaign Assistant":
