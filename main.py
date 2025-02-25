@@ -293,7 +293,8 @@ def main():
     elif st.session_state.page == "Encounter Generator":
         st.subheader("⚔️ Encounter Generator")
         st.write("Generate encounters based on party size and details.")
-        st.number_input("Party Size", min_value=1, step=1)
+        st.number_input("Party Size", min_value=1, step=1, max_value=20)
+        st.number_input("Party Level", min_value=1, step=1, max_value=20)
         st.text_input("Custom Encounter Prompt:")
         st.button("Generate Encounter")
 
