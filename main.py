@@ -47,6 +47,23 @@ def initialize_session_state():
 
 initialize_session_state()
 
+### Cached Data
+@st.cache_data(ttl=600)  # Cache results for 10 minutes
+def cached_generate_npc(npc_type):
+    return generate_npc(npc_type)
+
+@st.cache_data(ttl=600)  
+def cached_generate_shop():
+    return generate_shop()
+
+@st.cache_data(ttl=600)  
+def cached_generate_location():
+    return generate_location()
+
+@st.cache_data(ttl=600)  
+def cached_modify_campaign_chapter):
+    return modify_campaign_chapter()
+
 def save_cart():
     """Save the current cart to Dropbox."""
     try:
