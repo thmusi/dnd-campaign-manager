@@ -66,6 +66,24 @@ def download_file(file_id, output_path):
         file.write(request.execute())
     print(f"✅ File downloaded: {output_path}")
 
+def save_to_vault(content, filename="generated_content.md"):
+    """Saves the modified content to the user's Obsidian-Google Drive vault."""
+    vault_path = "obsidian_vault"
+    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
+    
+    # Ensure filename has only one .md extension
+    if not filename.endswith(".md"):
+        filename += ".md"
+    
+    file_path = os.path.join(vault_path, filename)
+
+    # Save locally before upload
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    upload_file(file_path)  # Upload to Google Drive
+    st.success(f"File saved successfully to Google Drive: {filename}")
+
 # Retained non-Dropbox functions from original obsidian.py
 # Additional Obsidian-related utilities and Markdown processing functions
 
