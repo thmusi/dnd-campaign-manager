@@ -83,7 +83,7 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
         st.markdown("---")
-        if st.session_state.page not in "Main Menu":
+        if st.session_state.page != "Main Menu":  # Fix: Use != instead of not in
             if st.button("🧙 Create NPC", key="generate_npc"):
                 navigate_to("Generate NPC")
             if st.button("🏪 Create Shop", key="generate_shop"):
@@ -91,7 +91,7 @@ def render_sidebar():
             if st.button("📍 Create Location", key="create_location"):
                 navigate_to("Create Location")
             if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
-                 navigate_to("Adapt Chapter")
+                navigate_to("Adapt Chapter")
             if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
                 navigate_to("Campaign Assistant")
             if st.button("⚔️ Encounter Generator", key="encounter_generator"):
@@ -188,12 +188,21 @@ def main():
     elif st.session_state.page == "Cart":
         st.title("🛒 Your Cart")
         categories = list(st.session_state.cart.keys())
-        selected_category = st.selectbox("📂 Select Folder", categories)
-        files = st.session_state.cart[selected_category]
-        selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-        if selected_file:
-            st.markdown("### 📖 Preview")
-            st.markdown(selected_file)
+        if categories:  # Fix: Ensure categories exist before selecting
+            selected_category = st.selectbox("📂 Select Folder", categories)
+            if selected_category in st.session_state.cart:  # Fix: Ensure selected category exists
+                files = st.session_state.cart[selected_category]
+                if files:  # Fix: Ensure files exist before selecting
+                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+                    if selected_file:
+                        st.markdown("### 📖 Preview")
+                        st.markdown(selected_file)
+                else:
+                    st.warning(f"No files found in {selected_category}.")
+            else:
+                st.warning("Selected category does not exist.")
+        else:
+            st.warning("Your cart is empty.")
 
 if __name__ == "__main__":
     main()
