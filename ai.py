@@ -15,6 +15,12 @@ def get_summarized_relevant_notes(query, vault_path):
         })
     return summarized_notes
 
+@st.cache_data(ttl=300)  # Cache file list for 5 minutes
+def cached_list_campaign_files():
+    return list_campaign_files()
+
+# Use cached function
+files = cached_list_campaign_files()
 
 def ai_search_campaign_notes(query, campaign_notes):
     """Uses AI to process campaign notes and answer user queries."""
