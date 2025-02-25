@@ -31,8 +31,8 @@ DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 if not DROPBOX_ACCESS_TOKEN:
     st.error("❌ Dropbox API Key is missing! Please check your environment variables.")
     st.stop()  # Stop execution if the API key is missing
-else:
-    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 CART_FILE = "/Apps/DnDManager/cart.json"
 
@@ -68,10 +68,9 @@ def load_cart():
 
 def save_to_vault(content, filename="generated_content.md"):
     """Saves the modified content to the user's Obsidian-Dropbox vault."""
-    dbx = dropbox.Dropbox("YOUR_DROPBOX_ACCESS_TOKEN")  # Replace with your Dropbox token
     vault_path = f"/Obsidian-Vault/{filename}"
     try:
-        dbx.files_upload(content.encode("utf-8"), vault_path, mode=dropbox.files.WriteMode("overwrite"))
+        dbx.files_upload(content.encode("utf-8"), vault_path, mode=WriteMode("overwrite"))
         st.success(f"File saved successfully to {vault_path}")
     except Exception as e:
         st.error(f"Error saving to vault: {e}")
@@ -93,7 +92,7 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
         st.markdown("---")
-        if st.session_state.page != "Main Menu":  # Fix: Use != instead of not in
+        if st.session_state.page != "Main Menu":  
             if st.button("🧙 Create NPC", key="generate_npc"):
                 navigate_to("Generate NPC")
             if st.button("🏪 Create Shop", key="generate_shop"):
@@ -180,13 +179,13 @@ def main():
         st.title("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         if st.button("Generate NPC"):
-            npc = generate_npc(st.session_state.api_key, npc_prompt)  # Fix: Use the correct variable
-            st.session_state.generated_npc = npc  # Store generated NPC
-            st.text_area("Generated NPC:", npc, height=250)  # Fix: Correct variable name
+            npc = generate_npc(st.session_state.api_key, npc_prompt)  
+            st.session_state.generated_npc = npc  
+            st.text_area("Generated NPC:", npc, height=250)  
 
-        if "generated_npc" in st.session_state:  # Fix: Check for the correct key
+        if "generated_npc" in st.session_state:
             if st.button("🛒 Add to Cart"):
-                st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  # Fix: Ensure the list exists
+                st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  
                 st.session_state.cart["npc"].append(st.session_state.generated_npc)
                 save_cart()
                 st.success("Added to Cart!")
@@ -227,13 +226,13 @@ def main():
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
         if st.button("Generate Location"):
-            location = generate_location(st.session_state.api_key, location_prompt)  # Fix: Use the correct variable
-            st.session_state.generated_location = location  # Store generated location
+            location = generate_location(st.session_state.api_key, location_prompt)  
+            st.session_state.generated_location = location  
             st.text_area("Generated Location:", location, height=250)
 
         if "generated_location" in st.session_state:
             if st.button("🛒 Add to Cart"):
-                st.session_state.cart["location"] = st.session_state.cart.get("location", [])  # Fix: Ensure the list exists
+                st.session_state.cart["location"] = st.session_state.cart.get("location", [])  
                 st.session_state.cart["location"].append(st.session_state.generated_location)
                 save_cart()
                 st.success("Added to Cart!")
@@ -248,14 +247,14 @@ def main():
         ])
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
         if st.button("Generate Shop"):
-            shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  # Fix: Use the correct variable
-            st.session_state.generated_shop = shop  # Store generated shop
+            shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  
+            st.session_state.generated_shop = shop  
             st.text_area(f"Generated {shop_type}:", shop, height=250)
 
-        if "generated_shop" in st.session_state:  # Fix: Correct indentation
+        if "generated_shop" in st.session_state:
             if st.button("🛒 Add to Cart"):
-                st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  # Fix: Ensure the list exists
-                st.session_state.cart["shop"].append(st.session_state.generated_shop)  # Fix: Use the correct variable
+                st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  
+                st.session_state.cart["shop"].append(st.session_state.generated_shop)  
                 save_cart()
                 st.success("Added to Cart!")
 
