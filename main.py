@@ -92,9 +92,8 @@ def save_cart():
         st.error(f"Failed to save cart: {e}")
         logging.error(f"Error saving cart: {e}")
 
-
 def load_cart():
-    """Load the cart from Google Drive."""
+    """Load the cart from Google Drive with file validation and retry mechanism for SSL errors."""
     try:
         file_id = None
         files = list_drive_files()
@@ -109,14 +108,38 @@ def load_cart():
             st.warning("No saved cart found in Google Drive.")
             return
 
-        # Download and read the file
-        download_file(file_id, "cart.json")
+        # Retry download if SSL error occurs
+        attempts = 3
+        for attempt in range(attempts):
+            try:
+                download_file(file_id, "cart.json")
+                break  # If successful, exit loop
+            except ssl.SSLError:
+                st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
+                time.sleep(2)  # Wait before retrying
+        else:
+            st.error("Failed to download cart.json after multiple attempts.")
+            return
+
+        # ✅ Ensure the file exists and is not empty
+        if not os.path.exists("cart.json"):
+            st.error("Downloaded cart.json is missing.")
+            return
+
+        if os.stat("cart.json").st_size == 0:
+            st.error("Downloaded cart.json is empty. Try saving the cart again.")
+            return
+
+        # Read the file safely
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
 
         st.success("Cart loaded from Google Drive!")
+
     except json.JSONDecodeError:
         st.error("Failed to decode cart data. Please check the file format.")
+    except ssl.SSLError as e:
+        st.error(f"SSL error: {e}")
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
