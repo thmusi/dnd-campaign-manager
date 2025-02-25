@@ -307,7 +307,11 @@ def main():
                         # Send to Vault
                         if st.button("Send to Vault"):
                             if edited_content.strip():
-                                save_to_vault(edited_content, filename=f"{selected_category}_{selected_file}.md")
+                                # ✅ Trim filename to avoid excessively long names
+                                base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
+                                safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+                                save_to_vault(edited_content, filename=safe_filename)
+
                             else:
                                 st.warning("Content is empty! Please modify before sending to vault.")
                 else:
