@@ -76,47 +76,62 @@ def cached_list_campaign_files():
 campaign_files = cached_list_campaign_files()
 
 def save_cart():
-    """Save the current cart to Dropbox."""
+    """Save the current cart to Google Drive."""
     try:
         json_data = json.dumps(st.session_state.cart)
-        # Check if the file already exists
-        try:
-            _, res = dbx.files_download(CART_FILE)
-            existing_data = res.content.decode()
-            if existing_data == json_data:
-                st.info("Cart is already up to date.")
-                return
-        except dropbox.exceptions.HttpError:
-            pass  # File doesn't exist, proceed to upload
+        file_path = "cart.json"
 
-        dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
-        st.success("Cart saved!")
-        logging.info("Cart saved successfully.")
+        # Save locally before upload
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(json_data)
+
+        upload_file(file_path)  # Upload to Google Drive
+        st.success("Cart saved to Google Drive!")
+        logging.info("Cart saved successfully to Google Drive.")
     except Exception as e:
         st.error(f"Failed to save cart: {e}")
         logging.error(f"Error saving cart: {e}")
 
+
 def load_cart():
-    """Load the cart from Dropbox."""
+    """Load the cart from Google Drive."""
     try:
-        _, res = dbx.files_download(CART_FILE)
-        st.session_state.cart = json.loads(res.content)
-        st.success("Cart loaded!")
-    except dropbox.exceptions.HttpError as e:
-        st.warning("No saved cart found. Error: " + str(e))
+        file_id = None
+        files = list_drive_files()
+
+        # Find the cart.json file in Google Drive
+        for file in files:
+            if file["name"] == "cart.json":
+                file_id = file["id"]
+                break
+
+        if not file_id:
+            st.warning("No saved cart found in Google Drive.")
+            return
+
+        # Download and read the file
+        download_file(file_id, "cart.json")
+        with open("cart.json", "r", encoding="utf-8") as f:
+            st.session_state.cart = json.load(f)
+
+        st.success("Cart loaded from Google Drive!")
     except json.JSONDecodeError:
         st.error("Failed to decode cart data. Please check the file format.")
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
+
 def save_to_vault(content, filename="generated_content.md"):
-    """Saves the modified content to the user's Obsidian-Dropbox vault."""
-    vault_path = f"/Obsidian-Vault/{filename}"
-    try:
-        dbx.files_upload(content.encode("utf-8"), vault_path, mode=WriteMode("overwrite"))
-        st.success(f"File saved successfully to {vault_path}")
-    except Exception as e:
-        st.error(f"Error saving to vault: {e}")
+    """Saves the modified content to the user's Obsidian-Google Drive vault."""
+    file_path = os.path.join("obsidian_vault", filename)
+
+    # Save locally before upload
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    upload_file(file_path)  # Upload to Google Drive
+    st.success(f"File saved successfully to Google Drive: {filename}")
+
 
 def navigate_to(page_name):
     """Change the current page in the session state."""
