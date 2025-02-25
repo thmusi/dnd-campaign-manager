@@ -83,9 +83,8 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
         st.markdown("---")
-        
         if st.session_state.page not in "Main Menu":
-            if st.button("🛒 Cart", key="cart_sidebar"):
+            if st.button("🛒 Cart", key="cart_sidebar_menu"):
                 navigate_to("Cart")
                 st.markdown("---")
             if st.button("🧙 Create NPC", key="generate_npc"):
