@@ -190,7 +190,7 @@ def main():
                 st.success("Added to Cart!")
 
     # Additional page rendering logic can be added here
-    elif st.session_stage.page == "Cart"
+    elif st.session_stage.page == "Cart":
         st.title ("🛒 Your Cart")
         categories = list(st.session_state.cart.keys())
         selected_category = st.selectbox("📂 Select Folder", categories)
