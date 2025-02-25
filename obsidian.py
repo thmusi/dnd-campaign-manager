@@ -5,6 +5,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
 import streamlit as st
+import re
+
 
 credentials_info = dict(st.secrets["google_drive"])  # ✅ Convert to dictionary directly
 credentials = service_account.Credentials.from_service_account_info(credentials_info)
@@ -67,24 +69,28 @@ def download_file(file_id, output_path):
     print(f"✅ File downloaded: {output_path}")
 
 def save_to_vault(content, filename="generated_content.md"):
-    """Saves the modified content to the user's Obsidian-Google Drive vault when manually triggered."""
+    """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
     vault_path = "obsidian_vault"
+    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
     
-    # ✅ Ensure the directory exists before saving
-    os.makedirs(vault_path, exist_ok=True)
-
-    # ✅ Ensure filename only has one .md extension
+    # ✅ Extract only the first 50 characters of filename to prevent length issues
+    filename = filename[:50]
+    
+    # ✅ Remove special characters and spaces from filename
+    filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename)
+    
+    # ✅ Ensure filename has only one .md extension
     if not filename.endswith(".md"):
         filename += ".md"
-    
+
     file_path = os.path.join(vault_path, filename)
 
-    # ✅ Save locally before upload
+    # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    upload_file(file_path)  # ✅ Upload to Google Drive only when manually triggered
-    st.success(f"✅ File saved manually to Google Drive: {filename}")
+    upload_file(file_path)  # Upload to Google Drive
+    st.success(f"✅ File saved successfully to Google Drive: {filename}")
 
 # Retained non-Dropbox functions from original obsidian.py
 # Additional Obsidian-related utilities and Markdown processing functions
