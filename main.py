@@ -36,18 +36,31 @@ dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 CART_FILE = "/Apps/DnDManager/cart.json"
 
-# Initialize session state
-if "api_key" not in st.session_state:
-    st.session_state.api_key = None
-if "cart" not in st.session_state:
-    st.session_state.cart = {}
-if "page" not in st.session_state:
-    st.session_state.page = "API Key"
+def initialize_session_state():
+    """Initialize session state variables."""
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = None
+    if "cart" not in st.session_state:
+        st.session_state.cart = {}
+    if "page" not in st.session_state:
+        st.session_state.page = "API Key"
+
+initialize_session_state()
 
 def save_cart():
     """Save the current cart to Dropbox."""
     try:
         json_data = json.dumps(st.session_state.cart)
+        # Check if the file already exists
+        try:
+            _, res = dbx.files_download(CART_FILE)
+            existing_data = res.content.decode()
+            if existing_data == json_data:
+                st.info("Cart is already up to date.")
+                return
+        except dropbox.exceptions.HttpError:
+            pass  # File doesn't exist, proceed to upload
+
         dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
         st.success("Cart saved!")
         logging.info("Cart saved successfully.")
@@ -61,8 +74,10 @@ def load_cart():
         _, res = dbx.files_download(CART_FILE)
         st.session_state.cart = json.loads(res.content)
         st.success("Cart loaded!")
-    except dropbox.exceptions.HttpError:
-        st.warning("No saved cart found.")
+    except dropbox.exceptions.HttpError as e:
+        st.warning("No saved cart found. Error: " + str(e))
+    except json.JSONDecodeError:
+        st.error("Failed to decode cart data. Please check the file format.")
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
