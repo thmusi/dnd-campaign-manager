@@ -262,7 +262,7 @@ def main():
 ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
         st.subheader("📖 Adapt Chapter to Campaign")
-            st.write("Modify your campaign text dynamically.")
+        st.write("Modify your campaign text dynamically.")
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.text_area("Original Chapter", height=500)
