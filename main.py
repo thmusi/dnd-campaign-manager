@@ -53,16 +53,16 @@ def cached_generate_npc(npc_type):
     return generate_npc(npc_type)
 
 @st.cache_data(ttl=600)  
-def cached_generate_shop():
-    return generate_shop()
+def cached_generate_shop(shop_type):
+    return generate_shop(shop_type)
 
 @st.cache_data(ttl=600)  
-def cached_generate_location():
-    return generate_location()
+def cached_generate_location(location_type):
+    return generate_location(location_type)
 
 @st.cache_data(ttl=600)  
-def cached_modify_campaign_chapter):
-    return modify_campaign_chapter()
+def cached_modify_campaign_chapter(modified_chapter):
+    return modify_campaign_chapter(modified_chapter)
 
 def save_cart():
     """Save the current cart to Dropbox."""
