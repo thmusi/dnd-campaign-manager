@@ -265,13 +265,14 @@ def main():
         st.write("Modify your campaign text dynamically.")
         col1, col2, col3 = st.columns(3)
         with col1:
-             st.text_area("Original Chapter", height=500)
+             st.text_area("Original Chapter", height=500, width=300)
              st.button("Load")
         with col2:
-            st.text_area("Edits Input", height=500)
+            st.text_area("Edits Input", height=500, width=300)
+            st.button("What do you think ?")
         with col3:
             st.text_area("AI Output", height=500)
-            st.button("Refresh")
+            
 
 
     ### Campaign AI Asst.
