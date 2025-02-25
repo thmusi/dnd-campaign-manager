@@ -147,15 +147,28 @@ def load_cart():
 
 
 def save_to_vault(content, filename="generated_content.md"):
-    """Saves the modified content to the user's Obsidian-Google Drive vault."""
-    file_path = os.path.join("obsidian_vault", filename)
+    """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
+    vault_path = "obsidian_vault"
+    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
+    
+    # Ensure filename has only one .md extension
+    if not filename.endswith(".md"):
+        filename += ".md"
+    
+    file_path = os.path.join(vault_path, filename)
 
     # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     upload_file(file_path)  # Upload to Google Drive
-    st.success(f"File saved successfully to Google Drive: {filename}")
+    st.success(f"✅ File saved successfully to Google Drive: {filename}")
+
+# Ensure saving to vault happens only when a button is pressed
+if st.session_state.get("selected_content_to_save"):
+    if st.button("📁 Save to Vault"):
+        save_to_vault(st.session_state["selected_content_to_save"], filename=f"{st.session_state['selected_category']}_{st.session_state['selected_file']}.md")
+        st.session_state["selected_content_to_save"] = None  # Clear after saving
 
 
 def navigate_to(page_name):
