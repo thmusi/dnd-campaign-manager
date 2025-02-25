@@ -4,6 +4,7 @@ import dropbox
 import streamlit as st
 from dropbox.files import WriteMode
 from dotenv import load_dotenv
+import logging
 
 # Import AI and Obsidian functionalities
 from ai import (
@@ -19,6 +20,9 @@ from obsidian import (
     list_campaign_files,
     fetch_note_content,
 )
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Load environment variables
 load_dotenv()
@@ -46,8 +50,10 @@ def save_cart():
         json_data = json.dumps(st.session_state.cart)
         dbx.files_upload(json_data.encode(), CART_FILE, mode=WriteMode("overwrite"))
         st.success("Cart saved!")
+        logging.info("Cart saved successfully.")
     except Exception as e:
         st.error(f"Failed to save cart: {e}")
+        logging.error(f"Error saving cart: {e}")
 
 def load_cart():
     """Load the cart from Dropbox."""
@@ -122,6 +128,32 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+def render_main_menu_buttons():
+    """Render navigation buttons on the Main Menu page."""
+    st.subheader("Main Menu Options")
+    if st.button("🛒 Cart"):
+        navigate_to("Cart")
+    if st.button("🧙 Create NPC"):
+        navigate_to("Generate NPC")
+    if st.button("🏪 Create Shop"):
+        navigate_to("Create Shop")
+    if st.button("📍 Create Location"):
+        navigate_to("Create Location")
+    if st.button("📖 Adapt Chapter to Campaign"):
+        navigate_to("Adapt Chapter")
+    if st.button("🧠 Campaign Assistant"):
+        navigate_to("Campaign Assistant")
+    if st.button("⚔️ Encounter Generator"):
+        navigate_to("Encounter Generator")
+    if st.button("🏰 Dungeon Generator"):
+        navigate_to("Dungeon Generator")
+    if st.button("📜 Quest Generator"):
+        navigate_to("Quest Generator")
+    if st.button("🌍 Worldbuilding"):
+        navigate_to("Worldbuilding")
+    if st.button("🗒 Session Management"):
+        navigate_to("Session Management")
+
 # Main application logic
 def main():
     """Main function to run the Streamlit application."""
@@ -140,7 +172,8 @@ def main():
 
     elif st.session_state.page == "Main Menu":
         st.title("Welcome to the DnD Campaign Manager")
-        st.markdown("Select an option from the sidebar to get started.")
+        st.markdown("Select an option from the buttons below to get started.")
+        render_main_menu_buttons()
 
     elif st.session_state.page == "Cart":
         st.title("Your Cart")
