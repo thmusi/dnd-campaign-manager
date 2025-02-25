@@ -238,5 +238,41 @@ def main():
                 save_cart()
                 st.success("Added to Cart!")
 
+    elif st.session_state.page == "Campaign Assistant":
+        st.subheader("🧠 Campaign Assistant")
+        st.write("Ask me anything !")
+        st.text_input("Enter your query:")
+        st.button("Submit Query")
+
+    elif st.session_state.page == "Encounter Generator":
+        st.subheader("⚔️ Encounter Generator")
+        st.write("Generate encounters based on party size and details.")
+        st.number_input("Party Size", min_value=1, step=1)
+        st.text_input("Custom Encounter Prompt:")
+        st.button("Generate Encounter")
+
+    elif st.session_state.page == "Dungeon Generator":
+        st.subheader("🏰 Dungeon Generator")
+        st.write("Enter dungeon details and generate a full layout.")
+        st.text_input("Dungeon Prompt:")
+        st.button("Generate Dungeon")
+
+    elif st.session_state.page == "Quest Generator":
+        st.subheader("📜 Quest Generator")
+        st.write("Generate a quest based on input details.")
+        st.text_input("Quest Prompt:")
+        st.button("Generate Quest")
+
+    elif st.session_state.page == "Worldbuilding":
+        st.subheader("🌍 Worldbuilding Expansion")
+        st.write("Auto-fill lore and expand world details.")
+        st.button("Generate World Lore")
+
+    elif st.session_state.page == "Session Management":
+        st.subheader("🗒 Session Management")
+        st.write("Tools for session intros and note assistance.")
+        st.text_input("Session Details (e.g., S01):")
+        st.button("Load Session History")
+
 if __name__ == "__main__":
     main()
