@@ -168,9 +168,10 @@ def save_to_vault(content, filename="generated_content.md"):
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
     if st.button("📁 Save to Vault"):
-        save_to_vault(st.session_state["selected_content_to_save"], filename=f"{st.session_state['selected_category']}_{st.session_state['selected_file']}.md")
+        base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
+        safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+        save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
-
 
 def navigate_to(page_name):
     """Change the current page in the session state."""
