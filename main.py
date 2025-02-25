@@ -66,6 +66,16 @@ def load_cart():
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
+def save_to_vault(content, filename="generated_content.md"):
+    """Saves the modified content to the user's Obsidian-Dropbox vault."""
+    dbx = dropbox.Dropbox("YOUR_DROPBOX_ACCESS_TOKEN")  # Replace with your Dropbox token
+    vault_path = f"/Obsidian-Vault/{filename}"
+    try:
+        dbx.files_upload(content.encode("utf-8"), vault_path, mode=dropbox.files.WriteMode("overwrite"))
+        st.success(f"File saved successfully to {vault_path}")
+    except Exception as e:
+        st.error(f"Error saving to vault: {e}")
+
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
@@ -183,23 +193,34 @@ def main():
 
     # Cart page rendering
     elif st.session_state.page == "Cart":
-        st.title("🛒 Your Cart")
-        categories = list(st.session_state.cart.keys())
-        if categories:  # Fix: Ensure categories exist before selecting
-            selected_category = st.selectbox("📂 Select Folder", categories)
-            if selected_category in st.session_state.cart:  # Fix: Ensure selected category exists
-                files = st.session_state.cart[selected_category]
-                if files:  # Fix: Ensure files exist before selecting
-                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-                    if selected_file:
-                        st.markdown("### 📖 Preview")
-                        st.markdown(selected_file)
-                else:
-                    st.warning(f"No files found in {selected_category}.")
+    st.title("🛒 Your Cart")
+    categories = list(st.session_state.cart.keys())
+    if categories:
+        selected_category = st.selectbox("📂 Select Folder", categories)
+        if selected_category in st.session_state.cart:
+            files = st.session_state.cart[selected_category]
+            if files:
+                selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+                if selected_file:
+                    st.markdown("### 📖 Preview")
+                    st.markdown(selected_file)
+                    
+                    # Modify Content Directly in Cart
+                    st.subheader("Modify Selected Content")
+                    edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
+                    
+                    # Send to Vault
+                    if st.button("Send to Vault"):
+                        if edited_content.strip():
+                            save_to_vault(edited_content, filename=f"{selected_category}_{selected_file}.md")
+                        else:
+                            st.warning("Content is empty! Please modify before sending to vault.")
             else:
-                st.warning("Selected category does not exist.")
+                st.warning(f"No files found in {selected_category}.")
         else:
-            st.warning("Your cart is empty.")
+            st.warning("Selected category does not exist.")
+    else:
+        st.warning("Your cart is empty.")
 
     # Generate Location
     elif st.session_state.page == "Create Location":
