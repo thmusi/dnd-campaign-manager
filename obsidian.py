@@ -4,14 +4,10 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
+import streamlit as st
 
-# Load credentials from your service account JSON file
-SERVICE_ACCOUNT_FILE = "google_drive_credentials.json"  # Ensure this file is in your project directory
-SCOPES = ["https://www.googleapis.com/auth/drive"]
-
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
+credentials_info = json.loads(st.secrets["google_drive"])
+credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
 drive_service = build("drive", "v3", credentials=credentials)
 
