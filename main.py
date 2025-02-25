@@ -193,34 +193,34 @@ def main():
 
     # Cart page rendering
     elif st.session_state.page == "Cart":
-    st.title("🛒 Your Cart")
-    categories = list(st.session_state.cart.keys())
-    if categories:
-        selected_category = st.selectbox("📂 Select Folder", categories)
-        if selected_category in st.session_state.cart:
-            files = st.session_state.cart[selected_category]
-            if files:
-                selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-                if selected_file:
-                    st.markdown("### 📖 Preview")
-                    st.markdown(selected_file)
-                    
-                    # Modify Content Directly in Cart
-                    st.subheader("Modify Selected Content")
-                    edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
-                    
-                    # Send to Vault
-                    if st.button("Send to Vault"):
-                        if edited_content.strip():
-                            save_to_vault(edited_content, filename=f"{selected_category}_{selected_file}.md")
-                        else:
-                            st.warning("Content is empty! Please modify before sending to vault.")
+        st.title("🛒 Your Cart")
+        categories = list(st.session_state.cart.keys())
+        if categories:
+            selected_category = st.selectbox("📂 Select Folder", categories)
+            if selected_category in st.session_state.cart:
+                files = st.session_state.cart[selected_category]
+                if files:
+                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+                    if selected_file:
+                        st.markdown("### 📖 Preview")
+                        st.markdown(selected_file)
+                        
+                        # Modify Content Directly in Cart
+                        st.subheader("Modify Selected Content")
+                        edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
+                        
+                        # Send to Vault
+                        if st.button("Send to Vault"):
+                            if edited_content.strip():
+                                save_to_vault(edited_content, filename=f"{selected_category}_{selected_file}.md")
+                            else:
+                                st.warning("Content is empty! Please modify before sending to vault.")
+                else:
+                    st.warning(f"No files found in {selected_category}.")
             else:
-                st.warning(f"No files found in {selected_category}.")
+                st.warning("Selected category does not exist.")
         else:
-            st.warning("Selected category does not exist.")
-    else:
-        st.warning("Your cart is empty.")
+            st.warning("Your cart is empty.")
 
     # Generate Location
     elif st.session_state.page == "Create Location":
