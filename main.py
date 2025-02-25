@@ -147,7 +147,8 @@ def render_main_menu_buttons():
 def main():
     """Main function to run the Streamlit application."""
     render_sidebar()
-
+    load_cart()
+    
     # Page rendering based on session state
     if st.session_state.page == "API Key":
         st.title("Enter your API Key")
@@ -189,6 +190,16 @@ def main():
                 st.success("Added to Cart!")
 
     # Additional page rendering logic can be added here
+    elif st.session_stage.page == "Cart"
+        st.title ("🛒 Your Cart")
+        categories = list(st.session_state.cart.keys())
+        selected_category = st.selectbox("📂 Select Folder", categories)
+        files = st.session_state.cart[selected_category]
+        selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+        if selected_file:
+            st.markdown("### 📖 Preview")
+            st.markdown(selected_file)
+
 
 if __name__ == "__main__":
     main()
