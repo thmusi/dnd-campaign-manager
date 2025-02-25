@@ -5,6 +5,7 @@ from obsidian import write_note, list_campaign_files
 import ssl
 import time
 import os
+import re
 
 
 # Debugging: Print available functions in obsidian.py
