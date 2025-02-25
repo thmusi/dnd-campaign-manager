@@ -1,7 +1,8 @@
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
 from obsidian import list_drive_files, upload_file, download_file, save_ai_generated_content
-from obsidian import write_note
+from obsidian import write_note, list_campaign_files
+
 
 
 # Debugging: Print available functions in obsidian.py
@@ -71,7 +72,7 @@ def cached_modify_campaign_chapter(modified_chapter):
 def cached_list_campaign_files():
     return list_campaign_files()
 
-# Use cached version instead of calling it directly
+# Use cached function
 campaign_files = cached_list_campaign_files()
 
 def save_cart():
