@@ -55,9 +55,6 @@ def render_sidebar():
             if st.button("🛒 Cart"):
                 navigate_to("Cart")
             st.markdown("---")
-
-# Sidebar Navigation (visible on all pages except API Key and Landing Page)
-def render_sidebar():
     if st.session_state.page not in ["API Key", "Main Menu"]:
         with st.sidebar:
             st.title("Navigation")
@@ -67,7 +64,7 @@ def render_sidebar():
                 navigate_to("Cart")
             st.markdown("---")
             if st.button("🧙 Create NPC"):
-                navigate_to("Create NPC")
+                navigate_to("Generate NPC")
             if st.button("🏪 Create Shop"):
                 navigate_to("Create Shop")
             if st.button("📍 Create Location"):
@@ -99,26 +96,25 @@ else:
     
     # Main navigation buttons
     if st.button("🧙 Create NPC"):
-        switch_page("Generate NPC")
+        navigate_to("Generate NPC")
     if st.button("🏪 Create Shop"):
-        switch_page("Generate Shop")
+        navigate_to("Generate Shop")
     if st.button("📍 Create Location"):
-        switch_page("Generate Location")
-        if st.button("Generate Location"):
+        navigate_to("Generate Location")
     if st.button("📖 Adapt Chapter to Campaign"):
-        switch_page("Adapt Chapter")
+        navigate_to("Adapt Chapter")
     if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
-        switch_page("Campaign Assistant")
+        navigate_to("Campaign Assistant")
     if st.button("⚔️ Encounter Generator"):
-        switch_page("Encounter Generator")
+        navigate_to("Encounter Generator")
     if st.button("🏰 Dungeon Generator"):
-        switch_page("Dungeon Generator")
+        navigate_to("Dungeon Generator")
     if st.button("📜 Quest Generator"):
-        switch_page("Quest Generator")
+        navigate_to("Quest Generator")
     if st.button("🌍 Worldbuilding Expansion & Auto-Filled Lore"):
-        switch_page("Worldbuilding")
+        navigate_to("Worldbuilding")
     if st.button("🗒 Session Management"):
-        switch_page("Session Management")
+        navigate_to("Session Management")
 
 
 # Keep styling similar to landing.css using Streamlit's built-in styles
@@ -134,3 +130,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
