@@ -1,47 +1,63 @@
-import dropbox
 import os
-import streamlit as st
-st.write("🔍 Streamlit Secrets:", st.secrets)  # Debugging step
-import obsidian  # Import the Obsidian Dropbox module
-from dotenv import load_dotenv
+import json
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
 
-load_dotenv()
+# Load credentials from your service account JSON file
+SERVICE_ACCOUNT_FILE = "google_drive_credentials.json"  # Ensure this file is in your project directory
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-# Use Streamlit secrets for Dropbox authentication
-DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]
-db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
 
-def test_dropbox_upload():
-    file_path = "/Obsidian-Test/test_file.md"  # Adjust to match your Obsidian folder
-    content = "### Dropbox Test\nThis is a test file upload."
+drive_service = build("drive", "v3", credentials=credentials)
 
-    try:
-        dbx.files_upload(content.encode(), file_path, mode=dropbox.files.WriteMode("overwrite"))
-        return f"✅ Uploaded successfully: {file_path}"
-    except Exception as e:
-        return f"❌ Upload failed: {e}"
-DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault structure
+# Your Google Drive folder where Obsidian files will be stored
+DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
 
-db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+# Upload a file to Google Drive
+def upload_file(file_path, drive_folder_id=DRIVE_FOLDER_ID):
+    """Uploads a file to Google Drive inside the specified folder."""
+    file_metadata = {"name": os.path.basename(file_path), "parents": [drive_folder_id]}
+    media = MediaFileUpload(file_path, resumable=True)
+    
+    file = drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+    print(f"✅ File uploaded: {file.get('id')}")
+    return file.get("id")
 
-def list_campaign_files():
-    """Fetches the list of campaign files from Dropbox."""
-    try:
-        dbx = dropbox.Dropbox(st.secrets["DROPBOX_ACCESS_TOKEN"])
-        folder_path = "/Obsidian-Campaigns/"
-        files = [entry.name for entry in dbx.files_list_folder(folder_path).entries]
-        return files
-    except Exception as e:
-        st.error(f"Error fetching campaign files: {e}")
-        return []
+# List all files in the Google Drive folder
+def list_drive_files(drive_folder_id=DRIVE_FOLDER_ID):
+    """Lists all files in the given Google Drive folder."""
+    results = drive_service.files().list(q=f"'{drive_folder_id}' in parents",
+                                         fields="files(id, name)").execute()
+    return results.get("files", [])
 
-@st.cache_data(ttl=300)  # Cache file list for 5 minutes
-def cached_list_campaign_files():
-    return list_campaign_files()
+# Download a file from Google Drive
+def download_file(file_id, output_path):
+    """Downloads a file from Google Drive to a local path."""
+    request = drive_service.files().get_media(fileId=file_id)
+    with open(output_path, "wb") as file:
+        file.write(request.execute())
+    print(f"✅ File downloaded: {output_path}")
 
-# Use cached function
-files = cached_list_campaign_files()
+# Retained non-Dropbox functions from original obsidian.py
+# Additional Obsidian-related utilities and Markdown processing functions
+
+def format_markdown_header(text):
+    """Formats text as a Markdown header."""
+    return f"# {text}\n"
+
+def create_obsidian_note(title, content):
+    """Creates an Obsidian-compatible Markdown note."""
+    note_content = format_markdown_header(title) + "\n" + content
+    file_name = f"{title.replace(' ', '_')}.md"
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(note_content)
+    print(f"📝 Note created: {file_name}")
+    return file_name
 
 def build_index(vault_path, keywords, keyword_weights):
     """
@@ -62,7 +78,6 @@ def build_index(vault_path, keywords, keyword_weights):
                     "last_modified": last_modified,
                     "content": content
                 })
-    # Sort the index in descending order by score
     index.sort(key=lambda x: x["score"], reverse=True)
     return index
 
@@ -74,127 +89,32 @@ def compute_keyword_score(content, file_path, last_modified, keywords, keyword_w
       - Recency (more recent notes score higher)
     """
     score = 0
-    # Calculate base score from keyword frequency
     for keyword in keywords:
         count = content.lower().count(keyword.lower())
         weight = keyword_weights.get(keyword, 1)
         score += count * weight
-    
-    # Folder-based bonus example: if the file is in a folder named "Whitestone"
     if "Whitestone" in file_path:
         score *= 1.5
-    
-    # Recency factor: calculate how many days ago the note was modified
     days_since_modified = (datetime.now().timestamp() - last_modified) / 86400
-    # Use a decay function: full weight for notes modified within 1 year, then decreasing.
     recency_multiplier = max(0.5, 1 - (days_since_modified / 365))
     score *= recency_multiplier
-    
     return score
 
-def list_dropbox_files():
-    """Lists files in the root folder of the Dropbox account."""
-    try:
-        files = dbx.files_list_folder("").entries
-        return [file.name for file in files]  # Returns a list of file names
-    except Exception as e:
-        return f"Error: {e}"
-
-def list_notes():
-    """List all markdown files in the Obsidian vault stored in Dropbox."""
-    try:
-        result = db.files_list_folder(DROPBOX_VAULT_PATH)
-        notes = [entry.name for entry in result.entries if entry.name.endswith(".md")]
-        return notes
-    except Exception as e:
-        print(f"Error listing notes: {e}")
-        return []
-
-def read_note(note_name):
-    """Read the content of a specific note from Dropbox."""
-    file_path = f"{DROPBOX_VAULT_PATH}{note_name}"
-    try:
-        _, res = db.files_download(file_path)
-        return res.content.decode("utf-8")
-    except Exception as e:
-        print(f"Error reading {note_name}: {e}")
-        return None
-
-def write_note(note_name, content):
-    """Write or update a note in Dropbox."""
-    file_path = f"{DROPBOX_VAULT_PATH}{note_name}"
-    print(f"Attempting to save: {file_path}")  # Debugging output
-    try:
-        db.files_upload(content.encode("utf-8"), file_path, mode=dropbox.files.WriteMode("overwrite"))
-        print(f"✅ Successfully updated {note_name} in Dropbox.")
-        return True
-    except dropbox.exceptions.AuthError:
-        print("❌ Dropbox authentication failed. Check your access token.")
-        return False
-    except Exception as e:
-        print(f"❌ Error writing {note_name}: {e}")
-        return False
-
-def save_ai_generated_content(title, content):
-    """Save AI-generated content as a Markdown file in Obsidian via Dropbox."""
-    note_name = f"{title.replace(' ', '_')}.md"
-    markdown_content = f"# {title}\n\n{content}"
-    obsidian.write_note(note_name, markdown_content)
-    print(f"AI-generated content saved: {note_name}")
-
-if __name__ == "__main__":
-    # Test Dropbox Integration
-    print("Listing notes:", list_notes())
-    sample_note = "Test_NPC.md"
-    test_content = "# Test NPC\n- Name: Eldrin the Wise\n- Race: Elf\n- Class: Wizard"
-    write_note(sample_note, test_content)
-    print("Reading back:", read_note(sample_note))
-
-def list_dropbox_files():
-    try:
-        files = dbx.files_list_folder("").entries
-        return [file.name for file in files]
-    except Exception as e:
-        return f"Error: {e}"
-
-def list_campaign_files():
-    """Lists all campaign-related files in the Dropbox folder."""
-    try:
-        result = dbx.files_list_folder(DROPBOX_FOLDER_PATH)
-        files = [entry.name for entry in result.entries if isinstance(entry, dropbox.files.FileMetadata)]
-        return files
-    except Exception as e:
-        print(f"Error listing files: {e}")
-        return []
-
 def get_relevant_notes(query, vault_path):
-    # Extract keywords from the query; here we simply split the query, but you can enhance this.
+    """Fetches the most relevant notes based on keyword search."""
     keywords = query.split()
-    
-    # Define keyword weights – adjust these values based on importance.
-    keyword_weights = {
-        "Whitestone": 2,
-        "NPC": 1.5,
-        # Add other keywords and their weights as needed.
-    }
-    
-    # Build the index for the current vault
+    keyword_weights = {"Whitestone": 2, "NPC": 1.5}
     index = build_index(vault_path, keywords, keyword_weights)
-    
-    # Optional: filter out notes below a certain score threshold
-    threshold = 5  # Adjust this threshold as needed
+    threshold = 5
     relevant_notes = [note for note in index if note["score"] >= threshold]
-    
-    # Limit to top 5 results (or any number you prefer)
     return relevant_notes[:5]
 
-
-def fetch_note_content(file_name):
-    """Fetches the content of a campaign note from Dropbox."""
-    file_path = f"{DROPBOX_FOLDER_PATH}/{file_name}"
-    try:
-        metadata, res = dbx.files_download(file_path)
-        return res.content.decode("utf-8")
-    except Exception as e:
-        print(f"Error fetching note: {e}")
-        return None
+def save_ai_generated_content(title, content):
+    """Save AI-generated content as a Markdown file in Obsidian via Google Drive."""
+    note_name = f"{title.replace(' ', '_')}.md"
+    markdown_content = f"# {title}\n\n{content}"
+    file_path = os.path.join("obsidian_vault", note_name)
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(markdown_content)
+    upload_file(file_path)
+    print(f"AI-generated content saved: {note_name}")
