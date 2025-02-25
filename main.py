@@ -165,12 +165,6 @@ def main():
         st.markdown("Select an option from the buttons below to get started.")
         render_main_menu_buttons()
 
-    elif st.session_state.page == "Cart":
-        st.title("Your Cart")
-        if st.button("Load Cart", key="load_cart"):
-            load_cart()
-        st.json(st.session_state.cart)
-
     # Generate NPC
     elif st.session_state.page == "Generate NPC":
         st.title("🛡️ Generate an NPC")
