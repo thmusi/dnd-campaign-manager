@@ -9,7 +9,7 @@ import streamlit as st
 credentials_info = dict(st.secrets["google_drive"])  # ✅ Convert to dictionary directly
 credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
-drive_service = build("drive", "v3", credentials=credentials)
+drive_service = build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
