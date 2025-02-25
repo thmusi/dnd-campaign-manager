@@ -83,30 +83,31 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
         st.markdown("---")
+        
         if st.session_state.page not in "Main Menu":
-        if st.button("🛒 Cart", key="cart_sidebar"):
-            navigate_to("Cart")
-        st.markdown("---")
-        if st.button("🧙 Create NPC", key="generate_npc"):
-            navigate_to("Generate NPC")
-        if st.button("🏪 Create Shop", key="generate_shop"):
-            navigate_to("Create Shop")
-        if st.button("📍 Create Location", key="create_location"):
-            navigate_to("Create Location")
-        if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
-            navigate_to("Adapt Chapter")
-        if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
-            navigate_to("Campaign Assistant")
-        if st.button("⚔️ Encounter Generator", key="encounter_generator"):
-            navigate_to("Encounter Generator")
-        if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
-            navigate_to("Dungeon Generator")
-        if st.button("📜 Quest Generator", key="quest_generator"):
-            navigate_to("Quest Generator")
-        if st.button("🌍 Worldbuilding", key="worldbuilding"):
-            navigate_to("Worldbuilding")
-        if st.button("🗒 Session Management", key="session_management"):
-            navigate_to("Session Management")
+            if st.button("🛒 Cart", key="cart_sidebar"):
+                navigate_to("Cart")
+                st.markdown("---")
+            if st.button("🧙 Create NPC", key="generate_npc"):
+                navigate_to("Generate NPC")
+            if st.button("🏪 Create Shop", key="generate_shop"):
+                navigate_to("Create Shop")
+            if st.button("📍 Create Location", key="create_location"):
+                navigate_to("Create Location")
+            if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
+                 navigate_to("Adapt Chapter")
+            if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
+                navigate_to("Campaign Assistant")
+            if st.button("⚔️ Encounter Generator", key="encounter_generator"):
+                navigate_to("Encounter Generator")
+            if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
+                navigate_to("Dungeon Generator")
+            if st.button("📜 Quest Generator", key="quest_generator"):
+                navigate_to("Quest Generator")
+            if st.button("🌍 Worldbuilding", key="worldbuilding"):
+                navigate_to("Worldbuilding")
+            if st.button("🗒 Session Management", key="session_management"):
+                navigate_to("Session Management")
 
 # Apply custom styling to buttons
 st.markdown(
