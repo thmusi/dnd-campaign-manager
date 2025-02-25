@@ -172,12 +172,9 @@ def main():
         if st.button("Generate NPC"):
             npc = generate_npc(st.session_state.api_key, npc_prompt)  # Fix: Use the correct variable
             st.session_state.generated_npc = npc  # Store generated NPC
-            st.markdown("### 🛡️ PNJ Généré")
-            st.markdown(npc)
+            st.text_area("Generated NPC:", location, height=250)
 
         if "generated_npc" in st.session_state:  # Fix: Check for the correct key
-            with st.expander("🛡️ View & Edit NPC"):
-                st.session_state.generated_npc = st.text_area("Modify NPC", value=st.session_state.generated_npc, height=250)
             if st.button("🛒 Add to Cart"):
                 st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  # Fix: Ensure the list exists
                 st.session_state.cart["npc"].append(st.session_state.generated_npc)
@@ -203,6 +200,44 @@ def main():
                 st.warning("Selected category does not exist.")
         else:
             st.warning("Your cart is empty.")
+
+        # Generate Location
+    elif st.session_state.page == "Create Location":
+        st.subheader("🏰 Generate a Location")
+        location_prompt = st.text_area("What do you already know about this location? (Optional)")
+        if st.button("Generate Location"):
+            location = generate_location(api_key, location_prompt)
+            st.session_state.generated_location = location  # Store generated location
+            st.text_area("Generated Location:", location, height=250)
+
+        if "generated_location" in st.session_state:
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["location"] = st.session_state.cart.get("location", [])  # Fix: Ensure the list exists
+                st.session_state.cart["location"].append(st.session_state.generated_location)
+                save_cart()
+                st.success("Added to Cart!")
+           
+        # Generate Shop
+    elif st.session_state.page == "Create Shop":
+        st.subheader("🛒 Generate a Shop")
+        shop_type = st.selectbox("Select Shop Type", [
+            "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
+            "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Bookstore", "Stable",
+            "Enchanter", "Herbalist", "Bakery", "Tailor",
+        ])
+        shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
+        if st.button("Generate Shop"):
+            shop = generate_shop(api_key, shop_type, shop_prompt)
+            st.session_state.generated_shop = shop  # Store generated shop
+            st.text_area(f"Generated {shop_type}:", shop, height=250)
+
+         if "generated_shop" in st.session_state:
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  # Fix: Ensure the list exists
+                st.session_state.cart["shop"].append(st.session_state.generated_location)
+                save_cart()
+                st.success("Added to Cart!")
+    
 
 if __name__ == "__main__":
     main()
