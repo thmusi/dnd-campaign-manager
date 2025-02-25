@@ -25,6 +25,13 @@ DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault struct
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
+@st.cache_data(ttl=300)  # Cache file list for 5 minutes
+def cached_list_campaign_files():
+    return list_campaign_files()
+
+# Use cached function
+files = cached_list_campaign_files()
+
 def build_index(vault_path, keywords, keyword_weights):
     """
     Scan the Obsidian vault directory and compute a relevance score for each .md file.
