@@ -14,6 +14,18 @@ drive_service = build("drive", "v3", credentials=credentials)
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
 
+def write_note(note_name, content):
+    """Saves a note as a Markdown file in Obsidian via Google Drive."""
+    note_name = f"{note_name.replace(' ', '_')}.md"
+    file_path = os.path.join("obsidian_vault", note_name)
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    upload_file(file_path)
+    print(f"✅ Note saved to Google Drive: {note_name}")
+    return note_name
+
 # Upload a file to Google Drive
 def upload_file(file_path, drive_folder_id=DRIVE_FOLDER_ID):
     """Uploads a file to Google Drive inside the specified folder."""
