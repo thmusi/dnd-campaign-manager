@@ -2,6 +2,7 @@
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
 from obsidian import list_campaign_files  # Explicitly import the function
+from obsidian import cached_list_campaign_files
 
 # Debugging: Print available functions in obsidian.py
 print("🔍 Available functions in obsidian.py:", dir(obsidian))
@@ -50,6 +51,11 @@ if not DROPBOX_ACCESS_TOKEN:
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
 CART_FILE = "/Apps/DnDManager/cart.json"
+
+if "campaign_files" not in st.session_state:
+    st.session_state["campaign_files"] = cached_list_campaign_files()
+
+st.write("Available Campaign Files:", st.session_state["campaign_files"])
 
 def initialize_session_state():
     """Initialize session state variables."""
