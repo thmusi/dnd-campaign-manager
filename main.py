@@ -1,26 +1,21 @@
-
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
-from obsidian import list_campaign_files  # Explicitly import the function
-from obsidian import cached_list_campaign_files
+from obsidian import list_drive_files, upload_file, download_file, save_ai_generated_content
 
 # Debugging: Print available functions in obsidian.py
 print("🔍 Available functions in obsidian.py:", dir(obsidian))
 
 @st.cache_data(ttl=300)  # Cache file list for 5 minutes
-def cached_list_campaign_files():
-    return list_campaign_files()
+def cached_list_drive_files():
+    return list_drive_files()
 
 # Use cached version
-campaign_files = cached_list_campaign_files()
+campaign_files = cached_list_drive_files()
 
 import os
 import json
-import dropbox
-import streamlit as st
-from dropbox.files import WriteMode
-from dotenv import load_dotenv
 import logging
+from dotenv import load_dotenv
 
 # Import AI and Obsidian functionalities
 from ai import (
@@ -30,30 +25,15 @@ from ai import (
     modify_campaign_chapter,
     ai_search_campaign_notes,
 )
-from obsidian import (
-    test_dropbox_upload,
-    write_note,
-    list_campaign_files,
-    fetch_note_content,
-)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Load environment variables
 load_dotenv()
-DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
-
-if not DROPBOX_ACCESS_TOKEN:
-    st.error("❌ Dropbox API Key is missing! Please check your environment variables.")
-    st.stop()  # Stop execution if the API key is missing
-
-dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-
-CART_FILE = "/Apps/DnDManager/cart.json"
 
 if "campaign_files" not in st.session_state:
-    st.session_state["campaign_files"] = cached_list_campaign_files()
+    st.session_state["campaign_files"] = cached_list_drive_files()
 
 st.write("Available Campaign Files:", st.session_state["campaign_files"])
 
