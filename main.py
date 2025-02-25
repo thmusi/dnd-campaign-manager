@@ -45,77 +45,48 @@ def load_cart():
 def navigate_to(page_name):
     st.session_state.page = page_name
 
-# Sidebar Navigation (visible on all pages except API Key and Landing Page)
 def render_sidebar():
-    if st.session_state.page not in ["API Key"]:
-        with st.sidebar:
-            st.title("Navigation")
+    with st.sidebar:
+        st.title("Navigation")
+        
+        # Check the current page and render buttons accordingly
+        if st.session_state.page == "API Key":
+            return  # No sidebar for API Key page
+        
+        if st.session_state.page == "Main Menu":
             if st.button("🏠 Home"):
                 navigate_to("Main Menu")
             if st.button("🛒 Cart"):
                 navigate_to("Cart")
             st.markdown("---")
-    if st.session_state.page not in ["API Key", "Main Menu"]:
-        with st.sidebar:
-            st.title("Navigation")
-            if st.button("🏠 Home"):
-                navigate_to("Main Menu")
-            if st.button("🛒 Cart"):
-                navigate_to("Cart")
-            st.markdown("---")
-            if st.button("🧙 Create NPC"):
-                navigate_to("Generate NPC")
-            if st.button("🏪 Create Shop"):
-                navigate_to("Create Shop")
-            if st.button("📍 Create Location"):
-                navigate_to("Create Location")
-            if st.button("📖 Adapt Chapter to Campaign"):
-                navigate_to("Adapt Chapter")
-            if st.button("🧠 Campaign Assistant"):
-                navigate_to("Campaign Assistant")
-            if st.button("⚔️ Encounter Generator"):
-                navigate_to("Encounter Generator")
-            if st.button("🏰 Dungeon Generator"):
-                navigate_to("Dungeon Generator")
-            if st.button("📜 Quest Generator"):
-                navigate_to("Quest Generator")
-            if st.button("🌍 Worldbuilding"):
-                navigate_to("Worldbuilding")
-            if st.button("🗒 Session Management"):
-                navigate_to("Session Management")
-
-# 1st Page: API Key Input
-if "api_key" not in st.session_state:
-    st.title("D&D AI Campaign Manager")
-    st.text_input("Enter your OpenAI API Key:", type="password", key="api_key")
-    st.button("Submit", on_click=check_api_key)
-else:
-    # 2nd Page: Main Menu
-    st.title("Main Menu")
-    st.sidebar.title("Navigation")
-    
-    # Main navigation buttons
-    if st.button("🧙 Create NPC"):
-        navigate_to("Generate NPC")
-    if st.button("🏪 Create Shop"):
-        navigate_to("Generate Shop")
-    if st.button("📍 Create Location"):
-        navigate_to("Generate Location")
-    if st.button("📖 Adapt Chapter to Campaign"):
-        navigate_to("Adapt Chapter")
-    if st.button("🧠 Campaign Assistant (AI-Powered Q&A)"):
-        navigate_to("Campaign Assistant")
-    if st.button("⚔️ Encounter Generator"):
-        navigate_to("Encounter Generator")
-    if st.button("🏰 Dungeon Generator"):
-        navigate_to("Dungeon Generator")
-    if st.button("📜 Quest Generator"):
-        navigate_to("Quest Generator")
-    if st.button("🌍 Worldbuilding Expansion & Auto-Filled Lore"):
-        navigate_to("Worldbuilding")
-    if st.button("🗒 Session Management"):
-        navigate_to("Session Management")
-
+            return  # Return to avoid showing additional buttons for Main Menu
+        
+        # If on any other page, show all navigation options
+        if st.button("🏠 Home"):
+            navigate_to("Main Menu")
+        if st.button("🛒 Cart"):
+            navigate_to("Cart")
+        st.markdown("---")
+        if st.button("🧙 Create NPC"):
+            navigate_to("Generate NPC")
+        if st.button("🏪 Create Shop"):
+            navigate_to("Create Shop")
+        if st.button("📍 Create Location"):
+            navigate_to("Create Location")
+        if st.button("📖 Adapt Chapter to Campaign"):
+            navigate_to("Adapt Chapter")
+        if st.button("🧠 Campaign Assistant"):
+            navigate_to("Campaign Assistant")
+        if st.button("⚔️ Encounter Generator"):
+            navigate_to("Encounter Generator")
+        if st.button("🏰 Dungeon Generator"):
+            navigate_to("Dungeon Generator")
+        if st.button("📜 Quest Generator"):
+            navigate_to("Quest Generator")
+        if st.button("🌍 Worldbuilding"):
+            navigate_to("Worldbuilding")
+        if st.button("🗒 Session Management"):
+            navigate_to("Session Management")
 
 # Keep styling similar to landing.css using Streamlit's built-in styles
 st.markdown(
