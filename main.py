@@ -102,11 +102,9 @@ st.markdown(
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
     st.subheader("Main Menu Options")
-    if st.button("🛒 Cart", key="cart_main"):
-        navigate_to("Cart")
-    if st.button("🧙 Create NPC", key="create_npc"):
+    if st.button("🧙 Create NPC", key="generate_npc"):
         navigate_to("Generate NPC")
-    if st.button("🏪 Create Shop", key="create_shop"):
+    if st.button("🏪 Create Shop", key="generate_shop"):
         navigate_to("Create Shop")
     if st.button("📍 Create Location", key="create_location"):
         navigate_to("Create Location")
@@ -151,6 +149,24 @@ def main():
         if st.button("Load Cart", key="load_cart"):
             load_cart()
         st.json(st.session_state.cart)
+
+    # Generate NPC
+    elif st.session_state.page == "Generate NPC":
+        st.title("🛡️ Generate an NPC")
+        npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
+        if st.button("Generate NPC"):
+            npc = generate_npc(api_key, npc_prompt)
+            st.session_state.generated_npc = npc  # Store generated NPC
+            st.markdown("### 🛡️ PNJ Généré")
+            st.markdown(npc)
+
+        if "generated_content" in st.session_state:
+            with st.expander("🛡️ View & Edit NPC"):
+                st.session_state.generated_content = st.text_area("Modify NPC", value=st.session_state.generated_content, height=250)
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["npc"].append(st.session_state.generated_content)
+                save_cart()
+                st.success("Added to Cart!")
 
     # Additional page rendering logic can be added here
 
