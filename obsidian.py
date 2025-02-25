@@ -14,6 +14,15 @@ drive_service = build("drive", "v3", credentials=credentials)
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
 
+def list_campaign_files():
+    """Lists all campaign-related files stored in Google Drive."""
+    try:
+        files = list_drive_files()  # Uses Google Drive function
+        return [file["name"] for file in files]  # Returns only file names
+    except Exception as e:
+        print(f"❌ Error listing campaign files: {e}")
+        return []
+
 def write_note(note_name, content):
     """Saves a note as a Markdown file in Obsidian via Google Drive."""
     note_name = f"{note_name.replace(' ', '_')}.md"
