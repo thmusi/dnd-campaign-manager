@@ -64,6 +64,13 @@ def cached_generate_location(location_type):
 def cached_modify_campaign_chapter(modified_chapter):
     return modify_campaign_chapter(modified_chapter)
 
+@st.cache_data(ttl=300)  # Cache file list for 5 minutes
+def cached_list_campaign_files():
+    return list_campaign_files()
+
+# Use cached version instead of calling it directly
+campaign_files = cached_list_campaign_files()
+
 def save_cart():
     """Save the current cart to Dropbox."""
     try:
