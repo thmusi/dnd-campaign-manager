@@ -25,6 +25,17 @@ DROPBOX_VAULT_PATH = "/ObsidianVault/"  # Modify this based on your vault struct
 
 db = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
 
+def list_campaign_files():
+    """Fetches the list of campaign files from Dropbox."""
+    try:
+        dbx = dropbox.Dropbox(st.secrets["DROPBOX_ACCESS_TOKEN"])
+        folder_path = "/Obsidian-Campaigns/"
+        files = [entry.name for entry in dbx.files_list_folder(folder_path).entries]
+        return files
+    except Exception as e:
+        st.error(f"Error fetching campaign files: {e}")
+        return []
+
 @st.cache_data(ttl=300)  # Cache file list for 5 minutes
 def cached_list_campaign_files():
     return list_campaign_files()
