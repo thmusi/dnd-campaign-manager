@@ -1,3 +1,18 @@
+
+import streamlit as st
+import obsidian  # Ensure full module import for debugging
+from obsidian import list_campaign_files  # Explicitly import the function
+
+# Debugging: Print available functions in obsidian.py
+print("🔍 Available functions in obsidian.py:", dir(obsidian))
+
+@st.cache_data(ttl=300)  # Cache file list for 5 minutes
+def cached_list_campaign_files():
+    return list_campaign_files()
+
+# Use cached version
+campaign_files = cached_list_campaign_files()
+
 import os
 import json
 import dropbox
