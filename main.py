@@ -79,40 +79,11 @@ def render_sidebar():
         if st.session_state.page == "API Key":
             return  # No sidebar for API Key page
 
-        if st.session_state.page == "Main Menu":
-            if st.button("🏠 Home"):
-                navigate_to("Main Menu")
-            if st.button("🛒 Cart"):
-                navigate_to("Cart")
-            st.markdown("---")
-            return  # Return to avoid showing additional buttons for Main Menu
-
-        # Show all navigation options if on any other page
-        if st.button("🏠 Home"):
+        if st.button("🏠 Home", key="home_sidebar"):
             navigate_to("Main Menu")
-        if st.button("🛒 Cart"):
+        if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
         st.markdown("---")
-        if st.button("🧙 Create NPC"):
-            navigate_to("Generate NPC")
-        if st.button("🏪 Create Shop"):
-            navigate_to("Create Shop")
-        if st.button("📍 Create Location"):
-            navigate_to("Create Location")
-        if st.button("📖 Adapt Chapter to Campaign"):
-            navigate_to("Adapt Chapter")
-        if st.button("🧠 Campaign Assistant"):
-            navigate_to("Campaign Assistant")
-        if st.button("⚔️ Encounter Generator"):
-            navigate_to("Encounter Generator")
-        if st.button("🏰 Dungeon Generator"):
-            navigate_to("Dungeon Generator")
-        if st.button("📜 Quest Generator"):
-            navigate_to("Quest Generator")
-        if st.button("🌍 Worldbuilding"):
-            navigate_to("Worldbuilding")
-        if st.button("🗒 Session Management"):
-            navigate_to("Session Management")
 
 # Apply custom styling to buttons
 st.markdown(
@@ -131,27 +102,27 @@ st.markdown(
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
     st.subheader("Main Menu Options")
-    if st.button("🛒 Cart"):
+    if st.button("🛒 Cart", key="cart_main"):
         navigate_to("Cart")
-    if st.button("🧙 Create NPC"):
+    if st.button("🧙 Create NPC", key="create_npc"):
         navigate_to("Generate NPC")
-    if st.button("🏪 Create Shop"):
+    if st.button("🏪 Create Shop", key="create_shop"):
         navigate_to("Create Shop")
-    if st.button("📍 Create Location"):
+    if st.button("📍 Create Location", key="create_location"):
         navigate_to("Create Location")
-    if st.button("📖 Adapt Chapter to Campaign"):
+    if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
         navigate_to("Adapt Chapter")
-    if st.button("🧠 Campaign Assistant"):
+    if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
         navigate_to("Campaign Assistant")
-    if st.button("⚔️ Encounter Generator"):
+    if st.button("⚔️ Encounter Generator", key="encounter_generator"):
         navigate_to("Encounter Generator")
-    if st.button("🏰 Dungeon Generator"):
+    if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
         navigate_to("Dungeon Generator")
-    if st.button("📜 Quest Generator"):
+    if st.button("📜 Quest Generator", key="quest_generator"):
         navigate_to("Quest Generator")
-    if st.button("🌍 Worldbuilding"):
+    if st.button("🌍 Worldbuilding", key="worldbuilding"):
         navigate_to("Worldbuilding")
-    if st.button("🗒 Session Management"):
+    if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
 
 # Main application logic
@@ -163,7 +134,7 @@ def main():
     if st.session_state.page == "API Key":
         st.title("Enter your API Key")
         st.session_state.api_key = st.text_input("API Key", type="password")
-        if st.button("Submit"):
+        if st.button("Submit", key="submit_api_key"):
             if st.session_state.api_key:
                 st.success("API Key set!")
                 navigate_to("Main Menu")
@@ -177,7 +148,7 @@ def main():
 
     elif st.session_state.page == "Cart":
         st.title("Your Cart")
-        if st.button("Load Cart"):
+        if st.button("Load Cart", key="load_cart"):
             load_cart()
         st.json(st.session_state.cart)
 
