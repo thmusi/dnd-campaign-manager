@@ -26,13 +26,19 @@ def list_campaign_files():
 def write_note(note_name, content):
     """Saves a note as a Markdown file in Obsidian via Google Drive."""
     note_name = f"{note_name.replace(' ', '_')}.md"
-    file_path = os.path.join("obsidian_vault", note_name)
 
+    # Ensure the directory exists
+    vault_path = "obsidian_vault"
+    os.makedirs(vault_path, exist_ok=True)  # ✅ Create if missing
+
+    file_path = os.path.join(vault_path, note_name)
+
+    # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    upload_file(file_path)
-    print(f"✅ Note saved to Google Drive: {note_name}")
+    upload_file(file_path)  # ✅ Upload to Google Drive
+    st.success(f"✅ Note saved to Google Drive: {note_name}")
     return note_name
 
 # Upload a file to Google Drive
