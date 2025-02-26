@@ -142,6 +142,10 @@ def render_sidebar():
             navigate_to("Main Menu")
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
+        st.markdown("---")
+        if st.session_state.page != "Main Menu":
+            render_main_menu_buttons()
+            
 
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
