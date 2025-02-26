@@ -181,11 +181,11 @@ forced_entry = st.sidebar.checkbox("Forced Entry (Bypass API Key)")
 if forced_entry:
     st.warning("⚠️ Forced Entry Enabled - OpenAI API will not function!", icon="⚠️")
     openai_api_key = None  # Prevents API calls from running
-        # Redirect user to main menu immediately when Forced Entry is enabled
-
+    
+    # Redirect user to main menu immediately when Forced Entry is enabled
     if st.button("Enter Main Menu"):
         st.session_state["menu"] = "main"
-        st.experimental_rerun()
+        st.rerun()
 else:
     openai_api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets else None
 
