@@ -105,7 +105,9 @@ def load_cart():
     if download_cart_file(file_id) and validate_cart_file():
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
-        st.success("Cart loaded from Google Drive!")
+        success_message = st.success("Cart loaded from Google Drive!")
+        time.sleep(10)
+        success_message.empty()
 
 @handle_exception
 def save_to_vault(content, filename="generated_content.md"):
