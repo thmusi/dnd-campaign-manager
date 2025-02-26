@@ -42,19 +42,15 @@ def handle_exception(func):
 
 @handle_exception
 def initialize_session_state():
-    """Initialize session state variables."""
-    if "api_key" not in st.session_state:
+    """Initialize session state variables only once."""
+    if "initialized" not in st.session_state:
         st.session_state.api_key = None
-    if "cart" not in st.session_state:
         st.session_state.cart = {}
-    if "page" not in st.session_state:
         st.session_state.page = "API Key"
-    if "selected_content_to_save" not in st.session_state:
         st.session_state.selected_content_to_save = None
-    if "selected_category" not in st.session_state:
         st.session_state.selected_category = ""
-    if "selected_file" not in st.session_state:
         st.session_state.selected_file = ""
+        st.session_state.initialized = True  # Mark as initialized
 
 initialize_session_state()
 
