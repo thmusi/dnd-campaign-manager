@@ -9,7 +9,7 @@ import json
 import logging
 from dotenv import load_dotenv
 
-# Import AI functionalities
+# Import AI and Obsidian functionalities
 from ai import (
     generate_npc,
     generate_shop,
@@ -74,6 +74,7 @@ def load_cart():
                 break  # If successful, exit loop
             except ssl.SSLError as e:
                 st.warning(f"SSL error, retrying... ({attempt + 1}/{attempts})")
+                logging.warning(f"SSL error on attempt {attempt + 1}: {e}")
                 time.sleep(2)  # Wait before retrying
         else:
             st.error("Failed to download cart.json after multiple attempts.")
