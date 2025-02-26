@@ -38,6 +38,14 @@ def initialize_drive_service():
         st.error("Google Drive API credentials are missing in Streamlit Secrets.")
         logging.error("Missing GOOGLE_DRIVE_API_CREDENTIALS in Streamlit Secrets.")
         return None
+    except json.JSONDecodeError:
+        st.error("Failed to decode Google Drive API credentials.")
+        logging.error("Invalid JSON format for GOOGLE_DRIVE_API_CREDENTIALS.")
+        return None
+    except Exception as e:
+        st.error(f"An unexpected error occurred while initializing Google Drive: {e}")
+        logging.error(f"Unexpected error: {e}")
+        return None
 
 drive_service = initialize_drive_service()
 
@@ -70,14 +78,14 @@ def save_cart():
     """Save the current cart to Google Drive with error handling."""
     try:
         json_data = json.dumps(st.session_state.cart)
-        file_path = "cart.json"
-        
-        with open(file_path, "w", encoding="utf-8") as f:
+        with open("cart.json", "w", encoding="utf-8") as f:
             f.write(json_data)
-
-        upload_file(file_path)
+        upload_file("cart.json")
         st.success("Cart saved to Google Drive!")
         logging.info("Cart saved successfully to Google Drive.")
+    except OSError as e:
+        st.error(f"File operation error: {e}")
+        logging.error(f"File operation error: {e}")
     except Exception as e:
         st.error(f"Failed to save cart: {e}")
         logging.error(f"Error saving cart: {e}")
@@ -243,16 +251,21 @@ def main():
     render_sidebar()
     load_cart()
     
+    if "initialized" not in st.session_state:
+        initialize_session_state()
+        st.session_state.initialized = True
+
     # Page rendering based on session state
-    if st.session_state.page == "API Key":
-        st.title("Enter your API Key")
-        st.session_state.api_key = st.text_input("API Key", type="password")
-        if st.button("Submit", key="submit_api_key"):
-            if st.session_state.api_key:
-                st.success("API Key set!")
-                navigate_to("Main Menu")
-            else:
-                st.error("Please enter a valid API Key.")
+    try:
+        if st.session_state.page == "API Key":
+            st.title("Enter your API Key")
+            st.session_state.api_key = st.text_input("API Key", type="password")
+            if st.button("Submit", key="submit_api_key"):
+                if st.session_state.api_key:
+                    st.success("API Key set!")
+                    navigate_to("Main Menu")
+                else:
+                    st.error("Please enter a valid API Key.")
 
     elif st.session_state.page == "Main Menu":
         st.title("Welcome to the DnD Campaign Manager")
@@ -442,6 +455,10 @@ def main():
         st.write("Tools for session intros and note assistance.")
         st.text_input("Session Details (e.g., S01):")
         st.button("Load Session History")
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        logging.error(f"Error in main application logic: {e}")
 
 if __name__ == "__main__":
     main()
