@@ -167,6 +167,20 @@ def render_main_menu_buttons():
     if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
 
+# Apply custom styling to buttons
+st.markdown(
+    """
+    <style>
+    .stButton>button {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 def main():
     """Main function to run the Streamlit application."""
     render_sidebar()
