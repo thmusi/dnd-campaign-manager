@@ -28,6 +28,26 @@ logging.basicConfig(level=logging.INFO)
 # Load environment variables
 load_dotenv()
 
+try:
+    credentials_json = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
+    credentials_dict = json.loads(credentials_json)
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+    drive_service = build('drive', 'v3', credentials=credentials)
+except KeyError:
+    st.error("Google Drive API credentials are missing in Streamlit Secrets.")
+    logging.error("Missing GOOGLE_DRIVE_API_CREDENTIALS in Streamlit Secrets.")
+    drive_service = None
+
+def cached_list_drive_files():
+    try:
+        return list_drive_files()
+    except Exception as e:
+        logging.error(f"Error listing Drive files: {e}")
+        st.error("Failed to retrieve Google Drive files.")
+        return []
+        
+# Function to safely list Google Drive files
+
 if "campaign_files" not in st.session_state:
     st.session_state["campaign_files"] = cached_list_drive_files()
 
