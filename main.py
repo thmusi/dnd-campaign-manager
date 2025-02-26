@@ -52,23 +52,18 @@ def initialize_session_state():
 initialize_session_state()
 
 ### Cached Data
-@st.cache_data(ttl=600)  # Cache results for 10 minutes
 def cached_generate_npc(npc_type):
     return generate_npc(npc_type)
 
-@st.cache_data(ttl=600)  
 def cached_generate_shop(shop_type):
     return generate_shop(shop_type)
 
-@st.cache_data(ttl=600)  
 def cached_generate_location(location_type):
     return generate_location(location_type)
 
-@st.cache_data(ttl=600)  
 def cached_modify_campaign_chapter(modified_chapter):
     return modify_campaign_chapter(modified_chapter)
 
-@st.cache_data(ttl=300)  # Cache file list for 5 minutes
 def cached_list_campaign_files():
     return list_campaign_files()
 
