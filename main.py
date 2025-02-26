@@ -125,7 +125,7 @@ def save_to_vault(content, filename="generated_content.md"):
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
-    if st.button("📁 Save to Vault"):
+    if st.button("📁 Save to Vault", key="save_to_vault_button"):
         base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
         save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
@@ -149,25 +149,25 @@ def render_sidebar():
             navigate_to("Cart")
         st.markdown("---")
         if st.session_state.page != "Main Menu":  
-            if st.button("🧙 Create NPC", key="generate_npc"):
+            if st.button("🧙 Create NPC", key="generate_npc_sidebar"):
                 navigate_to("Generate NPC")
-            if st.button("🏪 Create Shop", key="generate_shop"):
+            if st.button("🏪 Create Shop", key="generate_shop_sidebar"):
                 navigate_to("Create Shop")
-            if st.button("📍 Create Location", key="create_location"):
+            if st.button("📍 Create Location", key="create_location_sidebar"):
                 navigate_to("Create Location")
-            if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
+            if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter_sidebar"):
                 navigate_to("Adapt Chapter")
-            if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
+            if st.button("🧠 Campaign Assistant", key="campaign_assistant_sidebar"):
                 navigate_to("Campaign Assistant")
-            if st.button("⚔️ Encounter Generator", key="encounter_generator"):
+            if st.button("⚔️ Encounter Generator", key="encounter_generator_sidebar"):
                 navigate_to("Encounter Generator")
-            if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
+            if st.button("🏰 Dungeon Generator", key="dungeon_generator_sidebar"):
                 navigate_to("Dungeon Generator")
-            if st.button("📜 Quest Generator", key="quest_generator"):
+            if st.button("📜 Quest Generator", key="quest_generator_sidebar"):
                 navigate_to("Quest Generator")
-            if st.button("🌍 Worldbuilding", key="worldbuilding"):
+            if st.button("🌍 Worldbuilding", key="worldbuilding_sidebar"):
                 navigate_to("Worldbuilding")
-            if st.button("🗒 Session Management", key="session_management"):
+            if st.button("🗒 Session Management", key="session_management_sidebar"):
                 navigate_to("Session Management")
 
 # Apply custom styling to buttons
@@ -187,25 +187,25 @@ st.markdown(
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
     st.subheader("Main Menu Options")
-    if st.button("🧙 Create NPC", key="generate_npc"):
+    if st.button("🧙 Create NPC", key="generate_npc_main"):
         navigate_to("Generate NPC")
-    if st.button("🏪 Create Shop", key="generate_shop"):
+    if st.button("🏪 Create Shop", key="generate_shop_main"):
         navigate_to("Create Shop")
-    if st.button("📍 Create Location", key="create_location"):
+    if st.button("📍 Create Location", key="create_location_main"):
         navigate_to("Create Location")
-    if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
+    if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter_main"):
         navigate_to("Adapt Chapter")
-    if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
+    if st.button("🧠 Campaign Assistant", key="campaign_assistant_main"):
         navigate_to("Campaign Assistant")
-    if st.button("⚔️ Encounter Generator", key="encounter_generator"):
+    if st.button("⚔️ Encounter Generator", key="encounter_generator_main"):
         navigate_to("Encounter Generator")
-    if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
+    if st.button("🏰 Dungeon Generator", key="dungeon_generator_main"):
         navigate_to("Dungeon Generator")
-    if st.button("📜 Quest Generator", key="quest_generator"):
+    if st.button("📜 Quest Generator", key="quest_generator_main"):
         navigate_to("Quest Generator")
-    if st.button("🌍 Worldbuilding", key="worldbuilding"):
+    if st.button("🌍 Worldbuilding", key="worldbuilding_main"):
         navigate_to("Worldbuilding")
-    if st.button("🗒 Session Management", key="session_management"):
+    if st.button("🗒 Session Management", key="session_management_main"):
         navigate_to("Session Management")
 
 # Main application logic
@@ -234,13 +234,13 @@ def main():
     elif st.session_state.page == "Generate NPC":
         st.title("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
-        if st.button("Generate NPC"):
+        if st.button("Generate NPC", key="generate_npc_button"):
             npc = generate_npc(st.session_state.api_key, npc_prompt)  
             st.session_state.generated_npc = npc  
             st.text_area("Generated NPC:", npc, height=250)  
 
         if "generated_npc" in st.session_state:
-            if st.button("🛒 Add to Cart"):
+            if st.button("🛒 Add to Cart", key="add_npc_to_cart"):
                 st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  
                 st.session_state.cart["npc"].append(st.session_state.generated_npc)
                 save_cart()
@@ -265,7 +265,7 @@ def main():
                         edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
                         
                         # Send to Vault
-                        if st.button("Send to Vault"):
+                        if st.button("Send to Vault", key="send_to_vault_button"):
                             if edited_content.strip():
                                 # ✅ Trim filename to avoid excessively long names
                                 base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
@@ -285,13 +285,13 @@ def main():
     elif st.session_state.page == "Create Location":
         st.subheader("🏰 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
-        if st.button("Generate Location"):
+        if st.button("Generate Location", key="generate_location_button"):
             location = generate_location(st.session_state.api_key, location_prompt)  
             st.session_state.generated_location = location  
             st.text_area("Generated Location:", location, height=250)
 
         if "generated_location" in st.session_state:
-            if st.button("🛒 Add to Cart"):
+            if st.button("🛒 Add to Cart", key="add_location_to_cart"):
                 st.session_state.cart["location"] = st.session_state.cart.get("location", [])  
                 st.session_state.cart["location"].append(st.session_state.generated_location)
                 save_cart()
@@ -306,18 +306,17 @@ def main():
             "Enchanter", "Herbalist", "Bakery", "Tailor",
         ])
         shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
-        if st.button("Generate Shop"):
+        if st.button("Generate Shop", key="generate_shop_button"):
             shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  
             st.session_state.generated_shop = shop  
             st.text_area(f"Generated {shop_type}:", shop, height=250)
 
         if "generated_shop" in st.session_state:
-            if st.button("🛒 Add to Cart"):
+            if st.button("🛒 Add to Cart", key="add_shop_to_cart"):
                 st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  
                 st.session_state.cart["shop"].append(st.session_state.generated_shop)  
                 save_cart()
                 st.success("Added to Cart!")
-
 
     ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
@@ -327,13 +326,13 @@ def main():
         
         with col1:
             original_chapter = st.text_area("Original Chapter", height=500)
-            if st.button("Load"):
+            if st.button("Load", key="load_chapter_button"):
                 # Load functionality would go here
                 pass
         
         with col2:
             edits_input = st.text_area("Edits Input", height=500)
-            if st.button("What do you think?"):
+            if st.button("What do you think?", key="feedback_button"):
                 # Feedback functionality would go here
                 pass
         
@@ -345,33 +344,35 @@ def main():
     elif st.session_state.page == "Campaign Assistant":
         st.subheader("🧠 Campaign Assistant")
         st.write("Ask me anything !")
-        st.text_input("Enter your query:")
-        st.button("Submit Query")
+        query = st.text_input("Enter your query:")
+        if st.button("Submit Query", key="submit_query_button"):
+            # Query processing would go here
+            pass
 
 
     ### Encounter generator
     elif st.session_state.page == "Encounter Generator":
         st.subheader("⚔️ Encounter Generator")
         st.write("Generate encounters based on party size and details.")
-        st.number_input("Party Size", min_value=1, step=1, max_value=20)
-        st.number_input("Party Level", min_value=1, step=1, max_value=20)
-        st.text_input("Custom Encounter Prompt:")
-        st.button("Generate Encounter")
+        party_size = st.number_input("Party Size", min_value=1, step=1, max_value=20, key="party_size_input")
+        party_level = st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
+        custom_prompt = st.text_input("Custom Encounter Prompt:", key="custom_encounter_prompt")
+        if st.button("Generate Encounter", key="generate_encounter_button"):
+            # Encounter generation logic would go here
+            pass
 
     ### Dungeon Gen. 
     elif st.session_state.page == "Dungeon Generator":
         st.subheader("🏰 Dungeon Generator")
         st.write("Enter dungeon details and generate a full layout.")
-        dungeon_prompt = st.text_area("Dungeon Prompt:")
-        st.button("Generate Dungeon")
-      
-        if st.button("Generate Dungeon"):
+        dungeon_prompt = st.text_area("Dungeon Prompt:", key="dungeon_prompt_input")
+        if st.button("Generate Dungeon", key="generate_dungeon_button"):
             # Placeholder logic for dungeon generation
             st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
             st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
           
         if "generated_dungeon" in st.session_state:
-            if st.button("🗺️ Generate Grid Battle Map"):
+            if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map_button"):
                 import numpy as np
                 import matplotlib.pyplot as plt
                 import io
@@ -403,21 +404,27 @@ def main():
     elif st.session_state.page == "Quest Generator":
         st.subheader("📜 Quest Generator")
         st.write("Generate a quest based on input details.")
-        st.text_input("Quest Prompt:")
-        st.button("Generate Quest")
+        quest_prompt = st.text_input("Quest Prompt:", key="quest_prompt_input")
+        if st.button("Generate Quest", key="generate_quest_button"):
+            # Quest generation logic would go here
+            pass
 
     ### Worldbuilding Gen.
     elif st.session_state.page == "Worldbuilding":
         st.subheader("🌍 Worldbuilding Expansion")
         st.write("Auto-fill lore and expand world details.")
-        st.button("Generate World Lore")
+        if st.button("Generate World Lore", key="generate_world_lore_button"):
+            # World lore generation logic would go here
+            pass
 
     ### Session Management
     elif st.session_state.page == "Session Management":
         st.subheader("🗒 Session Management")
         st.write("Tools for session intros and note assistance.")
-        st.text_input("Session Details (e.g., S01):")
-        st.button("Load Session History")
+        session_details = st.text_input("Session Details (e.g., S01):", key="session_details_input")
+        if st.button("Load Session History", key="load_session_history_button"):
+            # Load session history logic would go here
+            pass
 
 if __name__ == "__main__":
     main()
