@@ -1,7 +1,6 @@
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
-from obsidian import list_drive_files, upload_file, download_file, save_ai_generated_content
-from obsidian import write_note, list_campaign_files
+from obsidian import list_drive_files, upload_file, download_file
 import ssl
 import time
 import os
@@ -10,13 +9,11 @@ import json
 import logging
 from dotenv import load_dotenv
 
-# Import AI and Obsidian functionalities
+# Import AI functionalities
 from ai import (
     generate_npc,
     generate_shop,
     generate_location,
-    modify_campaign_chapter,
-    ai_search_campaign_notes,
 )
 
 # Configure logging
@@ -75,14 +72,14 @@ def load_cart():
             try:
                 download_file(file_id, "cart.json")
                 break  # If successful, exit loop
-            except ssl.SSLError:
-                st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
+            except ssl.SSLError as e:
+                st.warning(f"SSL error, retrying... ({attempt + 1}/{attempts})")
                 time.sleep(2)  # Wait before retrying
         else:
             st.error("Failed to download cart.json after multiple attempts.")
             return
 
-        # ✅ Ensure the file exists and is not empty
+        # Ensure the file exists and is not empty
         if not os.path.exists("cart.json"):
             st.error("Downloaded cart.json is missing.")
             return
@@ -104,7 +101,6 @@ def load_cart():
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
-
 def save_to_vault(content, filename="generated_content.md"):
     """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
     vault_path = "obsidian_vault"
@@ -125,7 +121,7 @@ def save_to_vault(content, filename="generated_content.md"):
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
-    if st.button("📁 Save to Vault", key="save_to_vault_button"):
+    if st.button("📁 Save to Vault", key="save_to_vault"):
         base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
         save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
@@ -265,9 +261,9 @@ def main():
                         edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
                         
                         # Send to Vault
-                        if st.button("Send to Vault", key="send_to_vault_button"):
+                        if st.button("Send to Vault", key="send_to_vault"):
                             if edited_content.strip():
-                                # ✅ Trim filename to avoid excessively long names
+                                # Trim filename to avoid excessively long names
                                 base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
                                 safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
                                 save_to_vault(edited_content, filename=safe_filename)
@@ -326,7 +322,7 @@ def main():
         
         with col1:
             original_chapter = st.text_area("Original Chapter", height=500)
-            if st.button("Load", key="load_chapter_button"):
+            if st.button("Load", key="load_chapter"):
                 # Load functionality would go here
                 pass
         
@@ -344,22 +340,17 @@ def main():
     elif st.session_state.page == "Campaign Assistant":
         st.subheader("🧠 Campaign Assistant")
         st.write("Ask me anything !")
-        query = st.text_input("Enter your query:")
-        if st.button("Submit Query", key="submit_query_button"):
-            # Query processing would go here
-            pass
-
+        st.text_input("Enter your query:", key="query_input")
+        st.button("Submit Query", key="submit_query")
 
     ### Encounter generator
     elif st.session_state.page == "Encounter Generator":
         st.subheader("⚔️ Encounter Generator")
         st.write("Generate encounters based on party size and details.")
-        party_size = st.number_input("Party Size", min_value=1, step=1, max_value=20, key="party_size_input")
-        party_level = st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
-        custom_prompt = st.text_input("Custom Encounter Prompt:", key="custom_encounter_prompt")
-        if st.button("Generate Encounter", key="generate_encounter_button"):
-            # Encounter generation logic would go here
-            pass
+        st.number_input("Party Size", min_value=1, step=1, max_value=20, key="party_size_input")
+        st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
+        st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
+        st.button("Generate Encounter", key="generate_encounter_button")
 
     ### Dungeon Gen. 
     elif st.session_state.page == "Dungeon Generator":
@@ -372,7 +363,7 @@ def main():
             st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
           
         if "generated_dungeon" in st.session_state:
-            if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map_button"):
+            if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map"):
                 import numpy as np
                 import matplotlib.pyplot as plt
                 import io
@@ -404,27 +395,21 @@ def main():
     elif st.session_state.page == "Quest Generator":
         st.subheader("📜 Quest Generator")
         st.write("Generate a quest based on input details.")
-        quest_prompt = st.text_input("Quest Prompt:", key="quest_prompt_input")
-        if st.button("Generate Quest", key="generate_quest_button"):
-            # Quest generation logic would go here
-            pass
+        st.text_input("Quest Prompt:", key="quest_prompt_input")
+        st.button("Generate Quest", key="generate_quest_button")
 
     ### Worldbuilding Gen.
     elif st.session_state.page == "Worldbuilding":
         st.subheader("🌍 Worldbuilding Expansion")
         st.write("Auto-fill lore and expand world details.")
-        if st.button("Generate World Lore", key="generate_world_lore_button"):
-            # World lore generation logic would go here
-            pass
+        st.button("Generate World Lore", key="generate_world_lore_button")
 
     ### Session Management
     elif st.session_state.page == "Session Management":
         st.subheader("🗒 Session Management")
         st.write("Tools for session intros and note assistance.")
-        session_details = st.text_input("Session Details (e.g., S01):", key="session_details_input")
-        if st.button("Load Session History", key="load_session_history_button"):
-            # Load session history logic would go here
-            pass
+        st.text_input("Session Details (e.g., S01):", key="session_details_input")
+        st.button("Load Session History", key="load_session_history_button")
 
 if __name__ == "__main__":
     main()
