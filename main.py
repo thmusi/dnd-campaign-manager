@@ -175,6 +175,7 @@ if st.session_state.get("selected_content_to_save"):
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
         save_to_vault(content_data, filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
+        
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
