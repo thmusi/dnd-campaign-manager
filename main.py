@@ -8,7 +8,7 @@ import re
 import json
 import logging
 from dotenv import load_dotenv
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 # Import AI and Obsidian functionalities
 from ai import (
