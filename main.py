@@ -18,7 +18,6 @@ from ai import (
     modify_campaign_chapter,
     ai_search_campaign_notes,
 )
-
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -28,15 +27,19 @@ logging.basicConfig(level=logging.INFO)
 # Load environment variables
 load_dotenv()
 
-try:
-    credentials_json = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
-    credentials_dict = json.loads(credentials_json)
-    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-    drive_service = build('drive', 'v3', credentials=credentials)
-except KeyError:
-    st.error("Google Drive API credentials are missing in Streamlit Secrets.")
-    logging.error("Missing GOOGLE_DRIVE_API_CREDENTIALS in Streamlit Secrets.")
-    drive_service = None
+# Initialize Google Drive service
+def initialize_drive_service():
+    try:
+        credentials_json = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
+        credentials_dict = json.loads(credentials_json)
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+        return build('drive', 'v3', credentials=credentials)
+    except KeyError:
+        st.error("Google Drive API credentials are missing in Streamlit Secrets.")
+        logging.error("Missing GOOGLE_DRIVE_API_CREDENTIALS in Streamlit Secrets.")
+        return None
+
+drive_service = initialize_drive_service()
 
 def cached_list_drive_files():
     try:
@@ -45,9 +48,8 @@ def cached_list_drive_files():
         logging.error(f"Error listing Drive files: {e}")
         st.error("Failed to retrieve Google Drive files.")
         return []
-        
-# Function to safely list Google Drive files
 
+# Initialize session state
 if "campaign_files" not in st.session_state:
     st.session_state["campaign_files"] = cached_list_drive_files()
 
@@ -72,7 +74,7 @@ def save_cart():
         
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(json_data)
-        
+
         upload_file(file_path)
         st.success("Cart saved to Google Drive!")
         logging.info("Cart saved successfully to Google Drive.")
@@ -101,7 +103,7 @@ def load_cart():
                 download_file(file_id, "cart.json")
                 break
             except ssl.SSLError:
-                st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
+                st.warning(f"SSL error, retrying... ({attempt + 1}/{attempts})")
                 time.sleep(2)
         else:
             st.error("Failed to download cart.json after multiple attempts.")
@@ -135,8 +137,11 @@ def save_to_vault(content, filename="generated_content.md"):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
     
-    upload_file(file_path)
-    st.success(f"✅ File saved successfully to Google Drive: {filename}")
+    if drive_service:  # Ensure drive_service is initialized
+        upload_file(file_path)
+        st.success(f"✅ File saved successfully to Google Drive: {filename}")
+    else:
+        st.error("Drive service not initialized. File not saved.")
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
@@ -145,12 +150,8 @@ if st.session_state.get("selected_content_to_save"):
         content_data = st.session_state.get("selected_content_to_save", "")
         
         # Extract a meaningful filename based on content type
-        if category == "npc" and "name" in content_data:
-            base_filename = content_data["name"]
-        elif category == "location" and "name" in content_data:
-            base_filename = content_data["name"]
-        elif category == "shop" and "name" in content_data:
-            base_filename = content_data["name"]
+        if category in content_data:
+            base_filename = content_data[category].get("name", f"{category}_content")
         else:
             base_filename = f"{category}_{st.session_state.get('selected_file', 'content')}"
         
@@ -158,7 +159,7 @@ if st.session_state.get("selected_content_to_save"):
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
         save_to_vault(content_data, filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
-        
+
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
@@ -346,7 +347,6 @@ def main():
                 save_cart()
                 st.success("Added to Cart!")
 
-
     ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
         st.subheader("📖 Adapt Chapter to Campaign")
@@ -368,7 +368,6 @@ def main():
         with col3:
             ai_output = st.text_area("AI Output", height=500)
     
-
     ### Campaign AI Asst.
     elif st.session_state.page == "Campaign Assistant":
         st.subheader("🧠 Campaign Assistant")
@@ -423,7 +422,6 @@ def main():
                 st.pyplot(fig)
                 st.markdown(href, unsafe_allow_html=True)
                 st.success("Battle map generated! Click the link above to download.")
-
 
     ### Quest Gen.
     elif st.session_state.page == "Quest Generator":
