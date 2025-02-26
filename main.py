@@ -51,6 +51,8 @@ def initialize_session_state():
         st.session_state.cart = {}
     if "page" not in st.session_state:
         st.session_state.page = "API Key"
+    if "menu" not in st.session_state:
+        st.session_state.menu = "home"
 
 initialize_session_state()
 
@@ -179,6 +181,13 @@ forced_entry = st.sidebar.checkbox("Forced Entry (Bypass API Key)")
 if forced_entry:
     st.warning("⚠️ Forced Entry Enabled - OpenAI API will not function!", icon="⚠️")
     openai_api_key = None  # Prevents API calls from running
+        # Redirect user to main menu immediately when Forced Entry is enabled
+
+    if st.button("Enter Main Menu"):
+
+        st.session_state["menu"] = "main"
+
+        st.experimental_rerun()
 else:
     openai_api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets else None
 
