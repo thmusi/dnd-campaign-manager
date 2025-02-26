@@ -7,7 +7,6 @@ import time
 import os
 import re
 
-@st.cache_data(ttl=300)  # Cache file list for 5 minutes
 def cached_list_drive_files():
     return list_drive_files()
 
@@ -47,7 +46,7 @@ def initialize_session_state():
         st.session_state.cart = {}
     if "page" not in st.session_state:
         st.session_state.page = "API Key"
-    if "menu" not in st.session_state:
+    if "menu" not in st.session_state or st.session_state["menu"] is None:
         st.session_state.menu = "home"
 
 initialize_session_state()
@@ -187,14 +186,18 @@ else:
 
 # Check if API key is missing (unless forced entry is active)
 if not openai_api_key and not forced_entry:
-    st.error("❌ OpenAI API key is missing! Please set it in Streamlit secrets.")
-    st.stop()
+    openai_api_key = st.text_input("Enter OpenAI API Key:", type="password")
+    if st.button("Save Key"):
+        st.session_state["api_key"] = openai_api_key
+        st.rerun()
 
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
 
 def render_sidebar():
+    with st.sidebar:
+        with st.expander("Navigation Menu", expanded=True):
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
@@ -446,3 +449,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
