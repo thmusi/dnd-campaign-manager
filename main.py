@@ -330,6 +330,8 @@ def main():
     elif st.session_state.page == "Dungeon Generator":
         st.subheader("🏰 Dungeon Generator")
         st.write("Enter dungeon details and generate a full layout.")
+        st.number_input("Party Size", min_value=1, step=1, max_value=20, key="party_size_input")
+        st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
         dungeon_prompt = st.text_area("Dungeon Prompt:", key="dungeon_prompt_input")
         if st.button("Generate Dungeon", key="generate_dungeon_button"):
             # Placeholder logic for dungeon generation
