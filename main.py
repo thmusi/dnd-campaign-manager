@@ -196,9 +196,10 @@ def navigate_to(page_name):
     st.session_state.page = page_name
 
 def render_sidebar():
+    """Render the sidebar navigation menu."""
     with st.sidebar:
     with st.expander("Navigation Menu", expanded=True):
-        pass  # Fix indentation error
+        st.title("Navigation")
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
@@ -450,4 +451,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
