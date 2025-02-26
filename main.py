@@ -6,14 +6,6 @@ import ssl
 import time
 import os
 import re
-
-def cached_list_drive_files():
-    return list_drive_files()
-
-# Use cached version
-campaign_files = cached_list_drive_files()
-
-import os
 import json
 import logging
 from dotenv import load_dotenv
@@ -26,6 +18,9 @@ from ai import (
     modify_campaign_chapter,
     ai_search_campaign_notes,
 )
+
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,36 +44,16 @@ def initialize_session_state():
 
 initialize_session_state()
 
-### Cached Data
-def cached_generate_npc(npc_type):
-    return generate_npc(npc_type)
-
-def cached_generate_shop(shop_type):
-    return generate_shop(shop_type)
-
-def cached_generate_location(location_type):
-    return generate_location(location_type)
- 
-def cached_modify_campaign_chapter(modified_chapter):
-    return modify_campaign_chapter(modified_chapter)
-
-def cached_list_campaign_files():
-    return list_campaign_files()
-
-# Use cached function
-campaign_files = cached_list_campaign_files()
-
 def save_cart():
-    """Save the current cart to Google Drive."""
+    """Save the current cart to Google Drive with error handling."""
     try:
         json_data = json.dumps(st.session_state.cart)
         file_path = "cart.json"
-
-        # Save locally before upload
+        
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(json_data)
-
-        upload_file(file_path)  # Upload to Google Drive
+        
+        upload_file(file_path)
         st.success("Cart saved to Google Drive!")
         logging.info("Cart saved successfully to Google Drive.")
     except Exception as e:
@@ -86,12 +61,11 @@ def save_cart():
         logging.error(f"Error saving cart: {e}")
 
 def load_cart():
-    """Load the cart from Google Drive with file validation and retry mechanism for SSL errors."""
+    """Load the cart from Google Drive with error handling and retries."""
     try:
         file_id = None
         files = list_drive_files()
 
-        # Find the cart.json file in Google Drive
         for file in files:
             if file["name"] == "cart.json":
                 file_id = file["id"]
@@ -101,34 +75,26 @@ def load_cart():
             st.warning("No saved cart found in Google Drive.")
             return
 
-        # Retry download if SSL error occurs
         attempts = 3
         for attempt in range(attempts):
             try:
                 download_file(file_id, "cart.json")
-                break  # If successful, exit loop
+                break
             except ssl.SSLError:
                 st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
-                time.sleep(2)  # Wait before retrying
+                time.sleep(2)
         else:
             st.error("Failed to download cart.json after multiple attempts.")
             return
 
-        # ✅ Ensure the file exists and is not empty
-        if not os.path.exists("cart.json"):
-            st.error("Downloaded cart.json is missing.")
+        if not os.path.exists("cart.json") or os.stat("cart.json").st_size == 0:
+            st.error("Downloaded cart.json is missing or empty. Try saving again.")
             return
 
-        if os.stat("cart.json").st_size == 0:
-            st.error("Downloaded cart.json is empty. Try saving the cart again.")
-            return
-
-        # Read the file safely
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
 
         st.success("Cart loaded from Google Drive!")
-
     except json.JSONDecodeError:
         st.error("Failed to decode cart data. Please check the file format.")
     except ssl.SSLError as e:
@@ -136,23 +102,20 @@ def load_cart():
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
-
 def save_to_vault(content, filename="generated_content.md"):
-    """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
+    """Save the modified content to Google Drive securely."""
     vault_path = "obsidian_vault"
-    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
+    os.makedirs(vault_path, exist_ok=True)
     
-    # Ensure filename has only one .md extension
     if not filename.endswith(".md"):
         filename += ".md"
     
     file_path = os.path.join(vault_path, filename)
 
-    # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
-
-    upload_file(file_path)  # Upload to Google Drive
+    
+    upload_file(file_path)
     st.success(f"✅ File saved successfully to Google Drive: {filename}")
 
 # Ensure saving to vault happens only when a button is pressed
