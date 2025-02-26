@@ -7,6 +7,11 @@ import time
 import os
 import re
 
+
+# Debugging: Print available functions in obsidian.py
+print("🔍 Available functions in obsidian.py:", dir(obsidian))
+
+@st.cache_data(ttl=300)  # Cache file list for 5 minutes
 def cached_list_drive_files():
     return list_drive_files()
 
@@ -46,8 +51,6 @@ def initialize_session_state():
         st.session_state.cart = {}
     if "page" not in st.session_state:
         st.session_state.page = "API Key"
-    if "menu" not in st.session_state or st.session_state["menu"] is None:
-        st.session_state.menu = "home"
 
 initialize_session_state()
 
@@ -170,37 +173,11 @@ if st.session_state.get("selected_content_to_save"):
         save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
 
-# Add a Forced Entry toggle
-forced_entry = st.sidebar.checkbox("Forced Entry (Bypass API Key)")
-
-if forced_entry:
-    st.warning("⚠️ Forced Entry Enabled - OpenAI API will not function!", icon="⚠️")
-    openai_api_key = None  # Prevents API calls from running
-    
-    # Redirect user to main menu immediately when Forced Entry is enabled
-    if st.button("Enter Main Menu"):
-        st.session_state["menu"] = "main"
-        st.rerun()
-else:
-    openai_api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets else None
-
-# Check if API key is missing (unless forced entry is active)
-if not openai_api_key and not forced_entry:
-    openai_api_key = st.text_input("Enter OpenAI API Key:", type="password")
-    if st.button("Save Key"):
-        st.session_state["api_key"] = openai_api_key
-        st.rerun()
-
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
 
 def render_sidebar():
-    """Render the sidebar navigation menu."""
-    with st.sidebar:
-        with st.expander("Navigation Menu", expanded=True):
-            st.title("Navigation")
-        st.title("Navigation")
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
@@ -452,5 +429,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
