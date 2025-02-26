@@ -464,9 +464,5 @@ def main():
             st.text_input("Session Details (e.g., S01):")
             st.button("Load Session History")
     
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-            logging.error(f"Error in main application logic: {e}")
-
 if __name__ == "__main__":
     main()
