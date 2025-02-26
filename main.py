@@ -199,6 +199,7 @@ def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
         with st.expander("Navigation Menu", expanded=True):
+            st.title("Navigation")
         st.title("Navigation")
     """Render the sidebar navigation menu."""
     with st.sidebar:
