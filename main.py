@@ -453,3 +453,20 @@ def main():
 
         ### Worldbuilding Gen.
         elif st.session_state.page == "Worldbuilding":
+            st.subheader("🌍 Worldbuilding Expansion")
+            st.write("Auto-fill lore and expand world details.")
+            st.button("Generate World Lore")
+    
+        ### Session Management
+        elif st.session_state.page == "Session Management":
+            st.subheader("🗒 Session Management")
+            st.write("Tools for session intros and note assistance.")
+            st.text_input("Session Details (e.g., S01):")
+            st.button("Load Session History")
+    
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            logging.error(f"Error in main application logic: {e}")
+
+if __name__ == "__main__":
+    main()
