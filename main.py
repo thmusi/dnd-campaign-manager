@@ -8,6 +8,7 @@ import re
 import json
 import logging
 from dotenv import load_dotenv
+from pydantic import BaseSettings
 
 # Import AI and Obsidian functionalities
 from ai import (
@@ -19,9 +20,27 @@ from ai import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+# Configuration Management
+class Settings(BaseSettings):
+    GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
+
+settings = Settings()
+
 # Load environment variables
 load_dotenv()
 
+def handle_exception(func):
+    """Centralized error handling decorator."""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            logging.error(f"Error in {func.__name__}: {e}")
+            return None
+    return wrapper
+
+@handle_exception
 def initialize_session_state():
     """Initialize session state variables."""
     if "api_key" not in st.session_state:
@@ -30,94 +49,75 @@ def initialize_session_state():
         st.session_state.cart = {}
     if "page" not in st.session_state:
         st.session_state.page = "API Key"
+    if "selected_content_to_save" not in st.session_state:
+        st.session_state.selected_content_to_save = None
+    if "selected_category" not in st.session_state:
+        st.session_state.selected_category = ""
+    if "selected_file" not in st.session_state:
+        st.session_state.selected_file = ""
 
 initialize_session_state()
 
+@handle_exception
 def save_cart():
     """Save the current cart to Google Drive."""
-    try:
-        json_data = json.dumps(st.session_state.cart)
-        file_path = "cart.json"
+    json_data = json.dumps(st.session_state.cart)
+    file_path = "cart.json"
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(json_data)
+    upload_file(file_path)
+    st.success("Cart saved to Google Drive!")
+    logging.info("Cart saved successfully to Google Drive.")
 
-        # Save locally before upload
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(json_data)
+@handle_exception
+def download_cart_file(file_id):
+    """Download the cart.json file from Google Drive."""
+    attempts = 3
+    for attempt in range(attempts):
+        try:
+            download_file(file_id, "cart.json")
+            return True
+        except ssl.SSLError:
+            st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
+            logging.warning(f"SSL error on attempt {attempt+1}")
+            time.sleep(2)
+    return False
 
-        upload_file(file_path)  # Upload to Google Drive
-        st.success("Cart saved to Google Drive!")
-        logging.info("Cart saved successfully to Google Drive.")
-    except Exception as e:
-        st.error(f"Failed to save cart: {e}")
-        logging.error(f"Error saving cart: {e}")
+@handle_exception
+def validate_cart_file():
+    """Validate the downloaded cart.json file."""
+    if not os.path.exists("cart.json"):
+        st.error("Downloaded cart.json is missing.")
+        return False
+    if os.stat("cart.json").st_size == 0:
+        st.error("Downloaded cart.json is empty. Try saving the cart again.")
+        return False
+    return True
 
+@handle_exception
 def load_cart():
-    """Load the cart from Google Drive with file validation and retry mechanism for SSL errors."""
-    try:
-        file_id = None
-        files = list_drive_files()
-
-        # Find the cart.json file in Google Drive
-        for file in files:
-            if file["name"] == "cart.json":
-                file_id = file["id"]
-                break
-
-        if not file_id:
-            st.warning("No saved cart found in Google Drive.")
-            return
-
-        # Retry download if SSL error occurs
-        attempts = 3
-        for attempt in range(attempts):
-            try:
-                download_file(file_id, "cart.json")
-                break  # If successful, exit loop
-            except ssl.SSLError as e:
-                st.warning(f"SSL error, retrying... ({attempt + 1}/{attempts})")
-                logging.warning(f"SSL error on attempt {attempt + 1}: {e}")
-                time.sleep(2)  # Wait before retrying
-        else:
-            st.error("Failed to download cart.json after multiple attempts.")
-            return
-
-        # Ensure the file exists and is not empty
-        if not os.path.exists("cart.json"):
-            st.error("Downloaded cart.json is missing.")
-            return
-
-        if os.stat("cart.json").st_size == 0:
-            st.error("Downloaded cart.json is empty. Try saving the cart again.")
-            return
-
-        # Read the file safely
+    """Load the cart from Google Drive with validation and retries."""
+    files = list_drive_files()
+    file_id = next((file["id"] for file in files if file["name"] == "cart.json"), None)
+    if not file_id:
+        st.warning("No saved cart found in Google Drive.")
+        return
+    if download_cart_file(file_id) and validate_cart_file():
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
-
         st.success("Cart loaded from Google Drive!")
 
-    except json.JSONDecodeError:
-        st.error("Failed to decode cart data. Please check the file format.")
-    except ssl.SSLError as e:
-        st.error(f"SSL error: {e}")
-    except Exception as e:
-        st.error(f"Error loading cart: {e}")
-
+@handle_exception
 def save_to_vault(content, filename="generated_content.md"):
-    """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
+    """Saves content to the user's Obsidian-Google Drive vault."""
     vault_path = "obsidian_vault"
-    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
-    
-    # Ensure filename has only one .md extension
+    os.makedirs(vault_path, exist_ok=True)
     if not filename.endswith(".md"):
         filename += ".md"
-    
     file_path = os.path.join(vault_path, filename)
-
-    # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
-
-    upload_file(file_path)  # Upload to Google Drive
+    upload_file(file_path)
     st.success(f"✅ File saved successfully to Google Drive: {filename}")
 
 # Ensure saving to vault happens only when a button is pressed
@@ -136,82 +136,17 @@ def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
-
-        # Check the current page and render buttons accordingly
         if st.session_state.page == "API Key":
-            return  # No sidebar for API Key page
+            return
         if st.button("🏠 Home", key="home_sidebar"):
             navigate_to("Main Menu")
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
-        st.markdown("---")
-        if st.session_state.page != "Main Menu":  
-            if st.button("🧙 Create NPC", key="generate_npc_sidebar"):
-                navigate_to("Generate NPC")
-            if st.button("🏪 Create Shop", key="generate_shop_sidebar"):
-                navigate_to("Create Shop")
-            if st.button("📍 Create Location", key="create_location_sidebar"):
-                navigate_to("Create Location")
-            if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter_sidebar"):
-                navigate_to("Adapt Chapter")
-            if st.button("🧠 Campaign Assistant", key="campaign_assistant_sidebar"):
-                navigate_to("Campaign Assistant")
-            if st.button("⚔️ Encounter Generator", key="encounter_generator_sidebar"):
-                navigate_to("Encounter Generator")
-            if st.button("🏰 Dungeon Generator", key="dungeon_generator_sidebar"):
-                navigate_to("Dungeon Generator")
-            if st.button("📜 Quest Generator", key="quest_generator_sidebar"):
-                navigate_to("Quest Generator")
-            if st.button("🌍 Worldbuilding", key="worldbuilding_sidebar"):
-                navigate_to("Worldbuilding")
-            if st.button("🗒 Session Management", key="session_management_sidebar"):
-                navigate_to("Session Management")
 
-# Apply custom styling to buttons
-st.markdown(
-    """
-    <style>
-    .stButton>button {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-def render_main_menu_buttons():
-    """Render navigation buttons on the Main Menu page."""
-    st.subheader("Main Menu Options")
-    if st.button("🧙 Create NPC", key="generate_npc_main"):
-        navigate_to("Generate NPC")
-    if st.button("🏪 Create Shop", key="generate_shop_main"):
-        navigate_to("Create Shop")
-    if st.button("📍 Create Location", key="create_location_main"):
-        navigate_to("Create Location")
-    if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter_main"):
-        navigate_to("Adapt Chapter")
-    if st.button("🧠 Campaign Assistant", key="campaign_assistant_main"):
-        navigate_to("Campaign Assistant")
-    if st.button("⚔️ Encounter Generator", key="encounter_generator_main"):
-        navigate_to("Encounter Generator")
-    if st.button("🏰 Dungeon Generator", key="dungeon_generator_main"):
-        navigate_to("Dungeon Generator")
-    if st.button("📜 Quest Generator", key="quest_generator_main"):
-        navigate_to("Quest Generator")
-    if st.button("🌍 Worldbuilding", key="worldbuilding_main"):
-        navigate_to("Worldbuilding")
-    if st.button("🗒 Session Management", key="session_management_main"):
-        navigate_to("Session Management")
-
-# Main application logic
 def main():
     """Main function to run the Streamlit application."""
     render_sidebar()
     load_cart()
-    
-    # Page rendering based on session state
     if st.session_state.page == "API Key":
         st.title("Enter your API Key")
         st.session_state.api_key = st.text_input("API Key", type="password")
