@@ -7,10 +7,6 @@ import time
 import os
 import re
 
-
-# Debugging: Print available functions in obsidian.py
-print("🔍 Available functions in obsidian.py:", dir(obsidian))
-
 @st.cache_data(ttl=300)  # Cache file list for 5 minutes
 def cached_list_drive_files():
     return list_drive_files()
