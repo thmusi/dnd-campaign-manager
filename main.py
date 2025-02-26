@@ -362,8 +362,42 @@ def main():
     elif st.session_state.page == "Dungeon Generator":
         st.subheader("🏰 Dungeon Generator")
         st.write("Enter dungeon details and generate a full layout.")
-        st.text_input("Dungeon Prompt:")
+        dungeon_prompt = st.text_area("Dungeon Prompt:")
         st.button("Generate Dungeon")
+      
+        if st.button("Generate Dungeon"):
+            # Placeholder logic for dungeon generation
+            st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
+            st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
+          
+        if "generated_dungeon" in st.session_state:
+            if st.button("🗺️ Generate Grid Battle Map"):
+                import numpy as np
+                import matplotlib.pyplot as plt
+                import io
+                import base64
+
+                grid_size = 10  # Adjust for larger maps
+                dungeon_map = np.random.choice([0, 1], size=(grid_size, grid_size), p=[0.7, 0.3])
+
+                fig, ax = plt.subplots()
+                ax.imshow(dungeon_map, cmap="gray_r", interpolation="nearest")
+                ax.set_xticks([])
+                ax.set_yticks([])
+
+                # Save to a buffer
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png")
+                buf.seek(0)
+                
+                # Create a downloadable link
+                b64 = base64.b64encode(buf.getvalue()).decode()
+                href = f'<a href="data:image/png;base64,{b64}" download="battle_map.png">📥 Download Battle Map</a>'
+
+                st.pyplot(fig)
+                st.markdown(href, unsafe_allow_html=True)
+                st.success("Battle map generated! Click the link above to download.")
+
 
     ### Quest Gen.
     elif st.session_state.page == "Quest Generator":
