@@ -184,9 +184,7 @@ if forced_entry:
         # Redirect user to main menu immediately when Forced Entry is enabled
 
     if st.button("Enter Main Menu"):
-
         st.session_state["menu"] = "main"
-
         st.experimental_rerun()
 else:
     openai_api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets else None
