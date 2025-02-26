@@ -18,50 +18,12 @@ from ai import (
     modify_campaign_chapter,
     ai_search_campaign_notes,
 )
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Load environment variables
 load_dotenv()
-
-# Initialize Google Drive service
-def initialize_drive_service():
-    try:
-        credentials_json = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
-        credentials_dict = json.loads(credentials_json)
-        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-        return build('drive', 'v3', credentials=credentials)
-    except KeyError:
-        st.error("Google Drive API credentials are missing in Streamlit Secrets.")
-        logging.error("Missing GOOGLE_DRIVE_API_CREDENTIALS in Streamlit Secrets.")
-        return None
-    except json.JSONDecodeError:
-        st.error("Failed to decode Google Drive API credentials.")
-        logging.error("Invalid JSON format for GOOGLE_DRIVE_API_CREDENTIALS.")
-        return None
-    except Exception as e:
-        st.error(f"An unexpected error occurred while initializing Google Drive: {e}")
-        logging.error(f"Unexpected error: {e}")
-        return None
-
-drive_service = initialize_drive_service()
-
-def cached_list_drive_files():
-    try:
-        return list_drive_files()
-    except Exception as e:
-        logging.error(f"Error listing Drive files: {e}")
-        st.error("Failed to retrieve Google Drive files.")
-        return []
-
-# Initialize session state
-if "campaign_files" not in st.session_state:
-    st.session_state["campaign_files"] = cached_list_drive_files()
-
-st.write("Available Campaign Files:", st.session_state["campaign_files"])
 
 def initialize_session_state():
     """Initialize session state variables."""
@@ -75,18 +37,18 @@ def initialize_session_state():
 initialize_session_state()
 
 def save_cart():
-    """Save the current cart to Google Drive with error handling."""
+    """Save the current cart to Google Drive."""
     try:
         json_data = json.dumps(st.session_state.cart)
-        with open("cart.json", "w", encoding="utf-8") as f:
-            f.write(json_data)
-        upload_file("cart.json")
+        file_path = "cart.json"
 
+        # Save locally before upload
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(json_data)
+
+        upload_file(file_path)  # Upload to Google Drive
         st.success("Cart saved to Google Drive!")
         logging.info("Cart saved successfully to Google Drive.")
-    except OSError as e:
-        st.error(f"File operation error: {e}")
-        logging.error(f"File operation error: {e}")
     except Exception as e:
         st.error(f"Failed to save cart: {e}")
         logging.error(f"Error saving cart: {e}")
@@ -120,11 +82,15 @@ def load_cart():
             st.error("Failed to download cart.json after multiple attempts.")
             return
 
-        # Ensure the file exists and is not empty
-        if not os.path.exists("cart.json") or os.stat("cart.json").st_size == 0:
-            st.error("Downloaded cart.json is missing or empty. Try saving again.")
+        # ✅ Ensure the file exists and is not empty
+        if not os.path.exists("cart.json"):
+            st.error("Downloaded cart.json is missing.")
             return
-            
+
+        if os.stat("cart.json").st_size == 0:
+            st.error("Downloaded cart.json is empty. Try saving the cart again.")
+            return
+
         # Read the file safely
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
@@ -137,6 +103,7 @@ def load_cart():
         st.error(f"SSL error: {e}")
     except Exception as e:
         st.error(f"Error loading cart: {e}")
+
 
 def save_to_vault(content, filename="generated_content.md"):
     """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
@@ -153,27 +120,15 @@ def save_to_vault(content, filename="generated_content.md"):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    if drive_service:  # Ensure drive_service is initialized
-        upload_file(file_path)  # Upload the file after saving locally
-        st.success(f"✅ File saved successfully to Google Drive: {filename}")
-    else:
-        st.error("Drive service not initialized. File not saved.")
+    upload_file(file_path)  # Upload to Google Drive
+    st.success(f"✅ File saved successfully to Google Drive: {filename}")
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
     if st.button("📁 Save to Vault"):
-        category = st.session_state.get("selected_category", "generated_content")
-        
-        content_data = st.session_state.get("selected_content_to_save", "")
-
-        # Extract a meaningful filename based on content type
-        if category in content_data:
-            base_filename = content_data[category].get("name", f"{category}_content")
-        else:
-            base_filename = f"{category}_{st.session_state.get('selected_file', 'content')}"
-
+        base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-        save_to_vault(content_data, filename=safe_filename)
+        save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
 
 def navigate_to(page_name):
@@ -260,209 +215,175 @@ def main():
     load_cart()
     
     # Page rendering based on session state
-    try:
-        if st.session_state.page == "API Key":
-            st.title("Enter your API Key")
-            st.session_state.api_key = st.text_input("API Key", type="password")
-            if st.button("Submit", key="submit_api_key"):
-                if st.session_state.api_key:
-                    st.success("API Key set!")
-                    navigate_to("Main Menu")
-                else:
-                    st.error("Please enter a valid API Key.")
-
-        elif st.session_state.page == "Main Menu":
-            st.title("Welcome to the DnD Campaign Manager")
-            st.markdown("Select an option from the buttons below to get started.")
-            render_main_menu_buttons()
-
-        # Generate NPC
-        elif st.session_state.page == "Generate NPC":
-            st.title("🛡️ Generate an NPC")
-            npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
-            if st.button("Generate NPC"):
-                npc = generate_npc(st.session_state.api_key, npc_prompt)  
-                st.session_state.generated_npc = npc  
-                st.text_area("Generated NPC:", npc, height=250)  
-
-            if "generated_npc" in st.session_state:
-                if st.button("🛒 Add to Cart"):
-                    st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  
-                    st.session_state.cart["npc"].append(st.session_state.generated_npc)
-                    save_cart()
-                    st.success("Added to Cart!")
-
-        # Cart page rendering
-        elif st.session_state.page == "Cart":
-            st.title("🛒 Your Cart")
-            categories = list(st.session_state.cart.keys())
-            if categories:
-                selected_category = st.selectbox("📂 Select Folder", categories)
-                if selected_category in st.session_state.cart:
-                    files = st.session_state.cart[selected_category]
-                    if files:
-                        selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-                        if selected_file:
-                            st.markdown("### 📖 Preview")
-                            st.markdown(selected_file)
-                            
-                            # Modify Content Directly in Cart
-                            st.subheader("Modify Selected Content")
-                            edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
-                            
-                            # Send to Vault
-                            if st.button("Send to Vault"):
-                                if edited_content.strip():
-                                    # Trim filename to avoid excessively long names
-                                    base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
-                                    safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-                                    save_to_vault(edited_content, filename=safe_filename)
-                                else:
-                                    st.warning("Content is empty! Please modify before sending to vault.")
-                    else:
-                        st.warning(f"No files found in {selected_category}.")
-                else:
-                    st.warning("Selected category does not exist.")
+    if st.session_state.page == "API Key":
+        st.title("Enter your API Key")
+        st.session_state.api_key = st.text_input("API Key", type="password")
+        if st.button("Submit", key="submit_api_key"):
+            if st.session_state.api_key:
+                st.success("API Key set!")
+                navigate_to("Main Menu")
             else:
-                st.warning("Your cart is empty.")
+                st.error("Please enter a valid API Key.")
 
-        # Generate Location
-        elif st.session_state.page == "Create Location":
-            st.subheader("🏰 Generate a Location")
-            location_prompt = st.text_area("What do you already know about this location? (Optional)")
-            if st.button("Generate Location"):
-                location = generate_location(st.session_state.api_key, location_prompt)  
-                st.session_state.generated_location = location  
-                st.text_area("Generated Location:", location, height=250)
+    elif st.session_state.page == "Main Menu":
+        st.title("Welcome to the DnD Campaign Manager")
+        st.markdown("Select an option from the buttons below to get started.")
+        render_main_menu_buttons()
 
-            if "generated_location" in st.session_state:
-                if st.button("🛒 Add to Cart"):
-                    st.session_state.cart["location"] = st.session_state.cart.get("location", [])  
-                    st.session_state.cart["location"].append(st.session_state.generated_location)
-                    save_cart()
-                    st.success("Added to Cart!")
+    # Generate NPC
+    elif st.session_state.page == "Generate NPC":
+        st.title("🛡️ Generate an NPC")
+        npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
+        if st.button("Generate NPC"):
+            npc = generate_npc(st.session_state.api_key, npc_prompt)  
+            st.session_state.generated_npc = npc  
+            st.text_area("Generated NPC:", npc, height=250)  
 
-        # Generate Shop
-        elif st.session_state.page == "Create Shop":
-            st.subheader("🛒 Generate a Shop")
-            shop_type = st.selectbox("Select Shop Type", [
-                "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
-                "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Bookstore", "Stable",
-                "Enchanter", "Herbalist", "Bakery", "Tailor",
-            ])
-            shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
-            if st.button("Generate Shop"):
-                shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  
-                st.session_state.generated_shop = shop  
-                st.text_area(f"Generated {shop_type}:", shop, height=250)
+        if "generated_npc" in st.session_state:
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  
+                st.session_state.cart["npc"].append(st.session_state.generated_npc)
+                save_cart()
+                st.success("Added to Cart!")
 
-            if "generated_shop" in st.session_state:
-                if st.button("🛒 Add to Cart"):
-                    st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  
-                    st.session_state.cart["shop"].append(st.session_state.generated_shop)  
-                    save_cart()
-                    st.success("Added to Cart!")
+    # Cart page rendering
+    elif st.session_state.page == "Cart":
+        st.title("🛒 Your Cart")
+        categories = list(st.session_state.cart.keys())
+        if categories:
+            selected_category = st.selectbox("📂 Select Folder", categories)
+            if selected_category in st.session_state.cart:
+                files = st.session_state.cart[selected_category]
+                if files:
+                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+                    if selected_file:
+                        st.markdown("### 📖 Preview")
+                        st.markdown(selected_file)
+                        
+                        # Modify Content Directly in Cart
+                        st.subheader("Modify Selected Content")
+                        edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
+                        
+                        # Send to Vault
+                        if st.button("Send to Vault"):
+                            if edited_content.strip():
+                                # ✅ Trim filename to avoid excessively long names
+                                base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
+                                safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+                                save_to_vault(edited_content, filename=safe_filename)
 
-        ### Chapter Adaptation
-        elif st.session_state.page == "Adapt Chapter":
-            st.subheader("📖 Adapt Chapter to Campaign")
-            st.write("Modify your campaign text dynamically.")
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                original_chapter = st.text_area("Original Chapter", height=500)
-                if st.button("Load"):
-                    # Load functionality would go here
-                    pass
-            
-            with col2:
-                edits_input = st.text_area("Edits Input", height=500)
-                if st.button("What do you think?"):
-                    # Feedback functionality would go here
-                    pass
-            
-            with col3:
-                ai_output = st.text_area("AI Output", height=500)
+                            else:
+                                st.warning("Content is empty! Please modify before sending to vault.")
+                else:
+                    st.warning(f"No files found in {selected_category}.")
+            else:
+                st.warning("Selected category does not exist.")
+        else:
+            st.warning("Your cart is empty.")
+
+    # Generate Location
+    elif st.session_state.page == "Create Location":
+        st.subheader("🏰 Generate a Location")
+        location_prompt = st.text_area("What do you already know about this location? (Optional)")
+        if st.button("Generate Location"):
+            location = generate_location(st.session_state.api_key, location_prompt)  
+            st.session_state.generated_location = location  
+            st.text_area("Generated Location:", location, height=250)
+
+        if "generated_location" in st.session_state:
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["location"] = st.session_state.cart.get("location", [])  
+                st.session_state.cart["location"].append(st.session_state.generated_location)
+                save_cart()
+                st.success("Added to Cart!")
+
+    # Generate Shop
+    elif st.session_state.page == "Create Shop":
+        st.subheader("🛒 Generate a Shop")
+        shop_type = st.selectbox("Select Shop Type", [
+            "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern", 
+            "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Bookstore", "Stable",
+            "Enchanter", "Herbalist", "Bakery", "Tailor",
+        ])
+        shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
+        if st.button("Generate Shop"):
+            shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  
+            st.session_state.generated_shop = shop  
+            st.text_area(f"Generated {shop_type}:", shop, height=250)
+
+        if "generated_shop" in st.session_state:
+            if st.button("🛒 Add to Cart"):
+                st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  
+                st.session_state.cart["shop"].append(st.session_state.generated_shop)  
+                save_cart()
+                st.success("Added to Cart!")
+
+
+    ### Chapter Adaptation
+    elif st.session_state.page == "Adapt Chapter":
+        st.subheader("📖 Adapt Chapter to Campaign")
+        st.write("Modify your campaign text dynamically.")
+        col1, col2, col3 = st.columns(3)
         
-        ### Campaign AI Assistant
-        elif st.session_state.page == "Campaign Assistant":
-            st.subheader("🧠 Campaign Assistant")
-            st.write("Ask me anything!")
-            query = st.text_input("Enter your query:")
-            if st.button("Submit Query"):
-                # Placeholder for query handling
-                st.success("Query submitted!")
-
-        ### Encounter generator
-        elif st.session_state.page == "Encounter Generator":
-            st.subheader("⚔️ Encounter Generator")
-            st.write("Generate encounters based on party size and details.")
-            party_size = st.number_input("Party Size", min_value=1, step=1, max_value=20)
-            party_level = st.number_input("Party Level", min_value=1, step=1, max_value=20)
-            custom_prompt = st.text_input("Custom Encounter Prompt:")
-            if st.button("Generate Encounter"):
-                # Placeholder for encounter generation logic
-                st.success("Encounter generated!")
-
-        ### Dungeon Gen. 
-        elif st.session_state.page == "Dungeon Generator":
-            st.subheader("🏰 Dungeon Generator")
-            st.write("Enter dungeon details and generate a full layout.")
-            dungeon_prompt = st.text_area("Dungeon Prompt:")
-            if st.button("Generate Dungeon"):
-                # Placeholder logic for dungeon generation
-                st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
-                st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
-              
-            if "generated_dungeon" in st.session_state:
-                if st.button("🗺️ Generate Grid Battle Map"):
-                    import numpy as np
-                    import matplotlib.pyplot as plt
-                    import io
-                    import base64
-
-                    grid_size = 10  # Adjust for larger maps
-                    dungeon_map = np.random.choice([0, 1], size=(grid_size, grid_size), p=[0.7, 0.3])
-
-                    fig, ax = plt.subplots()
-                    ax.imshow(dungeon_map, cmap="gray_r", interpolation="nearest")
-                    ax.set_xticks([])
-                    ax.set_yticks([])
-
-                    # Save to a buffer
-                    buf = io.BytesIO()
-                    fig.savefig(buf, format="png")
-                    buf.seek(0)
-                    
-                    # Create a downloadable link
-                    b64 = base64.b64encode(buf.getvalue()).decode()
-                    href = f'<a href="data:image/png;base64,{b64}" download="battle_map.png">📥 Download Battle Map</a>'
-
-                    st.pyplot(fig)
-                    st.markdown(href, unsafe_allow_html=True)
-                    st.success("Battle map generated! Click the link above to download.")
-
-        ### Quest Gen.
-        elif st.session_state.page == "Quest Generator":
-            st.subheader("📜 Quest Generator")
-            st.write("Generate a quest based on input details.")
-            quest_prompt = st.text_input("Quest Prompt:")
-            if st.button("Generate Quest"):
-                # Placeholder for quest generation logic
-                st.success("Quest generated!")
-
-        ### Worldbuilding Gen.
-        elif st.session_state.page == "Worldbuilding":
-            st.subheader("🌍 Worldbuilding Expansion")
-            st.write("Auto-fill lore and expand world details.")
-            st.button("Generate World Lore")
+        with col1:
+            original_chapter = st.text_area("Original Chapter", height=500)
+            if st.button("Load"):
+                # Load functionality would go here
+                pass
+        
+        with col2:
+            edits_input = st.text_area("Edits Input", height=500)
+            if st.button("What do you think?"):
+                # Feedback functionality would go here
+                pass
+        
+        with col3:
+            ai_output = st.text_area("AI Output", height=500)
     
-        ### Session Management
-        elif st.session_state.page == "Session Management":
-            st.subheader("🗒 Session Management")
-            st.write("Tools for session intros and note assistance.")
-            st.text_input("Session Details (e.g., S01):")
-            st.button("Load Session History")
-    
+
+    ### Campaign AI Asst.
+    elif st.session_state.page == "Campaign Assistant":
+        st.subheader("🧠 Campaign Assistant")
+        st.write("Ask me anything !")
+        st.text_input("Enter your query:")
+        st.button("Submit Query")
+
+
+    ### Encounter generator
+    elif st.session_state.page == "Encounter Generator":
+        st.subheader("⚔️ Encounter Generator")
+        st.write("Generate encounters based on party size and details.")
+        st.number_input("Party Size", min_value=1, step=1, max_value=20)
+        st.number_input("Party Level", min_value=1, step=1, max_value=20)
+        st.text_input("Custom Encounter Prompt:")
+        st.button("Generate Encounter")
+
+    ### Dungeon Gen. 
+    elif st.session_state.page == "Dungeon Generator":
+        st.subheader("🏰 Dungeon Generator")
+        st.write("Enter dungeon details and generate a full layout.")
+        st.text_input("Dungeon Prompt:")
+        st.button("Generate Dungeon")
+
+    ### Quest Gen.
+    elif st.session_state.page == "Quest Generator":
+        st.subheader("📜 Quest Generator")
+        st.write("Generate a quest based on input details.")
+        st.text_input("Quest Prompt:")
+        st.button("Generate Quest")
+
+    ### Worldbuilding Gen.
+    elif st.session_state.page == "Worldbuilding":
+        st.subheader("🌍 Worldbuilding Expansion")
+        st.write("Auto-fill lore and expand world details.")
+        st.button("Generate World Lore")
+
+    ### Session Management
+    elif st.session_state.page == "Session Management":
+        st.subheader("🗒 Session Management")
+        st.write("Tools for session intros and note assistance.")
+        st.text_input("Session Details (e.g., S01):")
+        st.button("Load Session History")
+
 if __name__ == "__main__":
     main()
