@@ -143,6 +143,30 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
 
+def render_main_menu():
+    """Render navigation buttons on the Main Menu page."""
+    st.subheader("Main Menu Options")
+    if st.button("🧙 Create NPC", key="generate_npc"):
+        navigate_to("Generate NPC")
+    if st.button("🏪 Create Shop", key="generate_shop"):
+        navigate_to("Create Shop")
+    if st.button("📍 Create Location", key="create_location"):
+        navigate_to("Create Location")
+    if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
+        navigate_to("Adapt Chapter")
+    if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
+        navigate_to("Campaign Assistant")
+    if st.button("⚔️ Encounter Generator", key="encounter_generator"):
+        navigate_to("Encounter Generator")
+    if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
+        navigate_to("Dungeon Generator")
+    if st.button("📜 Quest Generator", key="quest_generator"):
+        navigate_to("Quest Generator")
+    if st.button("🌍 Worldbuilding", key="worldbuilding"):
+        navigate_to("Worldbuilding")
+    if st.button("🗒 Session Management", key="session_management"):
+        navigate_to("Session Management")
+
 def main():
     """Main function to run the Streamlit application."""
     render_sidebar()
