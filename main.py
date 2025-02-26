@@ -47,7 +47,9 @@ def initialize_drive_service():
         logging.error(f"Unexpected error: {e}")
         return None
 
+
 drive_service = initialize_drive_service()
+
 
 def cached_list_drive_files():
     try:
@@ -74,28 +76,30 @@ def initialize_session_state():
 
 initialize_session_state()
 
-def save_cart():
     """Save the current cart to Google Drive with error handling."""
     try:
         json_data = json.dumps(st.session_state.cart)
         with open("cart.json", "w", encoding="utf-8") as f:
             f.write(json_data)
         upload_file("cart.json")
+
         st.success("Cart saved to Google Drive!")
         logging.info("Cart saved successfully to Google Drive.")
-    except OSError as e:
+     except OSError as e:
         st.error(f"File operation error: {e}")
         logging.error(f"File operation error: {e}")
+
     except Exception as e:
         st.error(f"Failed to save cart: {e}")
         logging.error(f"Error saving cart: {e}")
 
 def load_cart():
-    """Load the cart from Google Drive with error handling and retries."""
+    """Load the cart from Google Drive with file validation and retry mechanism for SSL errors."""
     try:
         file_id = None
         files = list_drive_files()
 
+        # Find the cart.json file in Google Drive
         for file in files:
             if file["name"] == "cart.json":
                 file_id = file["id"]
@@ -105,26 +109,31 @@ def load_cart():
             st.warning("No saved cart found in Google Drive.")
             return
 
+        # Retry download if SSL error occurs
         attempts = 3
         for attempt in range(attempts):
             try:
                 download_file(file_id, "cart.json")
-                break
+                break  # If successful, exit loop
             except ssl.SSLError:
-                st.warning(f"SSL error, retrying... ({attempt + 1}/{attempts})")
-                time.sleep(2)
+                st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
+                time.sleep(2)  # Wait before retrying
         else:
             st.error("Failed to download cart.json after multiple attempts.")
             return
 
+        # ✅ Ensure the file exists and is not empty
         if not os.path.exists("cart.json") or os.stat("cart.json").st_size == 0:
-            st.error("Downloaded cart.json is missing or empty. Try saving again.")
-            return
 
+        if not os.path.exists("cart.json"):
+            st.error("Downloaded cart.json is missing or empty. Try saving again.")
+            
+        # Read the file safely
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
 
         st.success("Cart loaded from Google Drive!")
+
     except json.JSONDecodeError:
         st.error("Failed to decode cart data. Please check the file format.")
     except ssl.SSLError as e:
@@ -132,38 +141,41 @@ def load_cart():
     except Exception as e:
         st.error(f"Error loading cart: {e}")
 
+
 def save_to_vault(content, filename="generated_content.md"):
-    """Save the modified content to Google Drive securely."""
+    """Saves the modified content to the user's Obsidian-Google Drive vault only when manually triggered."""
     vault_path = "obsidian_vault"
-    os.makedirs(vault_path, exist_ok=True)
+    os.makedirs(vault_path, exist_ok=True)  # Ensure directory exists
     
+    # Ensure filename has only one .md extension
     if not filename.endswith(".md"):
         filename += ".md"
     
     file_path = os.path.join(vault_path, filename)
 
+    # Save locally before upload
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
-    
+
     if drive_service:  # Ensure drive_service is initialized
-        upload_file(file_path)
-        st.success(f"✅ File saved successfully to Google Drive: {filename}")
+
+    st.success(f"✅ File saved successfully to Google Drive: {filename}")
     else:
         st.error("Drive service not initialized. File not saved.")
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
-    if st.button("📁 Save to Vault"):
+    if st.button("📁 Save to Vault")
         category = st.session_state.get("selected_category", "generated_content")
-        content_data = st.session_state.get("selected_content_to_save", "")
         
+        content_data = st.session_state.get("selected_content_to_save", "")
+
         # Extract a meaningful filename based on content type
         if category in content_data:
             base_filename = content_data[category].get("name", f"{category}_content")
         else:
             base_filename = f"{category}_{st.session_state.get('selected_file', 'content')}"
-        
-        # Sanitize filename
+
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
         save_to_vault(content_data, filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
@@ -251,21 +263,18 @@ def main():
     render_sidebar()
     load_cart()
     
-    if "initialized" not in st.session_state:
-        initialize_session_state()
-        st.session_state.initialized = True
-
     # Page rendering based on session state
     try:
-        if st.session_state.page == "API Key":
-            st.title("Enter your API Key")
-            st.session_state.api_key = st.text_input("API Key", type="password")
-            if st.button("Submit", key="submit_api_key"):
-                if st.session_state.api_key:
-                    st.success("API Key set!")
-                    navigate_to("Main Menu")
-                else:
-                    st.error("Please enter a valid API Key.")
+    	if st.session_state.page == "API Key":
+       		st.title("Enter your API Key")
+       		
+        	st.session_state.api_key = st.text_input("API Key", type="password")
+        	if st.button("Submit", key="submit_api_key"):
+            	if st.session_state.api_key:
+                	st.success("API Key set!")
+                	navigate_to("Main Menu")
+            	else:
+                	st.error("Please enter a valid API Key.")
 
     elif st.session_state.page == "Main Menu":
         st.title("Welcome to the DnD Campaign Manager")
@@ -360,6 +369,7 @@ def main():
                 save_cart()
                 st.success("Added to Cart!")
 
+
     ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
         st.subheader("📖 Adapt Chapter to Campaign")
@@ -381,12 +391,14 @@ def main():
         with col3:
             ai_output = st.text_area("AI Output", height=500)
     
+
     ### Campaign AI Asst.
     elif st.session_state.page == "Campaign Assistant":
         st.subheader("🧠 Campaign Assistant")
         st.write("Ask me anything !")
         st.text_input("Enter your query:")
         st.button("Submit Query")
+
 
     ### Encounter generator
     elif st.session_state.page == "Encounter Generator":
@@ -402,27 +414,28 @@ def main():
         st.subheader("🏰 Dungeon Generator")
         st.write("Enter dungeon details and generate a full layout.")
         dungeon_prompt = st.text_area("Dungeon Prompt:")
-        
+        st.button("Generate Dungeon")
+      
         if st.button("Generate Dungeon"):
             # Placeholder logic for dungeon generation
             st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
             st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
-        
+          
         if "generated_dungeon" in st.session_state:
             if st.button("🗺️ Generate Grid Battle Map"):
                 import numpy as np
                 import matplotlib.pyplot as plt
                 import io
                 import base64
-                
+
                 grid_size = 10  # Adjust for larger maps
                 dungeon_map = np.random.choice([0, 1], size=(grid_size, grid_size), p=[0.7, 0.3])
-                
+
                 fig, ax = plt.subplots()
                 ax.imshow(dungeon_map, cmap="gray_r", interpolation="nearest")
                 ax.set_xticks([])
                 ax.set_yticks([])
-                
+
                 # Save to a buffer
                 buf = io.BytesIO()
                 fig.savefig(buf, format="png")
@@ -431,10 +444,11 @@ def main():
                 # Create a downloadable link
                 b64 = base64.b64encode(buf.getvalue()).decode()
                 href = f'<a href="data:image/png;base64,{b64}" download="battle_map.png">📥 Download Battle Map</a>'
-                
+
                 st.pyplot(fig)
                 st.markdown(href, unsafe_allow_html=True)
                 st.success("Battle map generated! Click the link above to download.")
+
 
     ### Quest Gen.
     elif st.session_state.page == "Quest Generator":
