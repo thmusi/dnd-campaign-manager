@@ -173,6 +173,20 @@ if st.session_state.get("selected_content_to_save"):
         save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
         st.session_state["selected_content_to_save"] = None  # Clear after saving
 
+# Add a Forced Entry toggle
+forced_entry = st.sidebar.checkbox("Forced Entry (Bypass API Key)")
+
+if forced_entry:
+    st.warning("⚠️ Forced Entry Enabled - OpenAI API will not function!", icon="⚠️")
+    openai_api_key = None  # Prevents API calls from running
+else:
+    openai_api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets else None
+
+# Check if API key is missing (unless forced entry is active)
+if not openai_api_key and not forced_entry:
+    st.error("❌ OpenAI API key is missing! Please set it in Streamlit secrets.")
+    st.stop()
+
 def navigate_to(page_name):
     """Change the current page in the session state."""
     st.session_state.page = page_name
