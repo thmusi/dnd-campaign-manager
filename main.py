@@ -143,7 +143,7 @@ def render_sidebar():
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
 
-def render_main_menu():
+def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
     st.subheader("Main Menu Options")
     if st.button("🧙 Create NPC", key="generate_npc"):
