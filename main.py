@@ -222,7 +222,7 @@ def main():
 
         if "generated_location" in st.session_state:
             add_to_cart("Locations", "generated_location")
-                st.success("Added to Cart!")
+            st.success("Added to Cart!")
 
     # Generate Shop
     elif st.session_state.page == "Create Shop":
