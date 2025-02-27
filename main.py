@@ -198,6 +198,7 @@ st.markdown(
 
 # Page Functions
 def render_api_key_page():
+    load_cart()
     st.title("Enter your API Key")
     st.session_state.api_key = st.text_input("API Key", type="password")  # ✅ Corrected
     if st.button("Submit", key="submit_api_key"):
