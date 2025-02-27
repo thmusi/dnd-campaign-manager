@@ -123,14 +123,6 @@ def load_cart():
     else:
         st.warning("No saved cart found locally.")
 
-# Ensure saving to vault happens only when a button is pressed
-if st.session_state.get("selected_content_to_save"):
-    if st.button("📁 Save to Vault", key="save_to_vault"):
-        base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
-        safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-        save_to_vault(st.session_state["selected_category"], st.session_state["selected_content_to_save"])
-        st.session_state["selected_content_to_save"] = None  # Clear after saving
-
 def add_to_cart(category, session_key):
     """Save generated content to the cart under a specific category (JSON only)."""
     if session_key in st.session_state:
