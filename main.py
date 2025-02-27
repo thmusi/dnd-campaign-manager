@@ -96,7 +96,13 @@ def load_cart():
     else:
         st.warning("No saved cart found locally.")
 
-if st.session_state.get("selected_content_to_save") and st.session_state.page == "Cart":
+if "selected_content_to_save" not in st.session_state:
+    st.session_state.selected_content_to_save = None
+
+if "page" not in st.session_state:
+    st.session_state.page = "API Key"  # Ensure default page is set
+
+if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
     st.subheader("Modify Selected Content Before Saving")
     edited_content = st.text_area("Edit before saving to vault:", st.session_state["selected_content_to_save"], height=300)
 
@@ -399,3 +405,4 @@ def render_page():
 
 if __name__ == "__main__":
     render_page()
+  
