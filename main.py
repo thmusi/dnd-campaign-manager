@@ -74,34 +74,64 @@ def initialize_session_state():
 
 initialize_session_state()
 
-@handle_exception
-def save_cart():
-    """Save the current cart to a structured local file."""
-    st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **st.session_state.cart}
+def save_to_vault(content, filename):
+    """Save content to the vault (Google Drive / Obsidian Sync)."""
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write(content)
+    upload_file(filename)
+    os.remove(filename)
+    st.success("✅ Successfully saved to Obsidian Vault")
 
-    with open("cart.json", "w", encoding="utf-8") as f:
-        json.dump(st.session_state.cart, f, indent=4)
+def add_to_cart(content, category):
+    """Add content to local cart storage."""
+    cart_file = "cart.json"
+    if os.path.exists(cart_file):
+        with open(cart_file, "r", encoding="utf-8") as file:
+            cart = json.load(file)
+    else:
+        cart = {}
     
-    st.success("✅ Cart saved with structured format!")
+    if category not in cart:
+        cart[category] = []
+    cart[category].append(content)
+    
+    with open(cart_file, "w", encoding="utf-8") as file:
+        json.dump(cart, file, indent=4)
+    
+    st.success(f"✅ Added to Cart ({category})")
 
-@handle_exception
-def save_to_vault(category, item):
-    """Save content to the vault only when manually confirmed from the cart page."""
-    if st.session_state.page == "Cart":
-        save_cart()
-        st.success(f"✅ {item} saved to the vault!")
+# Streamlit UI
+st.title("D&D Campaign Manager")
+st.subheader("Generate Content and Save")
 
-@handle_exception
-def load_cart():
-    """Load the cart from a local file if it exists, ensuring structure."""
-    file_path = "cart.json"
+content = st.text_area("Enter content:", "")
+category = st.selectbox("Select Category:", ["NPC", "Shop", "Location", "Encounter", "Dungeon", "Quest"])
 
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            loaded_data = json.load(f)
+col1, col2 = st.columns(2)
 
-        st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **loaded_data}
-        st.success("✅ Cart loaded with structured format!")
+with col1:
+    st.markdown('<style>div.stButton > button {background-color: #3498db; color: white;}</style>', unsafe_allow_html=True)
+    if st.button("🛒 Add to Cart", key="cart_btn", help="Save content locally for further editing."):
+        add_to_cart(content, category)
+
+with col2:
+    st.markdown('<style>div.stButton > button {background-color: #2ecc71; color: white;}</style>', unsafe_allow_html=True)
+    if st.button("📂 Save to Vault", key="vault_btn", help="Upload content to Obsidian via Google Drive."):
+        filename = f"{category}_{len(content)}.md"  # Generate a simple filename
+        save_to_vault(content, filename)
+
+st.subheader("🛒 Cart Preview")
+
+cart_file = "cart.json"
+if os.path.exists(cart_file):
+    with open(cart_file, "r", encoding="utf-8") as file:
+        cart_data = json.load(file)
+
+    if cart_data:
+        for category, items in cart_data.items():
+            with st.expander(f"📌 {category} ({len(items)} items)"):
+                for idx, item in enumerate(items, 1):
+                    st.write(f"🔹 **{idx}.** {item[:100]}...")  # Show only first 100 chars
     else:
         st.warning("No saved cart found locally.")
 
