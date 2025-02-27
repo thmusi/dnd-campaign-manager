@@ -409,8 +409,12 @@ PAGES = {
 
 def render_page():
     """Dynamically render the selected page."""
-    page_function = PAGES.get(st.session_state.page, lambda: st.error("Page not found."))
-    page_function()
+    if st.session_state.page not in PAGES:
+        st.warning("⚠️ Page not found, redirecting to Main Menu...")
+        st.session_state.page = "Main Menu"  # Redirect to a valid page
+
+    PAGES[st.session_state.page]()  # Safely render the correct page
+
 
 if __name__ == "__main__":
     render_page()
