@@ -54,7 +54,7 @@ def handle_exception(func):
 @handle_exception
 def initialize_session_state():
     """Initialize session state variables only once."""
-    if "initialized" not in st.session_state:
+    if not hasattr(st.session_state, "initialized"):
         st.session_state.api_key = None
         st.session_state.cart = DEFAULT_CART_STRUCTURE.copy()
         st.session_state.page = "API Key"
@@ -116,7 +116,7 @@ if st.session_state.selected_content_to_save and st.session_state.page == "Cart"
 
 def add_to_cart(category, session_key):
     """Add generated content to the cart without saving to vault, ensuring correct naming."""
-    if session_key in st.session_state:
+    if hasattr(st.session_state, session_key):
         item = st.session_state[session_key]
         
         # Extract NPC Name (or Shop/Location Name) if available
@@ -272,7 +272,7 @@ def render_dungeon_generator_page():
         st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
         st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
           
-    if "generated_dungeon" in st.session_state:
+    if hasattr(st.session_state, "generated_dungeon"):
         if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map"):
             import numpy as np
             import matplotlib.pyplot as plt
@@ -352,7 +352,7 @@ def render_create_shop_page():
          st.session_state.generated_shop = shop  
          st.text_area(f"Generated {shop_type}:", shop, height=250)
 
-    if "generated_shop" in st.session_state:
+    if hasattr(st.session_state, "generated_shop"):
         add_to_cart("Shops", "generated_shop")
 
 def render_create_location_page():
@@ -364,7 +364,7 @@ def render_create_location_page():
         st.session_state.generated_location = location  
         st.text_area("Generated Location:", location, height=250)
 
-    if "generated_location" in st.session_state:
+    if hasattr(st.session_state, "generated_location"):
         add_to_cart("Locations", "generated_location")
         st.success("Added to Cart!")
 
@@ -378,7 +378,7 @@ def render_generate_npc_page():
         st.session_state.generated_npc = npc  
         st.text_area("Generated NPC:", npc, height=250)  
       
-    if "generated_npc" in st.session_state:
+    if hasattr(st.session_state, "generated_npc"):
         add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
 
 # Dynamic Page Rendering Dictionary
