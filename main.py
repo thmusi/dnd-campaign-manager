@@ -21,8 +21,6 @@ from ai import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-import streamlit as st
-
 # Configuration Management
 class Settings(BaseSettings):
    GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
@@ -204,7 +202,7 @@ def render_api_key_page():
     if st.button("Submit", key="submit_api_key"):
         if session_state.api_key:
             st.success("API Key set!")
-            session_state.page = "Main Menu"
+            navigate_to("Main Menu")  # Corrected navigation
         else:
             st.error("Please enter a valid API Key.")
 
@@ -250,7 +248,6 @@ def render_cart_page():
             st.warning("Selected category does not exist.")
     else:
         st.warning("Your cart is empty.")
-
 
 def render_worldbuilding_page():
     st.title("🌍 Worldbuilding Expansion & Lore")
@@ -312,7 +309,6 @@ def render_dungeon_generator_page():
             st.markdown(href, unsafe_allow_html=True)
             st.success("Battle map generated! Click the link above to download.")
 
-
 def render_encounter_generator_page():
     st.title("⚔️ Encounter Generator")
     render_sidebar()
@@ -349,8 +345,7 @@ def render_adapt_chapter_page():
         
     with col3:
         ai_output = st.text_area("AI Output", height=500)
-    
-  
+
 def render_create_shop_page():
     st.title("🏪 Create Shop")
     render_sidebar()
@@ -369,7 +364,6 @@ def render_create_shop_page():
     if "generated_shop" in st.session_state:
         add_to_cart("Shops", "generated_shop")
 
-  
 def render_create_location_page():
     st.title("📍 Create Location")
     render_sidebar()
@@ -382,7 +376,7 @@ def render_create_location_page():
     if "generated_location" in st.session_state:
         add_to_cart("Locations", "generated_location")
         st.success("Added to Cart!")
-  
+
 def render_generate_npc_page():
     st.title("🧙 Generate NPC")
     render_sidebar()
@@ -396,8 +390,6 @@ def render_generate_npc_page():
     if "generated_npc" in st.session_state:
         add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
 
-
-  
 # Dynamic Page Rendering Dictionary
 PAGES = {
     "API Key": render_api_key_page,
@@ -422,4 +414,3 @@ def render_page():
 
 if __name__ == "__main__":
     render_page()
-
