@@ -137,8 +137,13 @@ def add_to_cart(category, session_key):
             st.success(f"✅ {item_name} added to {category} in the cart!")
 
 def navigate_to(page_name):
-    """Change the current page in Streamlit session state."""
-    st.session_state.page = page_name  # ✅ Corrected
+    """Ensure only valid pages are set."""
+    if page_name in PAGES:
+        st.session_state.page = page_name
+    else:
+        st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
+        st.session_state.page = "Main Menu"  # Redirect to Main Menu instead
+
 
 def render_sidebar():
     """Render the sidebar navigation menu."""
