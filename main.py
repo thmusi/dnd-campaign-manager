@@ -21,14 +21,11 @@ from ai import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Load Configuration from YAML
-class Settings(BaseSettings):
-    def __init__(self, config_file='config.yaml'):
-        with open(config_file) as f:
-            config = yaml.safe_load(f)
-        super().__init__(**config)
+import streamlit as st
 
-settings = Settings()
+# Access secrets securely
+GOOGLE_DRIVE_API_CREDENTIALS = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 # Load environment variables
 load_dotenv()
