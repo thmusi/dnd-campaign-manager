@@ -96,7 +96,7 @@ def load_cart():
     else:
         st.warning("No saved cart found locally.")
 
-if "selected_content_to_save" not in st.session_state:
+if not hasattr(st.session_state, "selected_content_to_save"):
     st.session_state.selected_content_to_save = None
 
 if "page" not in st.session_state:
