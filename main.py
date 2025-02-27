@@ -21,18 +21,25 @@ from ai import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Default cart structure
-DEFAULT_CART_STRUCTURE = {
-    "NPCs": [],
-    "Shops": [],
-    "Locations": [],
-    "Encounters": [],
-    "Dungeons": [],
-    "Quests": []
-}
+import streamlit as st
+
+# Configuration Management
+class Settings(BaseSettings):
+   GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
+
+settings = Settings()
 
 # Load environment variables
 load_dotenv()
+
+# Centralized session management
+class SessionState:
+    def __init__(self):
+        self.api_key = None
+        self.cart = {}
+        self.page = "API Key"
+
+session_state = SessionState()
 
 def handle_exception(func):
     """Centralized error handling decorator."""
@@ -56,7 +63,7 @@ def initialize_session_state():
     """Initialize session state variables only once."""
     if "initialized" not in st.session_state:
         st.session_state.api_key = None
-        st.session_state.cart = DEFAULT_CART_STRUCTURE.copy()
+        st.session_state.cart = {}
         st.session_state.page = "API Key"
         st.session_state.selected_content_to_save = None
         st.session_state.selected_category = ""
@@ -68,7 +75,17 @@ initialize_session_state()
 @handle_exception
 def save_cart():
     """Save the current cart to a structured local file."""
-    st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **st.session_state.cart}
+    default_cart_structure = {
+        "NPCs": [],
+        "Shops": [],
+        "Locations": [],
+        "Encounters": [],
+        "Dungeons": [],
+        "Quests": []
+    }
+
+    # Merge with existing session cart (preserving generated items)
+    st.session_state.cart = {**default_cart_structure, **st.session_state.cart}
 
     with open("cart.json", "w", encoding="utf-8") as f:
         json.dump(st.session_state.cart, f, indent=4)
@@ -77,10 +94,11 @@ def save_cart():
 
 @handle_exception
 def save_to_vault(category, item):
-    """Save content to the vault only when manually confirmed from the cart page."""
-    if st.session_state.page == "Cart":
-        save_cart()
-        st.success(f"✅ {item} saved to the vault!")
+    """Save generated content to the cart under a specific category."""
+    st.session_state.cart[category] = st.session_state.cart.get(category, [])
+    st.session_state.cart[category].append(item)
+    save_cart()
+    st.success(f"Added to {category} in the cart!")
 
 @handle_exception
 def load_cart():
@@ -91,53 +109,47 @@ def load_cart():
         with open(file_path, "r", encoding="utf-8") as f:
             loaded_data = json.load(f)
 
-        st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **loaded_data}
+        # Ensure all expected categories exist
+        default_cart_structure = {
+            "NPCs": [],
+            "Shops": [],
+            "Locations": [],
+            "Encounters": [],
+            "Dungeons": [],
+            "Quests": []
+        }
+        st.session_state.cart = {**default_cart_structure, **loaded_data}
+
         st.success("✅ Cart loaded with structured format!")
     else:
         st.warning("No saved cart found locally.")
 
-if "selected_content_to_save" not in st.session_state:
-    st.session_state.selected_content_to_save = None
-
-if "page" not in st.session_state:
-    st.session_state.page = "API Key"  # Ensure default page is set
-
-if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
-    st.subheader("Modify Selected Content Before Saving")
-    edited_content = st.text_area("Edit before saving to vault:", st.session_state["selected_content_to_save"], height=300)
-
-    if st.button("📁 Save to Vault", key="send_to_vault"):
-        if edited_content.strip():
-            save_to_vault(st.session_state["selected_category"], edited_content)
-            st.success(f"✅ Saved {st.session_state['selected_file']} to the vault!")
-            st.session_state["selected_content_to_save"] = None  # Clear after saving
-        else:
-            st.warning("⚠️ Content is empty! Modify before sending to vault.")
+# Ensure saving to vault happens only when a button is pressed
+if st.session_state.get("selected_content_to_save"):
+    if st.button("📁 Save to Vault", key="save_to_vault"):
+        base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
+        safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+        save_to_vault(st.session_state["selected_category"], st.session_state["selected_content_to_save"])
+        st.session_state["selected_content_to_save"] = None  # Clear after saving
 
 def add_to_cart(category, session_key):
-    """Add generated content to the cart without saving to vault, ensuring correct naming."""
+    """Save generated content to the cart under a specific category (JSON only)."""
     if session_key in st.session_state:
-        item = st.session_state[session_key]
-        
-        # Extract NPC Name (or Shop/Location Name) if available
-        name_match = re.search(r"\*\*Nom\*\* ?: (.+)", item) if isinstance(item, str) else None
-        item_name = name_match.group(1) if name_match else f"New {category[:-1]}"
-
-        if st.button(f"🛒 Add {item_name} to Cart", key=f"add_{session_key}_to_cart"):
+        if st.button(f"🛒 Add to Cart", key=f"add_{session_key}_to_cart"):
             st.session_state.cart[category] = st.session_state.cart.get(category, [])
-            st.session_state.cart[category].append(item)
+            st.session_state.cart[category].append(st.session_state[session_key])
             save_cart()
-            st.success(f"✅ {item_name} added to {category} in the cart!")
+            st.success(f"✅ {session_key} added to {category} in the cart!")
 
 def navigate_to(page_name):
-    """Change the current page in Streamlit session state."""
-    st.session_state.page = page_name  # ✅ Corrected
+    """Change the current page in the session state."""
+    st.session_state.page = page_name
 
 def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
-        if st.session_state.page == "API Key":
+        if session_state.page == "API Key":
             return
         if st.button("🏠 Home", key="home_sidebar"):
             navigate_to("Main Menu")
@@ -187,13 +199,12 @@ st.markdown(
 
 # Page Functions
 def render_api_key_page():
-    load_cart()
     st.title("Enter your API Key")
-    st.session_state.api_key = st.text_input("API Key", type="password")  # ✅ Corrected
+    session_state.api_key = st.text_input("API Key", type="password")
     if st.button("Submit", key="submit_api_key"):
-        if st.session_state.api_key:  # ✅ Corrected state usage
+        if session_state.api_key:
             st.success("API Key set!")
-            st.session_state.page = "Main Menu"  # ✅ Now Streamlit recognizes the change
+            session_state.page = "Main Menu"
         else:
             st.error("Please enter a valid API Key.")
 
@@ -239,6 +250,7 @@ def render_cart_page():
             st.warning("Selected category does not exist.")
     else:
         st.warning("Your cart is empty.")
+
 
 def render_worldbuilding_page():
     st.title("🌍 Worldbuilding Expansion & Lore")
@@ -300,6 +312,7 @@ def render_dungeon_generator_page():
             st.markdown(href, unsafe_allow_html=True)
             st.success("Battle map generated! Click the link above to download.")
 
+
 def render_encounter_generator_page():
     st.title("⚔️ Encounter Generator")
     render_sidebar()
@@ -336,7 +349,8 @@ def render_adapt_chapter_page():
         
     with col3:
         ai_output = st.text_area("AI Output", height=500)
-
+    
+  
 def render_create_shop_page():
     st.title("🏪 Create Shop")
     render_sidebar()
@@ -355,6 +369,7 @@ def render_create_shop_page():
     if "generated_shop" in st.session_state:
         add_to_cart("Shops", "generated_shop")
 
+  
 def render_create_location_page():
     st.title("📍 Create Location")
     render_sidebar()
@@ -367,7 +382,7 @@ def render_create_location_page():
     if "generated_location" in st.session_state:
         add_to_cart("Locations", "generated_location")
         st.success("Added to Cart!")
-
+  
 def render_generate_npc_page():
     st.title("🧙 Generate NPC")
     render_sidebar()
@@ -381,6 +396,8 @@ def render_generate_npc_page():
     if "generated_npc" in st.session_state:
         add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
 
+
+  
 # Dynamic Page Rendering Dictionary
 PAGES = {
     "API Key": render_api_key_page,
@@ -400,9 +417,8 @@ PAGES = {
 
 def render_page():
     """Dynamically render the selected page."""
-    page_function = PAGES.get(st.session_state.page, lambda: st.error("Page not found."))
+    page_function = PAGES.get(session_state.page, lambda: st.error("Page not found."))
     page_function()
 
 if __name__ == "__main__":
     render_page()
-  
