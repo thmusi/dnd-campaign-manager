@@ -317,7 +317,7 @@ def render_encounter_generator_page():
     st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
     st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
     st.button("Generate Encounter", key="generate_encounter_button")
-    if st.session_state.generated_encounter:
+    ###if st.session_state.generated_encounter:
 
   
 def render_campaign_assistant_page():
