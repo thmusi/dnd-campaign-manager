@@ -43,7 +43,7 @@ def handle_exception(func):
 @handle_exception
 def initialize_session_state():
     """Initialize session state variables only once."""
-    if "initialized" not in st.session_state:
+    if "initialized" not in st.session_state.__dict__:
         st.session_state.api_key = None
         st.session_state.cart = {}
         st.session_state.page = "API Key"
