@@ -25,7 +25,7 @@ import streamlit as st
 
 # Configuration Management
 class Settings(BaseSettings):
-GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
+   GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
 
 settings = Settings()
 
