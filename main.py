@@ -55,13 +55,24 @@ def handle_exception(func):
 def initialize_session_state():
     """Initialize session state variables only once."""
     if not hasattr(st.session_state, "initialized"):
-        st.session_state.api_key = None
-        st.session_state.cart = DEFAULT_CART_STRUCTURE.copy()
-        st.session_state.page = "API Key"
-        st.session_state.selected_content_to_save = None
-        st.session_state.selected_category = ""
-        st.session_state.selected_file = ""
-        st.session_state.initialized = True  # Mark as initialized
+        # Define all session state variables in one place to avoid redundant checks
+        session_defaults = {
+            "api_key": None,
+            "cart": DEFAULT_CART_STRUCTURE.copy(),
+            "page": "API Key",
+            "selected_content_to_save": None,
+            "selected_category": "",
+            "selected_file": "",
+            "generated_npc": None,
+            "generated_shop": None,
+            "generated_location": None,
+            "generated_dungeon": None,
+            "generated_encounter": None,
+            "initialized": True
+        }
+        
+        for key, value in session_defaults.items():
+            setattr(st.session_state, key, value)
 
 initialize_session_state()
 
@@ -96,11 +107,9 @@ def load_cart():
     else:
         st.warning("No saved cart found locally.")
 
-if not hasattr(st.session_state, "selected_content_to_save"):
+if st.session_state.selected_content_to_save is None:
     st.session_state.selected_content_to_save = None
 
-if not hasattr(st.session_state, "page"):
-    st.session_state.page = "API Key"  # Ensure default page is set
 
 if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
     st.subheader("Modify Selected Content Before Saving")
@@ -116,7 +125,7 @@ if st.session_state.selected_content_to_save and st.session_state.page == "Cart"
 
 def add_to_cart(category, session_key):
     """Add generated content to the cart without saving to vault, ensuring correct naming."""
-    if hasattr(st.session_state, session_key):
+    if st.session_state.get(session_key):
         item = st.session_state[session_key]
         
         # Extract NPC Name (or Shop/Location Name) if available
@@ -272,7 +281,7 @@ def render_dungeon_generator_page():
         st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
         st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
           
-    if hasattr(st.session_state, "generated_dungeon"):
+    if st.session_state.generated_dungeon:
         if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map"):
             import numpy as np
             import matplotlib.pyplot as plt
@@ -308,6 +317,8 @@ def render_encounter_generator_page():
     st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
     st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
     st.button("Generate Encounter", key="generate_encounter_button")
+    if st.session_state.generated_encounter:
+
   
 def render_campaign_assistant_page():
     st.title("📖 Campaign Assistant")
@@ -352,7 +363,7 @@ def render_create_shop_page():
          st.session_state.generated_shop = shop  
          st.text_area(f"Generated {shop_type}:", shop, height=250)
 
-    if hasattr(st.session_state, "generated_shop"):
+    if st.session_state.generated_shop:
         add_to_cart("Shops", "generated_shop")
 
 def render_create_location_page():
@@ -364,7 +375,7 @@ def render_create_location_page():
         st.session_state.generated_location = location  
         st.text_area("Generated Location:", location, height=250)
 
-    if hasattr(st.session_state, "generated_location"):
+    if st.session_state.generated_location:
         add_to_cart("Locations", "generated_location")
         st.success("Added to Cart!")
 
@@ -378,7 +389,7 @@ def render_generate_npc_page():
         st.session_state.generated_npc = npc  
         st.text_area("Generated NPC:", npc, height=250)  
       
-    if hasattr(st.session_state, "generated_npc"):
+    if st.session_state.generated_npc:
         add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
 
 # Dynamic Page Rendering Dictionary
@@ -405,4 +416,3 @@ def render_page():
 
 if __name__ == "__main__":
     render_page()
-
