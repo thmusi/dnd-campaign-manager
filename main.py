@@ -189,8 +189,8 @@ def main():
 
         if "generated_npc" in st.session_state:
             if st.button("🛒 Add to Cart", key="add_npc_to_cart"):
-                st.session_state.cart["npc"] = st.session_state.cart.get("npc", [])  
-                st.session_state.cart["npc"].append(st.session_state.generated_npc)
+                st.session_state.cart["NPCs"] = st.session_state.cart.get("NPCs", [])  
+                st.session_state.cart["NPCs"].append(st.session_state.generated_npc)
                 save_cart()
                 st.success("Added to Cart!")
 
@@ -240,8 +240,8 @@ def main():
 
         if "generated_location" in st.session_state:
             if st.button("🛒 Add to Cart", key="add_location_to_cart"):
-                st.session_state.cart["location"] = st.session_state.cart.get("location", [])  
-                st.session_state.cart["location"].append(st.session_state.generated_location)
+                st.session_state.cart["Locations"] = st.session_state.cart.get("Locations", [])  
+                st.session_state.cart["Locations"].append(st.session_state.generated_location)
                 save_cart()
                 st.success("Added to Cart!")
 
@@ -261,8 +261,8 @@ def main():
 
         if "generated_shop" in st.session_state:
             if st.button("🛒 Add to Cart", key="add_shop_to_cart"):
-                st.session_state.cart["shop"] = st.session_state.cart.get("shop", [])  
-                st.session_state.cart["shop"].append(st.session_state.generated_shop)  
+                st.session_state.cart["Shops"] = st.session_state.cart.get("Shops", [])  
+                st.session_state.cart["Shops"].append(st.session_state.generated_shop)  
                 save_cart()
                 st.success("Added to Cart!")
 
@@ -366,5 +366,6 @@ def main():
         st.button("Load Session History", key="load_session_history_button")
 
 if __name__ == "__main__":
-    load_cart()
-    st.write("App is running...")
+    main()
+
+  
