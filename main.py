@@ -39,7 +39,7 @@ class SessionState:
         self.cart = {}
         self.page = "API Key"
 
-session_state = SessionState()
+st.session_state = SessionState()
 
 def handle_exception(func):
     """Centralized error handling decorator."""
