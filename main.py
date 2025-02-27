@@ -53,9 +53,7 @@ def handle_exception(func):
 
 @handle_exception
 def initialize_session_state():
-    """Initialize session state variables only once."""
     if not hasattr(st.session_state, "initialized"):
-        # Define all session state variables in one place to avoid redundant checks
         session_defaults = {
             "api_key": None,
             "cart": DEFAULT_CART_STRUCTURE.copy(),
@@ -66,11 +64,11 @@ def initialize_session_state():
             "generated_npc": None,
             "generated_shop": None,
             "generated_location": None,
-            "generated_dungeon": None,
+            "generated_dungeon": None,  # <- Make sure this exists
             "generated_encounter": None,
             "initialized": True
         }
-        
+
         for key, value in session_defaults.items():
             setattr(st.session_state, key, value)
 
