@@ -148,7 +148,7 @@ def render_main_menu_buttons():
         navigate_to("Generate NPC")
     if st.button("🏪 Create Shop", key="generate_shop"):
         navigate_to("Create Shop")
-    if st.button("📍 Create Location", key="create_location"):
+    if st.button("📍 Generate a Location", key="create_location"):
         navigate_to("Create Location")
     if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
         navigate_to("Adapt Chapter")
@@ -213,7 +213,7 @@ def main():
 
     # Generate Location
     elif st.session_state.page == "Create Location":
-        st.subheader("🏰 Generate a Location")
+        st.subheader("📍 Generate a Location")
         location_prompt = st.text_area("What do you already know about this location? (Optional)")
         if st.button("Generate Location", key="generate_location_button"):
             location = generate_location(st.session_state.api_key, location_prompt)  
