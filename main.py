@@ -281,7 +281,7 @@ def render_dungeon_generator_page():
         st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
         st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
           
-    if st.session_state.generated_dungeon:
+    if getattr(st.session_state, "generated_dungeon", None):
         if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map"):
             import numpy as np
             import matplotlib.pyplot as plt
@@ -317,7 +317,7 @@ def render_encounter_generator_page():
     st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
     st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
     st.button("Generate Encounter", key="generate_encounter_button")
-    ### if st.session_state.generated_encounter:
+    if st.session_state.generated_encounter:
 
   
 def render_campaign_assistant_page():
@@ -363,7 +363,7 @@ def render_create_shop_page():
          st.session_state.generated_shop = shop  
          st.text_area(f"Generated {shop_type}:", shop, height=250)
 
-    if st.session_state.generated_shop:
+    if getattr(st.session_state, "generated_shop", None):
         add_to_cart("Shops", "generated_shop")
 
 def render_create_location_page():
@@ -375,7 +375,7 @@ def render_create_location_page():
         st.session_state.generated_location = location  
         st.text_area("Generated Location:", location, height=250)
 
-    if st.session_state.generated_location:
+    if getattr(st.session_state, "generated_location", None):
         add_to_cart("Locations", "generated_location")
         st.success("Added to Cart!")
 
@@ -389,7 +389,7 @@ def render_generate_npc_page():
         st.session_state.generated_npc = npc  
         st.text_area("Generated NPC:", npc, height=250)  
       
-    if st.session_state.generated_npc:
+    if getattr(st.session_state, "generated_npc", None):
         add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
 
 # Dynamic Page Rendering Dictionary
