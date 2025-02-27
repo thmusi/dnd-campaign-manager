@@ -221,10 +221,7 @@ def main():
             st.text_area("Generated Location:", location, height=250)
 
         if "generated_location" in st.session_state:
-            if st.button("🛒 Add to Cart", key="add_location_to_cart"):
-                st.session_state.cart["Locations"] = st.session_state.cart.get("Locations", [])  
-                st.session_state.cart["Locations"].append(st.session_state.generated_location)
-                save_cart()
+            add_to_cart("Locations", "generated_location")
                 st.success("Added to Cart!")
 
     # Generate Shop
@@ -242,11 +239,7 @@ def main():
             st.text_area(f"Generated {shop_type}:", shop, height=250)
 
         if "generated_shop" in st.session_state:
-            if st.button("🛒 Add to Cart", key="add_shop_to_cart"):
-                st.session_state.cart["Shops"] = st.session_state.cart.get("Shops", [])  
-                st.session_state.cart["Shops"].append(st.session_state.generated_shop)  
-                save_cart()
-                st.success("Added to Cart!")
+            add_to_cart("Shops", "generated_shop")
 
     ### Chapter Adaptation
     elif st.session_state.page == "Adapt Chapter":
@@ -285,7 +278,7 @@ def main():
         st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
         st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
         st.button("Generate Encounter", key="generate_encounter_button")
-
+       
     ### Dungeon Gen. 
     elif st.session_state.page == "Dungeon Generator":
         st.subheader("🏰 Dungeon Generator")
