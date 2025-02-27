@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
 from obsidian import list_drive_files, upload_file, download_file
@@ -92,11 +94,12 @@ def save_cart():
 
 @handle_exception
 def save_to_vault(category, item):
-    """Save generated content to the cart under a specific category."""
-    st.session_state.cart[category] = st.session_state.cart.get(category, [])
-    st.session_state.cart[category].append(item)
-    save_cart()
-    st.success(f"Added to {category} in the cart!")
+    """Save content to the vault only when manually confirmed from the cart page."""
+    if st.session_state.page == "Cart":  # ✅ Ensure it's only called in Cart
+        st.session_state.cart[category] = st.session_state.cart.get(category, [])
+        st.session_state.cart[category].append(item)
+        save_cart()
+        st.success(f"✅ {item} saved to the vault!")
 
 @handle_exception
 def load_cart():
@@ -138,17 +141,19 @@ if st.session_state.get("selected_content_to_save") and st.session_state.page ==
             st.warning("⚠️ Content is empty! Modify before sending to vault.")
 
 def add_to_cart(category, session_key):
-    """Add generated content to the cart without saving to vault."""
+    """Add generated content to the cart without saving to vault, ensuring correct naming."""
     if session_key in st.session_state:
-        item = st.session_state[session_key]  # Get the actual content
+        item = st.session_state[session_key]  # Get the generated item
 
-        if st.button(f"🛒 Add {category[:-1]} to Cart", key=f"add_{session_key}_to_cart"):
+        # ✅ Extract NPC Name (or Shop/Location Name) if available
+        name_match = re.search(r"\*\*Nom\*\* ?: (.+)", item) if isinstance(item, str) else None
+        item_name = name_match.group(1) if name_match else f"New {category[:-1]}"
+
+        if st.button(f"🛒 Add {item_name} to Cart", key=f"add_{session_key}_to_cart"):
             st.session_state.cart[category] = st.session_state.cart.get(category, [])
-            st.session_state.cart[category].append(item)  # Append actual item
-            save_cart()  # ✅ Saves to JSON but not to vault
-            
-            # ✅ Show the correct name (first 50 chars) instead of "generated_npc"
-            item_name = item[:50] if isinstance(item, str) else f"New {category[:-1]}"
+            st.session_state.cart[category].append(item)  # Append actual content
+            save_cart()  # ✅ Save to JSON
+
             st.success(f"✅ {item_name} added to {category} in the cart!")
 
 def navigate_to(page_name):
