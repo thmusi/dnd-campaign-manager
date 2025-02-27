@@ -56,69 +56,24 @@ initialize_session_state()
 
 @handle_exception
 def save_cart():
-    """Save the current cart to Google Drive."""
-    json_data = json.dumps(st.session_state.cart)
+    """Save the current cart to a local file."""
+    json_data = json.dumps(st.session_state.cart, indent=4)
     file_path = "cart.json"
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(json_data)
-    upload_file(file_path)
-    st.success("Cart saved to Google Drive!")
-    logging.info("Cart saved successfully to Google Drive.")
-
-@handle_exception
-def download_cart_file(file_id):
-    """Download the cart.json file from Google Drive."""
-    attempts = 3
-    for attempt in range(attempts):
-        try:
-            download_file(file_id, "cart.json")
-            return True
-        except ssl.SSLError:
-            st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
-            logging.warning(f"SSL error on attempt {attempt+1}")
-            time.sleep(2)
-        except Exception as e:
-            st.error(f"Failed to download file: {e}")
-            logging.error(f"Failed to download file: {e}")
-            return False
-    return False
-
-@handle_exception
-def validate_cart_file():
-    """Validate the downloaded cart.json file."""
-    if not os.path.exists("cart.json"):
-        st.error("Downloaded cart.json is missing.")
-        return False
-    if os.stat("cart.json").st_size == 0:
-        st.error("Downloaded cart.json is empty. Try saving the cart again.")
-        return False
-    return True
+    st.success("✅ Cart saved locally!")
+    logging.info("Cart saved successfully to local file.")
 
 @handle_exception
 def load_cart():
-    """Load the cart from Google Drive with validation and retries."""
-    files = list_drive_files()
-    file_id = next((file["id"] for file in files if file["name"] == "cart.json"), None)
-    if not file_id:
-        st.warning("No saved cart found in Google Drive.")
-        return
-    if download_cart_file(file_id) and validate_cart_file():
-        with open("cart.json", "r", encoding="utf-8") as f:
+    """Load the cart from a local file if it exists."""
+    file_path = "cart.json"
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
-        st.success("Cart loaded from Google Drive!")
-
-@handle_exception
-def save_to_vault(content, filename="generated_content.md"):
-    """Saves content to the user's Obsidian-Google Drive vault."""
-    vault_path = "obsidian_vault"
-    os.makedirs(vault_path, exist_ok=True)
-    if not filename.endswith(".md"):
-        filename += ".md"
-    file_path = os.path.join(vault_path, filename)
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    upload_file(file_path)
-    st.success(f"✅ File saved successfully to Google Drive: {filename}")
+        st.success("✅ Cart loaded from local file!")
+    else:
+        st.warning("No saved cart found locally.")
 
 # Ensure saving to vault happens only when a button is pressed
 if st.session_state.get("selected_content_to_save"):
@@ -388,4 +343,5 @@ def main():
         st.button("Load Session History", key="load_session_history_button")
 
 if __name__ == "__main__":
-    main()
+    load_cart()
+    st.write("App is running...")
