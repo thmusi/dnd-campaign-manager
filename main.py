@@ -56,22 +56,45 @@ initialize_session_state()
 
 @handle_exception
 def save_cart():
-    """Save the current cart to a local file."""
-    json_data = json.dumps(st.session_state.cart, indent=4)
-    file_path = "cart.json"
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(json_data)
-    st.success("✅ Cart saved locally!")
-    logging.info("Cart saved successfully to local file.")
+    """Save the current cart to a structured local file."""
+    default_cart_structure = {
+        "NPCs": [],
+        "Shops": [],
+        "Locations": [],
+        "Encounters": [],
+        "Dungeons": [],
+        "Quests": []
+    }
+
+    # Merge with existing session cart (preserving generated items)
+    st.session_state.cart = {**default_cart_structure, **st.session_state.cart}
+
+    with open("cart.json", "w", encoding="utf-8") as f:
+        json.dump(st.session_state.cart, f, indent=4)
+    
+    st.success("✅ Cart saved with structured format!")
 
 @handle_exception
 def load_cart():
-    """Load the cart from a local file if it exists."""
+    """Load the cart from a local file if it exists, ensuring structure."""
     file_path = "cart.json"
+
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
-            st.session_state.cart = json.load(f)
-        st.success("✅ Cart loaded from local file!")
+            loaded_data = json.load(f)
+
+        # Ensure all expected categories exist
+        default_cart_structure = {
+            "NPCs": [],
+            "Shops": [],
+            "Locations": [],
+            "Encounters": [],
+            "Dungeons": [],
+            "Quests": []
+        }
+        st.session_state.cart = {**default_cart_structure, **loaded_data}
+
+        st.success("✅ Cart loaded with structured format!")
     else:
         st.warning("No saved cart found locally.")
 
