@@ -1,3 +1,4 @@
+
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
 from obsidian import list_drive_files, upload_file, download_file
@@ -140,8 +141,8 @@ def add_to_cart(category, session_key):
             st.success(f"✅ {session_key} added to {category} in the cart!")
 
 def navigate_to(page_name):
-    """Change the current page in the session state."""
-    st.session_state.page = page_name
+    """Change the current page in Streamlit session state."""
+    st.session_state.page = page_name  # ✅ Corrected
 
 def render_sidebar():
     """Render the sidebar navigation menu."""
@@ -198,11 +199,11 @@ st.markdown(
 # Page Functions
 def render_api_key_page():
     st.title("Enter your API Key")
-    session_state.api_key = st.text_input("API Key", type="password")
+    st.session_state.api_key = st.text_input("API Key", type="password")  # ✅ Corrected
     if st.button("Submit", key="submit_api_key"):
-        if session_state.api_key:
+        if st.session_state.api_key:  # ✅ Corrected state usage
             st.success("API Key set!")
-            navigate_to("Main Menu")  # Corrected navigation
+            st.session_state.page = "Main Menu"  # ✅ Now Streamlit recognizes the change
         else:
             st.error("Please enter a valid API Key.")
 
@@ -409,8 +410,9 @@ PAGES = {
 
 def render_page():
     """Dynamically render the selected page."""
-    page_function = PAGES.get(session_state.page, lambda: st.error("Page not found."))
+    page_function = PAGES.get(st.session_state.page, lambda: st.error("Page not found."))
     page_function()
 
 if __name__ == "__main__":
     render_page()
+
