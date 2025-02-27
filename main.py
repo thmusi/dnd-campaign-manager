@@ -107,7 +107,7 @@ def load_cart():
         st.warning("No saved cart found locally.")
 
 # Ensure saving to vault happens only when a button is pressed
-if "selected_content_to_save" in st.session_state and st.session_state.selected_content_to_save is not None:
+if hasattr(st.session_state, "selected_content_to_save") and st.session_state.selected_content_to_save is not None:
     if st.button("📁 Save to Vault", key="save_to_vault"):
         base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
