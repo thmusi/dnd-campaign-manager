@@ -1,4 +1,3 @@
-
 import streamlit as st
 import obsidian  # Ensure full module import for debugging
 from obsidian import list_drive_files, upload_file, download_file
@@ -124,21 +123,33 @@ def load_cart():
         st.warning("No saved cart found locally.")
 
 # Ensure saving to vault happens only when a button is pressed
-if st.session_state.get("selected_content_to_save"):
-    if st.button("📁 Save to Vault", key="save_to_vault"):
-        base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
-        safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-        save_to_vault(st.session_state["selected_category"], st.session_state["selected_content_to_save"])
-        st.session_state["selected_content_to_save"] = None  # Clear after saving
+if st.session_state.get("selected_content_to_save") and st.session_state.page == "Cart":
+    st.subheader("Modify Selected Content Before Saving")
+    edited_content = st.text_area("Edit before saving to vault:", st.session_state["selected_content_to_save"], height=300)
+
+    if st.button("📁 Save to Vault", key="send_to_vault"):
+        if edited_content.strip():
+            base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
+            safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+            save_to_vault(st.session_state["selected_category"], edited_content)
+            st.success(f"✅ Saved {safe_filename} to the vault!")
+            st.session_state["selected_content_to_save"] = None  # Clear after saving
+        else:
+            st.warning("⚠️ Content is empty! Modify before sending to vault.")
 
 def add_to_cart(category, session_key):
-    """Save generated content to the cart under a specific category (JSON only)."""
+    """Add generated content to the cart without saving to vault."""
     if session_key in st.session_state:
-        if st.button(f"🛒 Add to Cart", key=f"add_{session_key}_to_cart"):
+        item = st.session_state[session_key]  # Get the actual content
+
+        if st.button(f"🛒 Add {category[:-1]} to Cart", key=f"add_{session_key}_to_cart"):
             st.session_state.cart[category] = st.session_state.cart.get(category, [])
-            st.session_state.cart[category].append(st.session_state[session_key])
-            save_cart()
-            st.success(f"✅ {session_key} added to {category} in the cart!")
+            st.session_state.cart[category].append(item)  # Append actual item
+            save_cart()  # ✅ Saves to JSON but not to vault
+            
+            # ✅ Show the correct name (first 50 chars) instead of "generated_npc"
+            item_name = item[:50] if isinstance(item, str) else f"New {category[:-1]}"
+            st.success(f"✅ {item_name} added to {category} in the cart!")
 
 def navigate_to(page_name):
     """Change the current page in Streamlit session state."""
@@ -416,4 +427,3 @@ def render_page():
 
 if __name__ == "__main__":
     render_page()
-
