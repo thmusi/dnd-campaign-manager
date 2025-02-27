@@ -23,9 +23,11 @@ logging.basicConfig(level=logging.INFO)
 
 import streamlit as st
 
-# Access secrets securely
-GOOGLE_DRIVE_API_CREDENTIALS = st.secrets["GOOGLE_DRIVE_API_CREDENTIALS"]
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+# Configuration Management
+class Settings(BaseSettings):
+GOOGLE_DRIVE_API_CREDENTIALS: str = "{}"
+
+settings = Settings()
 
 # Load environment variables
 load_dotenv()
