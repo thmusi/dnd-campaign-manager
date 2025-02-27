@@ -148,7 +148,7 @@ def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
         st.title("Navigation")
-        if session_state.page == "API Key":
+        if st.session_state.page == "API Key":
             return
         if st.button("🏠 Home", key="home_sidebar"):
             navigate_to("Main Menu")
