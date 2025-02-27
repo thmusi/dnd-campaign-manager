@@ -77,6 +77,10 @@ def download_cart_file(file_id):
             st.warning(f"SSL error, retrying... ({attempt+1}/{attempts})")
             logging.warning(f"SSL error on attempt {attempt+1}")
             time.sleep(2)
+        except Exception as e:
+            st.error(f"Failed to download file: {e}")
+            logging.error(f"Failed to download file: {e}")
+            return False
     return False
 
 @handle_exception
@@ -101,9 +105,7 @@ def load_cart():
     if download_cart_file(file_id) and validate_cart_file():
         with open("cart.json", "r", encoding="utf-8") as f:
             st.session_state.cart = json.load(f)
-        success_message = st.success("Cart loaded from Google Drive!")
-        time.sleep(10)
-        success_message.empty()
+        st.success("Cart loaded from Google Drive!")
 
 @handle_exception
 def save_to_vault(content, filename="generated_content.md"):
@@ -140,10 +142,6 @@ def render_sidebar():
             navigate_to("Main Menu")
         if st.button("🛒 Cart", key="cart_sidebar"):
             navigate_to("Cart")
-        st.markdown("---")
-        if st.session_state.page != "Main Menu":
-            render_main_menu_buttons()
-            
 
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
