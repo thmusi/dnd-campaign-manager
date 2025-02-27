@@ -99,7 +99,7 @@ def load_cart():
 if not hasattr(st.session_state, "selected_content_to_save"):
     st.session_state.selected_content_to_save = None
 
-if "page" not in st.session_state:
+if not hasattr(st.session_state, "page"):
     st.session_state.page = "API Key"  # Ensure default page is set
 
 if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
@@ -405,4 +405,4 @@ def render_page():
 
 if __name__ == "__main__":
     render_page()
-  
+
