@@ -75,6 +75,14 @@ def save_cart():
     st.success("✅ Cart saved with structured format!")
 
 @handle_exception
+def save_to_vault(category, item):
+    """Save generated content to the cart under a specific category."""
+    st.session_state.cart[category] = st.session_state.cart.get(category, [])
+    st.session_state.cart[category].append(item)
+    save_cart()
+    st.success(f"Added to {category} in the cart!")
+
+@handle_exception
 def load_cart():
     """Load the cart from a local file if it exists, ensuring structure."""
     file_path = "cart.json"
@@ -103,8 +111,17 @@ if st.session_state.get("selected_content_to_save"):
     if st.button("📁 Save to Vault", key="save_to_vault"):
         base_filename = f"{st.session_state['selected_category']}_{st.session_state['selected_file']}"[:50]
         safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-        save_to_vault(st.session_state["selected_content_to_save"], filename=safe_filename)
+        save_to_vault(st.session_state["selected_category"], st.session_state["selected_content_to_save"])
         st.session_state["selected_content_to_save"] = None  # Clear after saving
+
+def add_to_cart(category, session_key):
+    """Save generated content to the cart under a specific category (JSON only)."""
+    if session_key in st.session_state:
+        if st.button(f"🛒 Add to Cart", key=f"add_{session_key}_to_cart"):
+            st.session_state.cart[category] = st.session_state.cart.get(category, [])
+            st.session_state.cart[category].append(st.session_state[session_key])
+            save_cart()
+            st.success(f"✅ {session_key} added to {category} in the cart!")
 
 def navigate_to(page_name):
     """Change the current page in the session state."""
@@ -185,52 +202,14 @@ def main():
     elif st.session_state.page == "Generate NPC":
         st.title("🛡️ Generate an NPC")
         npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
+        
         if st.button("Generate NPC", key="generate_npc_button"):
             npc = generate_npc(st.session_state.api_key, npc_prompt)  
             st.session_state.generated_npc = npc  
             st.text_area("Generated NPC:", npc, height=250)  
-
+    
         if "generated_npc" in st.session_state:
-            if st.button("🛒 Add to Cart", key="add_npc_to_cart"):
-                st.session_state.cart["NPCs"] = st.session_state.cart.get("NPCs", [])  
-                st.session_state.cart["NPCs"].append(st.session_state.generated_npc)
-                save_cart()
-                st.success("Added to Cart!")
-
-    # Cart page rendering
-    elif st.session_state.page == "Cart":
-        st.title("🛒 Your Cart")
-        categories = list(st.session_state.cart.keys())
-        if categories:
-            selected_category = st.selectbox("📂 Select Folder", categories)
-            if selected_category in st.session_state.cart:
-                files = st.session_state.cart[selected_category]
-                if files:
-                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-                    if selected_file:
-                        st.markdown("### 📖 Preview")
-                        st.markdown(selected_file)
-                        
-                        # Modify Content Directly in Cart
-                        st.subheader("Modify Selected Content")
-                        edited_content = st.text_area("Edit the selected content before saving:", selected_file, height=300)
-                        
-                        # Send to Vault
-                        if st.button("Send to Vault", key="send_to_vault"):
-                            if edited_content.strip():
-                                # Trim filename to avoid excessively long names
-                                base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
-                                safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-                                save_to_vault(edited_content, filename=safe_filename)
-
-                            else:
-                                st.warning("Content is empty! Please modify before sending to vault.")
-                else:
-                    st.warning(f"No files found in {selected_category}.")
-            else:
-                st.warning("Selected category does not exist.")
-        else:
-            st.warning("Your cart is empty.")
+            add_to_cart("NPCs", "generated_npc")  # ✅ This replaces the redundant button logic
 
     # Generate Location
     elif st.session_state.page == "Create Location":
@@ -367,6 +346,42 @@ def main():
         st.write("Tools for session intros and note assistance.")
         st.text_input("Session Details (e.g., S01):", key="session_details_input")
         st.button("Load Session History", key="load_session_history_button")
+
+        # Cart page rendering
+    elif st.session_state.page == "Cart":
+        st.title("🛒 Your Cart")
+        categories = list(st.session_state.cart.keys())
+    
+        if categories:
+            selected_category = st.selectbox("📂 Select Folder", categories)
+            
+            if selected_category in st.session_state.cart:
+                files = st.session_state.cart[selected_category]
+                if files:
+                    selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
+                    
+                    if selected_file:
+                        st.markdown("### 📖 Preview")
+                        st.markdown(selected_file)
+    
+                        # Modify Content Directly in Cart
+                        st.subheader("Modify Selected Content")
+                        edited_content = st.text_area("Edit before saving:", selected_file, height=300)
+    
+                        # ✅ Save to Vault after reviewing
+                        if st.button("📁 Save to Vault", key="send_to_vault"):
+                            if edited_content.strip():
+                                base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
+                                safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
+                                save_to_vault(selected_category, edited_content)  # ✅ Saves reviewed content to vault
+                            else:
+                                st.warning("Content is empty! Modify before sending to vault.")
+                else:
+                    st.warning(f"No files found in {selected_category}.")
+            else:
+                st.warning("Selected category does not exist.")
+        else:
+            st.warning("Your cart is empty.")
 
 if __name__ == "__main__":
     main()
