@@ -41,6 +41,7 @@ credentials_dict = {
     "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL"),
     "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL"),
     "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN"),
+}
 
     # Validate credentials before proceeding
 if None in credentials_dict.values():
