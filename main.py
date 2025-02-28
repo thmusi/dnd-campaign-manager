@@ -1,15 +1,10 @@
 import streamlit as st
-import obsidian  # Ensure full module import for debugging
-from obsidian import list_drive_files, upload_file, download_file
-import ssl
-import time
 import os
-import re
 import json
 import logging
-import yaml
+import re
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from google.oauth2 import service_account  # Import the correct credentials module
 
 # Import AI and Obsidian functionalities
 from ai import (
@@ -33,16 +28,17 @@ DEFAULT_CART_STRUCTURE = {
 
 # Load environment variables
 load_dotenv()
-GOOGLE_DRIVE_CREDENTIALS_PATH = "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS.json"
+GOOGLE_DRIVE_CREDENTIALS_PATH = os.getenv("GOOGLE_DRIVE_CREDENTIALS_PATH", "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS.json")
 
 if os.path.exists(GOOGLE_DRIVE_CREDENTIALS_PATH):
     with open(GOOGLE_DRIVE_CREDENTIALS_PATH, "r") as f:
         credentials_dict = json.load(f)
-    credentials = Credentials.from_service_account_info(credentials_dict)
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
 else:
     st.error("❌ Google Drive credentials file is missing!")
     st.stop()
 
+# Exception handling decorator
 def handle_exception(func):
     """Centralized error handling decorator."""
     def wrapper(*args, **kwargs):
@@ -73,7 +69,7 @@ def initialize_session_state():
             "generated_npc": None,
             "generated_shop": None,
             "generated_location": None,
-            "generated_dungeon": None,  # <- Make sure this exists
+            "generated_dungeon": None,
             "generated_encounter": None,
             "initialized": True
         }
@@ -148,7 +144,6 @@ def navigate_to(page_name):
         st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
         st.session_state.page = "Main Menu"  # Redirect to Main Menu instead
 
-
 def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
@@ -219,9 +214,8 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
-    check_api_key()
+    render_api_key_page()
     st.stop()
-
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
@@ -334,16 +328,14 @@ def render_encounter_generator_page():
     st.number_input("Party Level", min_value=1, step=1, max_value=20, key="party_level_input")
     st.text_input("Custom Encounter Prompt:", key="custom_encounter_input")
     st.button("Generate Encounter", key="generate_encounter_button")
-    ###if st.session_state.generated_encounter:
 
-  
 def render_campaign_assistant_page():
     st.title("📖 Campaign Assistant")
     render_sidebar()
-    st.write("Ask me anything !")
+    st.write("Ask me anything!")
     st.text_input("Enter your query:", key="query_input")
     st.button("Submit Query", key="submit_query")
-  
+
 def render_adapt_chapter_page():
     st.title("📖 Adapt Chapter to Campaign")
     render_sidebar()
@@ -376,7 +368,7 @@ def render_create_shop_page():
     
     shop_prompt = st.text_area("What do you already know about this shop? (Optional)")
     if st.button("Generate Shop", key="generate_shop_button"):
-         shop = generate_shop(st.session_state.api_key, shop_type, shop_prompt)  
+         shop = generate_shop(st.session_state.openai_api_key, shop_type, shop_prompt)  
          st.session_state.generated_shop = shop  
          st.text_area(f"Generated {shop_type}:", shop, height=250)
 
@@ -388,7 +380,7 @@ def render_create_location_page():
     render_sidebar()
     location_prompt = st.text_area("What do you already know about this location? (Optional)")
     if st.button("Generate Location", key="generate_location_button"):
-        location = generate_location(st.session_state.api_key, location_prompt)  
+        location = generate_location(st.session_state.openai_api_key, location_prompt)  
         st.session_state.generated_location = location  
         st.text_area("Generated Location:", location, height=250)
 
@@ -402,7 +394,7 @@ def render_generate_npc_page():
     npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
         
     if st.button("Generate NPC", key="generate_npc_button"):
-        npc = generate_npc(st.session_state.api_key, npc_prompt)  
+        npc = generate_npc(st.session_state.openai_api_key, npc_prompt)  
         st.session_state.generated_npc = npc  
         st.text_area("Generated NPC:", npc, height=250)  
       
@@ -436,7 +428,6 @@ def render_page():
         st.warning("⚠️ Page not found, redirecting to Main Menu...")
         st.session_state.page = "Main Menu"
         render_main_menu_page()
-
 
 if __name__ == "__main__":
     render_page()
