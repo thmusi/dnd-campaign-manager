@@ -29,32 +29,25 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
-if not credentials_json:
-    st.error("❌ GOOGLE_DRIVE_CREDENTIALS is missing! Check your Render environment variables.")
+if os.path.exists(GOOGLE_CREDENTIALS_PATH):
+    with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
+        credentials_json = f.read().strip()  # Read as a string
+
+    try:
+        credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+        st.success("✅ Google Drive authentication successful!")
+
+    except json.JSONDecodeError:
+        st.error("❌ Invalid format for GOOGLE_DRIVE_CREDENTIALS! Ensure it's a valid JSON string.")
+        st.stop()
+else:
+    st.error("❌ Google Drive credentials file is missing! Check your Render Secret Files.")
     st.stop()
-
-try:
-    # Convert the string back into a dictionary
-    credentials_dict = json.loads(credentials_json)
-
-    # Ensure private key formatting is correct
-    if "private_key" in credentials_dict:
-        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
-
-    # Authenticate credentials
-    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-
-    st.success("✅ Google Drive authentication successful!")
-
-except json.JSONDecodeError:
-    st.error("❌ Invalid format for GOOGLE_DRIVE_CREDENTIALS! Ensure it's a valid JSON string.")
-    st.stop()
-except Exception as e:
-    st.error(f"❌ Failed to authenticate Google Drive credentials: {e}")
-    st.stop()
-
 
 # Exception handling decorator
 def handle_exception(func):
