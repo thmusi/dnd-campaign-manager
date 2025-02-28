@@ -29,15 +29,23 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-GOOGLE_DRIVE_CREDENTIALS_PATH = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
 
-if os.path.exists(GOOGLE_DRIVE_CREDENTIALS_PATH):
-    with open(GOOGLE_DRIVE_CREDENTIALS_PATH, "r") as f:
-        credentials_dict = json.load(f)
-    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-else:
-    st.error("❌ Google Drive credentials file is missing!")
+if not credentials_json:
+    st.error("❌ GOOGLE_DRIVE_CREDENTIALS is missing! Check your Render environment variables.")
     st.stop()
+
+try:
+    # Convert the string back into a dictionary
+    credentials_dict = json.loads(credentials_json)
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+except json.JSONDecodeError:
+    st.error("❌ Invalid format for GOOGLE_DRIVE_CREDENTIALS! Ensure it's a valid JSON string.")
+    st.stop()
+except Exception as e:
+    st.error(f"❌ Failed to authenticate Google Drive credentials: {e}")
+    st.stop()
+
 
 # Exception handling decorator
 def handle_exception(func):
