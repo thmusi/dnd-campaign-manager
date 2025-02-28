@@ -197,17 +197,36 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Load API keys from Render environment variables
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+
+if not OPENAI_API_KEY:
+    st.error("OpenAI API key is missing! Please set it in your Render environment variables.")
+    st.stop()
+
+if not GOOGLE_DRIVE_CREDENTIALS:
+    st.error("Google Drive credentials are missing! Please set them in your Render environment variables.")
+    st.stop()
+
+# Set up OpenAI
+import openai
+openai.api_key = OPENAI_API_KEY
+
+# Placeholder for Google Drive API setup
+st.write("Google Drive API setup is pending. Credentials loaded from environment.")
+
+
 # Page Functions
 def render_api_key_page():
     load_cart()
     st.title("Enter your API Key")
-    st.session_state.api_key = st.text_input("API Key", type="password")  # ✅ Corrected
-    if st.button("Submit", key="submit_api_key"):
-        if st.session_state.api_key:  # ✅ Corrected state usage
-            st.success("API Key set!")
-            st.session_state.page = "Main Menu"  # ✅ Now Streamlit recognizes the change
-        else:
-            st.error("Please enter a valid API Key.")
+    st.session_state.api_key = OPENAI_API_KEY  # Automatically set from environment
+    if st.session_state.api_key:
+        st.success("API Key set from Render environment variables!")
+        st.session_state.page = "Main Menu"
+    else:
+        st.error("API Key is missing!")
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
