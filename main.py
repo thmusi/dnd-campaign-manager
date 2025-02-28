@@ -33,8 +33,15 @@ DEFAULT_CART_STRUCTURE = {
 
 # Load environment variables
 load_dotenv()
-GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+GOOGLE_DRIVE_CREDENTIALS_PATH = "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS"
 
+if os.path.exists(GOOGLE_DRIVE_CREDENTIALS_PATH):
+    with open(GOOGLE_DRIVE_CREDENTIALS_PATH, "r") as f:
+        credentials_dict = json.load(f)
+    credentials = Credentials.from_service_account_info(credentials_dict)
+else:
+    st.error("❌ Google Drive credentials file is missing!")
+    st.stop()
 
 def handle_exception(func):
     """Centralized error handling decorator."""
