@@ -33,7 +33,7 @@ DEFAULT_CART_STRUCTURE = {
 
 # Load environment variables
 load_dotenv()
-GOOGLE_DRIVE_CREDENTIALS_PATH = "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS"
+GOOGLE_DRIVE_CREDENTIALS_PATH = "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS.json"
 
 if os.path.exists(GOOGLE_DRIVE_CREDENTIALS_PATH):
     with open(GOOGLE_DRIVE_CREDENTIALS_PATH, "r") as f:
