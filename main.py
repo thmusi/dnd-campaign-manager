@@ -38,7 +38,16 @@ if not credentials_json:
 try:
     # Convert the string back into a dictionary
     credentials_dict = json.loads(credentials_json)
+
+    # Ensure private key formatting is correct
+    if "private_key" in credentials_dict:
+        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+
+    # Authenticate credentials
     credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+
+    st.success("✅ Google Drive authentication successful!")
+
 except json.JSONDecodeError:
     st.error("❌ Invalid format for GOOGLE_DRIVE_CREDENTIALS! Ensure it's a valid JSON string.")
     st.stop()
