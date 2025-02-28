@@ -33,6 +33,8 @@ DEFAULT_CART_STRUCTURE = {
 
 # Load environment variables
 load_dotenv()
+GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+
 
 def handle_exception(func):
     """Centralized error handling decorator."""
@@ -53,7 +55,7 @@ def handle_exception(func):
 
 @handle_exception
 def initialize_session_state():
-    if not hasattr(st.session_state, "initialized"):
+    if not st.session_state.get("initialized", False):
         session_defaults = {
             "api_key": None,
             "cart": DEFAULT_CART_STRUCTURE.copy(),
@@ -93,21 +95,16 @@ def save_to_vault(category, item):
 
 @handle_exception
 def load_cart():
-    """Load the cart from a local file if it exists, ensuring structure."""
     file_path = "cart.json"
-
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
-            loaded_data = json.load(f)
-
-        st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **loaded_data}
-        st.success("✅ Cart loaded with structured format!")
+            st.session_state.cart = json.load(f)
     else:
-        st.warning("No saved cart found locally.")
+        st.session_state.cart = DEFAULT_CART_STRUCTURE.copy()
+        st.success("✅ Cart loaded with structured format!")
 
-if st.session_state.selected_content_to_save is None:
-    st.session_state.selected_content_to_save = None
-
+if "cart" not in st.session_state:
+    load_cart()
 
 if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
     st.subheader("Modify Selected Content Before Saving")
@@ -197,36 +194,27 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Load API keys from Render environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
-
-if not OPENAI_API_KEY:
-    st.error("OpenAI API key is missing! Please set it in your Render environment variables.")
-    st.stop()
-
-if not GOOGLE_DRIVE_CREDENTIALS:
-    st.error("Google Drive credentials are missing! Please set them in your Render environment variables.")
-    st.stop()
-
-# Set up OpenAI
-import openai
-openai.api_key = OPENAI_API_KEY
-
-# Placeholder for Google Drive API setup
-st.write("Google Drive API setup is pending. Credentials loaded from environment.")
-
-
 # Page Functions
 def render_api_key_page():
-    load_cart()
-    st.title("Enter your API Key")
-    st.session_state.api_key = OPENAI_API_KEY  # Automatically set from environment
-    if st.session_state.api_key:
-        st.success("API Key set from Render environment variables!")
-        st.session_state.page = "Main Menu"
-    else:
-        st.error("API Key is missing!")
+    st.title("Enter Your OpenAI API Key")
+
+    openai_key = st.text_input("Enter OpenAI API Key:", type="password")
+    if st.button("Login"):
+        if openai_key:
+            st.session_state["authenticated"] = True
+            st.session_state["openai_api_key"] = openai_key
+            st.success("Access Granted!")
+            st.experimental_rerun()
+        else:
+            st.error("Please enter your OpenAI API Key.")
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    check_api_key()
+    st.stop()
+
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
@@ -432,12 +420,15 @@ PAGES = {
 }
 
 def render_page():
-    """Dynamically render the selected page."""
-    if st.session_state.page not in PAGES:
+    if "page" not in st.session_state:
+        st.session_state.page = "API Key"
+    
+    if st.session_state.page in PAGES:
+        PAGES[st.session_state.page]()
+    else:
         st.warning("⚠️ Page not found, redirecting to Main Menu...")
-        st.session_state.page = "Main Menu"  # Redirect to a valid page
-
-    PAGES[st.session_state.page]()  # Safely render the correct page
+        st.session_state.page = "Main Menu"
+        render_main_menu_page()
 
 
 if __name__ == "__main__":
