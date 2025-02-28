@@ -57,7 +57,7 @@ def handle_exception(func):
 def initialize_session_state():
     if not st.session_state.get("initialized", False):
         session_defaults = {
-            "api_key": None,
+            "openai_api_key": None,
             "cart": DEFAULT_CART_STRUCTURE.copy(),
             "page": "API Key",
             "selected_content_to_save": None,
