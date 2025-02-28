@@ -28,30 +28,14 @@ DEFAULT_CART_STRUCTURE = {
 
 # Load environment variables
 load_dotenv()
-# Reconstruct Google Drive API credentials from environment variables
-credentials_dict = {
-    "type": os.getenv("GOOGLE_TYPE"),
-    "project_id": os.getenv("GOOGLE_PROJECT_ID"),
-    "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
-    "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),  # Ensure new lines are formatted correctly
-    "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
-    "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-    "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
-    "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
-    "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_X509_CERT_URL"),
-    "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_X509_CERT_URL"),
-    "universe_domain": os.getenv("GOOGLE_UNIVERSE_DOMAIN"),
-}
+GOOGLE_DRIVE_CREDENTIALS_PATH = os.getenv("GOOGLE_DRIVE_CREDENTIALS_PATH", "/etc/secrets/GOOGLE_DRIVE_CREDENTIALS")
 
-    # Validate credentials before proceeding
-if None in credentials_dict.values():
-    st.error("❌ Some Google Drive credentials are missing! Check your Render environment variables.")
-    st.stop()
-
-try:
-    credentials = Credentials.from_service_account_info(credentials_dict)
-except Exception as e:
-    st.error(f"❌ Failed to authenticate Google Drive credentials: {e}")
+if os.path.exists(GOOGLE_DRIVE_CREDENTIALS_PATH):
+    with open(GOOGLE_DRIVE_CREDENTIALS_PATH, "r") as f:
+        credentials_dict = json.load(f)
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+else:
+    st.error("❌ Google Drive credentials file is missing!")
     st.stop()
 
 # Exception handling decorator
