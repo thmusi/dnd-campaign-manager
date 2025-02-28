@@ -6,11 +6,22 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from datetime import datetime
 import streamlit as st
 import re
+from google.oauth2.service_account import Credentials
 
 
-credentials_info = dict(st.secrets["google_drive"])  # ✅ Convert to dictionary directly
-credentials = service_account.Credentials.from_service_account_info(credentials_info)
+GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
 
+if GOOGLE_DRIVE_CREDENTIALS:
+    try:
+        credentials_info = json.loads(GOOGLE_DRIVE_CREDENTIALS)  # Convert JSON string to dict
+        credentials = Credentials.from_service_account_info(credentials_info)
+    except json.JSONDecodeError:
+        st.error("Invalid Google Drive credentials format! Ensure it's a valid JSON string in Render.")
+        st.stop()
+else:
+    st.error("Google Drive credentials are missing! Set them in Render environment variables.")
+    st.stop()
+    
 drive_service = build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 # Your Google Drive folder where Obsidian files will be stored
