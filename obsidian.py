@@ -8,19 +8,16 @@ import streamlit as st
 import re
 from google.oauth2.service_account import Credentials
 
-
 GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
 
 if GOOGLE_DRIVE_CREDENTIALS:
     try:
-        credentials_info = json.loads(GOOGLE_DRIVE_CREDENTIALS)  # Convert JSON string to dict
+        credentials_info = json.loads(GOOGLE_DRIVE_CREDENTIALS)  # Convert JSON string to dictionary
         credentials = Credentials.from_service_account_info(credentials_info)
     except json.JSONDecodeError:
-        st.error("Invalid Google Drive credentials format! Ensure it's a valid JSON string in Render.")
-        st.stop()
+        raise ValueError("Invalid Google Drive credentials format! Ensure it's a valid JSON string in Render.")
 else:
-    st.error("Google Drive credentials are missing! Set them in Render environment variables.")
-    st.stop()
+    raise ValueError("Google Drive credentials are missing! Set them in Render environment variables.")
     
 drive_service = build("drive", "v3", credentials=credentials, cache_discovery=False)
 
