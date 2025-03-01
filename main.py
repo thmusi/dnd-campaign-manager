@@ -29,17 +29,14 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
-
-st.write(f"Checking if {GOOGLE_CREDENTIALS_PATH} exists...")
-
-if os.path.exists(GOOGLE_CREDENTIALS_PATH):
-    st.success(f"✅ Secret file found: {GOOGLE_CREDENTIALS_PATH}")
-    with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
-        credentials_content = f.read().strip()
-        st.write("File content:", credentials_content[:100])  # Print first 100 characters
+# Load credentials from Streamlit secrets
+if "google_drive" in st.secrets:
+    credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
+    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+    st.success("✅ Google Drive authentication successful!")
 else:
-    st.error("❌ GOOGLE_DRIVE_CREDENTIALS file is missing! Check your Render Secret Files.")
+    st.error("❌ Google Drive credentials not found in Streamlit secrets!")
+    st.stop()
 
 
 # Exception handling decorator
