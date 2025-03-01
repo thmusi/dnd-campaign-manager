@@ -7,36 +7,37 @@ from datetime import datetime
 import streamlit as st
 import re
 from google.oauth2.service_account import Credentials
+from google.oauth2 import service_account
 
 
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
 def load_google_credentials():
-    """Loads Google Drive API credentials securely from Streamlit Cloud, Render, or GitHub."""
-    
-    try:
-        # 1️⃣ Check if running on Streamlit Cloud
-        if hasattr(st, "secrets") and "google_drive" in st.secrets:
-            credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
-            return service_account.Credentials.from_service_account_info(credentials_dict)
+    """Loads Google Drive API credentials securely from Render, GitHub, or Streamlit Cloud."""
 
-        # 2️⃣ Check if running on Render (Secret File)
-        elif os.path.exists(GOOGLE_CREDENTIALS_PATH):
+    try:
+        # 1️⃣ Check if running on Render (Secret File)
+        if os.path.exists(GOOGLE_CREDENTIALS_PATH):
             with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
                 credentials_json = f.read().strip()
             credentials_dict = json.loads(credentials_json)  # Convert back to JSON
             credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
             return service_account.Credentials.from_service_account_info(credentials_dict)
 
-        # 3️⃣ Check if running on GitHub Actions (Environment Variable)
+        # 2️⃣ Check if running on GitHub Actions (Environment Variable)
         elif "GOOGLE_DRIVE_CREDENTIALS" in os.environ:
             credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
             credentials_dict = json.loads(credentials_json)  # Convert back to JSON
             credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
             return service_account.Credentials.from_service_account_info(credentials_dict)
 
+        # 3️⃣ Check if running on Streamlit Cloud (ONLY IF `st.secrets` EXISTS)
+        elif hasattr(st, "secrets") and "google_drive" in st.secrets:
+            credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+
         else:
-            raise FileNotFoundError("❌ No valid credentials found in Streamlit secrets, Render secret files, or GitHub secrets.")
+            raise FileNotFoundError("❌ No valid credentials found in Render secret files, GitHub Secrets, or Streamlit Cloud.")
 
     except json.JSONDecodeError:
         st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Please check your JSON storage.")
@@ -45,10 +46,6 @@ def load_google_credentials():
 # Load credentials dynamically
 credentials = load_google_credentials()
 st.success("✅ Google Drive authentication successful!")
-
-# Load credentials dynamically
-credentials = load_google_credentials()
-drive_service = build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
