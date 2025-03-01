@@ -29,10 +29,18 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
+# Define Render secret file path
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
+# 🛠 DEBUG: Print what Render is reading before parsing
+credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+
+if credentials_json:
+    st.write("🔍 Debug: Raw Credentials JSON from Environment Variable:")
+    st.code(credentials_json[:500])  # Print the first 500 characters to inspect
+
 def load_google_credentials():
-    """Loads Google Drive API credentials from GitHub Secrets, Render, or Streamlit Cloud."""
+    """Loads Google Drive API credentials securely from GitHub, Render, or Streamlit Cloud."""
     
     # 1️⃣ Check if running on Streamlit Cloud
     if "google_drive" in st.secrets:
@@ -43,25 +51,28 @@ def load_google_credentials():
     elif os.path.exists(GOOGLE_CREDENTIALS_PATH):
         with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
             credentials_json = f.read().strip()
-        credentials_dict = json.loads(credentials_json)  # Convert back to JSON
-        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
-        return service_account.Credentials.from_service_account_info(credentials_dict)
+
+        try:
+            credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+        except json.JSONDecodeError:
+            st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Please check your JSON storage.")
+            st.stop()
 
     # 3️⃣ Check if running on GitHub Actions (Environment Variable)
-    elif "GOOGLE_DRIVE_CREDENTIALS" in os.environ:
-        credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
-        credentials_dict = json.loads(credentials_json)
-        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
-        return service_account.Credentials.from_service_account_info(credentials_dict)
+    elif credentials_json:
+        try:
+            credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+        except json.JSONDecodeError:
+            st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Ensure it is stored correctly in GitHub Secrets.")
+            st.stop()
 
     else:
         st.error("❌ Google Drive credentials not found in Streamlit secrets, Render, or GitHub Secrets!")
         st.stop()
-
-# Load credentials dynamically
-credentials = load_google_credentials()
-st.success("✅ Google Drive authentication successful!")
-
 
 # Load credentials dynamically
 credentials = load_google_credentials()
