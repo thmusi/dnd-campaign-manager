@@ -29,18 +29,17 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-# Define Render secret file path
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
 def load_google_credentials():
-    """Loads Google Drive API credentials securely for both Streamlit Cloud & Render"""
+    """Loads Google Drive API credentials from GitHub Secrets, Render, or Streamlit Cloud."""
     
-    # 1️⃣ If running on Streamlit Cloud, use st.secrets
+    # 1️⃣ Check if running on Streamlit Cloud
     if "google_drive" in st.secrets:
         credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
         return service_account.Credentials.from_service_account_info(credentials_dict)
 
-    # 2️⃣ If running on Render, read from the secret file
+    # 2️⃣ Check if running on Render (Secret File)
     elif os.path.exists(GOOGLE_CREDENTIALS_PATH):
         with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
             credentials_json = f.read().strip()
@@ -48,9 +47,21 @@ def load_google_credentials():
         credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
         return service_account.Credentials.from_service_account_info(credentials_dict)
 
+    # 3️⃣ Check if running on GitHub Actions (Environment Variable)
+    elif "GOOGLE_DRIVE_CREDENTIALS" in os.environ:
+        credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+        credentials_dict = json.loads(credentials_json)
+        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+        return service_account.Credentials.from_service_account_info(credentials_dict)
+
     else:
-        st.error("❌ Google Drive credentials not found in Streamlit secrets or Render secret files!")
+        st.error("❌ Google Drive credentials not found in Streamlit secrets, Render, or GitHub Secrets!")
         st.stop()
+
+# Load credentials dynamically
+credentials = load_google_credentials()
+st.success("✅ Google Drive authentication successful!")
+
 
 # Load credentials dynamically
 credentials = load_google_credentials()
