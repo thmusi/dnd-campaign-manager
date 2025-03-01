@@ -133,11 +133,13 @@ def add_to_cart(category, session_key):
 def navigate_to(page_name):
     """Ensure only valid pages are set and force rerun to update UI."""
     if page_name in PAGES:
-        st.session_state.page = page_name
-        st.rerun()  # Forces the UI to update immediately after clicking a button
+        st.session_state["page"] = page_name
+        st.experimental_set_query_params(page=page_name)  # ✅ Set URL parameters for persistence
+        st.rerun()  # ✅ Forces the UI to update immediately after clicking a button
     else:
         st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
-        st.session_state.page = "Main Menu"
+        st.session_state["page"] = "Main Menu"
+        st.experimental_set_query_params(page="Main Menu")
         st.rerun()
 
 def render_sidebar():
@@ -157,27 +159,37 @@ def render_sidebar():
 def render_main_menu_buttons():
     """Render navigation buttons on the Main Menu page."""
     st.subheader("Main Menu Options")
+
     if st.button("🧙 Create NPC", key="generate_npc"):
         navigate_to("Generate NPC")
+        
     if st.button("🏪 Create Shop", key="generate_shop"):
         navigate_to("Create Shop")
+
     if st.button("📍 Generate a Location", key="create_location"):
         navigate_to("Create Location")
+
     if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
         navigate_to("Adapt Chapter")
+
     if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
         navigate_to("Campaign Assistant")
+
     if st.button("⚔️ Encounter Generator", key="encounter_generator"):
         navigate_to("Encounter Generator")
+
     if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
         navigate_to("Dungeon Generator")
+
     if st.button("📜 Quest Generator", key="quest_generator"):
         navigate_to("Quest Generator")
+
     if st.button("🌍 Worldbuilding", key="worldbuilding"):
         navigate_to("Worldbuilding")
+
     if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
-
+        
 # Apply custom styling to buttons
 st.markdown(
     """
