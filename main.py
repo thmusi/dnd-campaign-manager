@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from obsidian import load_google_credentials
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
+from obsidian import drive_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
