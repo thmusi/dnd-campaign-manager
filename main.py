@@ -31,23 +31,16 @@ load_dotenv()
 
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
+st.write(f"Checking if {GOOGLE_CREDENTIALS_PATH} exists...")
+
 if os.path.exists(GOOGLE_CREDENTIALS_PATH):
+    st.success(f"✅ Secret file found: {GOOGLE_CREDENTIALS_PATH}")
     with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
-        credentials_json = f.read().strip()  # Read as a string
-
-    try:
-        credentials_dict = json.loads(credentials_json)  # Convert back to JSON
-        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
-
-        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-        st.success("✅ Google Drive authentication successful!")
-
-    except json.JSONDecodeError:
-        st.error("❌ Invalid format for GOOGLE_DRIVE_CREDENTIALS! Ensure it's a valid JSON string.")
-        st.stop()
+        credentials_content = f.read().strip()
+        st.write("File content:", credentials_content[:100])  # Print first 100 characters
 else:
-    st.error("❌ Google Drive credentials file is missing! Check your Render Secret Files.")
-    st.stop()
+    st.error("❌ GOOGLE_DRIVE_CREDENTIALS file is missing! Check your Render Secret Files.")
+
 
 # Exception handling decorator
 def handle_exception(func):
