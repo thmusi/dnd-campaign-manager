@@ -133,13 +133,13 @@ def add_to_cart(category, session_key):
 def navigate_to(page_name):
     """Ensure only valid pages are set and force rerun to update UI."""
     if page_name in PAGES:
-        st.session_state["page"] = page_name
-        st.experimental_set_query_params(page=page_name)  # ✅ Set URL parameters for persistence
+        st.session_state.page = page_name
+        st.query_params["page"] = page_name  # ✅ Set URL parameters for persistence
         st.rerun()  # ✅ Forces the UI to update immediately after clicking a button
     else:
         st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
-        st.session_state["page"] = "Main Menu"
-        st.experimental_set_query_params(page="Main Menu")
+        st.session_state.page = "Main Menu"
+        st.query_params["page"] = "Main Menu"
         st.rerun()
 
 def render_sidebar():
@@ -447,10 +447,12 @@ def render_page():
     if "page" not in st.session_state:
         st.session_state.page = "Main Menu"
 
-    # ✅ Check for page from URL parameters
-    query_params = st.experimental_get_query_params()
+    # ✅ Check for page from URL parameters using the new Streamlit method
+    query_params = st.query_params
     if "page" in query_params:
-        requested_page = query_params["page"][0]
+        requested_page = query_params["page"]
+        if isinstance(requested_page, list):
+            requested_page = requested_page[0]  # Ensure we get a single string value
         if requested_page in PAGES:
             st.session_state.page = requested_page
 
