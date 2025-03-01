@@ -200,15 +200,18 @@ def render_api_key_page():
 
     openai_key = st.text_input("Enter OpenAI API Key:", type="password")
 
-    if st.button("Login"):  # ✅ Proper indentation starts here
-        if openai_key:  # ✅ This must be indented inside the button check
+    if st.button("Login"):
+        if openai_key:
             st.session_state["openai_api_key"] = openai_key
-            st.session_state["authenticated"] = True  # ✅ Ensure it's saved BEFORE rerun
+            st.session_state["authenticated"] = True  # ✅ Ensuring it's saved before rerun
+            st.session_state["page"] = "Main Menu"  # ✅ Redirect to Main Menu after login
+
             st.success("✅ Access Granted!")
 
             # ✅ Debugging Output
             st.write("🔍 Debug: API Key Saved", st.session_state["openai_api_key"])
             st.write("🔍 Debug: Authenticated?", st.session_state["authenticated"])
+            st.write("🔍 Debug: Page Set To", st.session_state["page"])
 
             # ✅ Use st.stop() before rerun (if needed)
             st.stop()  # Prevents execution from continuing before rerun
@@ -216,13 +219,19 @@ def render_api_key_page():
         else:
             st.error("❌ Please enter your OpenAI API Key.")
 
-# ✅ Authentication Check: If not authenticated, show API Key page
+# ✅ Authentication & Navigation Check: Redirect to Main Menu if authenticated
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
+
+if "page" not in st.session_state:
+    st.session_state["page"] = "API Key"
 
 if not st.session_state["authenticated"]:
     render_api_key_page()
     st.stop()
+else:
+    st.session_state["page"] = "Main Menu"  # ✅ Redirect to Main Menu if authenticated
+
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
