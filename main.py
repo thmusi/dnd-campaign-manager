@@ -135,12 +135,14 @@ def add_to_cart(category, session_key):
             st.success(f"✅ {item_name} added to {category} in the cart!")
 
 def navigate_to(page_name):
-    """Ensure only valid pages are set."""
+    """Ensure only valid pages are set and force rerun to update UI."""
     if page_name in PAGES:
         st.session_state.page = page_name
+        st.rerun()  # ✅ Forces the UI to update immediately after clicking a button
     else:
         st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
-        st.session_state.page = "Main Menu"  # Redirect to Main Menu instead
+        st.session_state.page = "Main Menu"
+        st.rerun()
 
 def render_sidebar():
     """Render the sidebar navigation menu."""
