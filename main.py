@@ -5,6 +5,8 @@ import logging
 import re
 from dotenv import load_dotenv
 from google.oauth2 import service_account  # Import the correct credentials module
+from obsidian import load_google_credentials  # Import from obsidian.py
+
 
 # Import AI and Obsidian functionalities
 from ai import (
