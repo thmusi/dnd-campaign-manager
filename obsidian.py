@@ -32,18 +32,15 @@ def load_google_credentials():
         # 2️⃣ Check if running on GitHub Actions (Environment Variable)
         elif "GOOGLE_DRIVE_CREDENTIALS" in os.environ:
             credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
-        
+
             # 🔍 Debug: Print what GitHub Secrets is passing
             st.write("🔍 Debug: Raw Credentials from GitHub Secrets:")
             st.code(credentials_json[:500])  # Print the first 500 characters
-        
-            try:
-                credentials_dict = json.loads(credentials_json)  # Convert back to JSON
-                credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
-                return service_account.Credentials.from_service_account_info(credentials_dict)
-    except json.JSONDecodeError:
-        st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Ensure it is stored correctly in GitHub Secrets.")
-        st.stop()
+
+            credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+
         # 3️⃣ Check if running on Streamlit Cloud (ONLY IF `st.secrets` EXISTS)
         elif hasattr(st, "secrets") and "google_drive" in st.secrets:
             credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
@@ -54,6 +51,10 @@ def load_google_credentials():
 
     except json.JSONDecodeError:
         st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Please check your JSON storage.")
+        st.stop()
+
+    except Exception as e:
+        st.error(f"❌ An unexpected error occurred while loading credentials: {e}")
         st.stop()
 
 # Load credentials dynamically
