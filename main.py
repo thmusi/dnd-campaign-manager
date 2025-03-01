@@ -29,15 +29,32 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-# Load credentials from Streamlit secrets
-if "google_drive" in st.secrets:
-    credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
-    credentials = service_account.Credentials.from_service_account_info(credentials_dict)
-    st.success("✅ Google Drive authentication successful!")
-else:
-    st.error("❌ Google Drive credentials not found in Streamlit secrets!")
-    st.stop()
+# Define Render secret file path
+GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
+def load_google_credentials():
+    """Loads Google Drive API credentials securely for both Streamlit Cloud & Render"""
+    
+    # 1️⃣ If running on Streamlit Cloud, use st.secrets
+    if "google_drive" in st.secrets:
+        credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
+        return service_account.Credentials.from_service_account_info(credentials_dict)
+
+    # 2️⃣ If running on Render, read from the secret file
+    elif os.path.exists(GOOGLE_CREDENTIALS_PATH):
+        with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
+            credentials_json = f.read().strip()
+        credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+        credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+        return service_account.Credentials.from_service_account_info(credentials_dict)
+
+    else:
+        st.error("❌ Google Drive credentials not found in Streamlit secrets or Render secret files!")
+        st.stop()
+
+# Load credentials dynamically
+credentials = load_google_credentials()
+st.success("✅ Google Drive authentication successful!")
 
 # Exception handling decorator
 def handle_exception(func):
