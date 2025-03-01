@@ -443,9 +443,18 @@ PAGES = {
 }
 
 def render_page():
+    """Render the correct page based on session state."""
     if "page" not in st.session_state:
-        st.session_state.page = "API Key"
-    
+        st.session_state.page = "Main Menu"
+
+    # ✅ Check for page from URL parameters
+    query_params = st.experimental_get_query_params()
+    if "page" in query_params:
+        requested_page = query_params["page"][0]
+        if requested_page in PAGES:
+            st.session_state.page = requested_page
+
+    # ✅ Render the correct page
     if st.session_state.page in PAGES:
         PAGES[st.session_state.page]()
     else:
