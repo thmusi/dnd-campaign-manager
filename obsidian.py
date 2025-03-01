@@ -9,20 +9,47 @@ import re
 from google.oauth2.service_account import Credentials
 
 
-# Load Google Drive API credentials from environment variable
-credentials_info = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
 
-if credentials_info:
-    try:
-        credentials_dict = json.loads(credentials_info)
-        credentials = Credentials.from_service_account_info(credentials_dict)
-    except json.JSONDecodeError:
-        st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format.")
-        st.stop()
-else:
-    st.error("❌ GOOGLE_DRIVE_CREDENTIALS is missing.")
-    st.stop()
+def load_google_credentials():
+    """Loads Google Drive API credentials securely from Streamlit Cloud, Render, or GitHub."""
     
+    # 1️⃣ Check if running on Streamlit Cloud
+    if "google_drive" in st.secrets:
+        credentials_dict = json.loads(json.dumps(st.secrets["google_drive"]))  # Convert TOML to JSON
+        return service_account.Credentials.from_service_account_info(credentials_dict)
+
+    # 2️⃣ Check if running on Render (Secret File)
+    elif os.path.exists(GOOGLE_CREDENTIALS_PATH):
+        with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
+            credentials_json = f.read().strip()
+
+        try:
+            credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+        except json.JSONDecodeError:
+            st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Please check your JSON storage.")
+            st.stop()
+
+    # 3️⃣ Check if running on GitHub Actions (Environment Variable)
+    elif "GOOGLE_DRIVE_CREDENTIALS" in os.environ:
+        credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+
+        try:
+            credentials_dict = json.loads(credentials_json)  # Convert back to JSON
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
+            return service_account.Credentials.from_service_account_info(credentials_dict)
+        except json.JSONDecodeError:
+            st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Ensure it is stored correctly in GitHub Secrets.")
+            st.stop()
+
+    else:
+        st.error("❌ Google Drive credentials not found in Streamlit secrets, Render, or GitHub Secrets!")
+        st.stop()
+
+# Load credentials dynamically
+credentials = load_google_credentials()
 drive_service = build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 # Your Google Drive folder where Obsidian files will be stored
