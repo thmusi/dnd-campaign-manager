@@ -204,7 +204,7 @@ def render_api_key_page():
             st.session_state["authenticated"] = True
             st.session_state["openai_api_key"] = openai_key
             st.success("Access Granted!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Please enter your OpenAI API Key.")
 
