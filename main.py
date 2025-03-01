@@ -4,11 +4,8 @@ import json
 import logging
 import re
 from dotenv import load_dotenv
-from google.oauth2 import service_account  # Import the correct credentials module
-from obsidian import load_google_credentials  # Import from obsidian.py
-
-
-# Import AI and Obsidian functionalities
+from google.oauth2 import service_account
+from obsidian import load_google_credentials
 from ai import (
     generate_npc,
     generate_shop,
@@ -33,7 +30,6 @@ load_dotenv()
 
 # Load Google Drive Credentials
 credentials = load_google_credentials()
-
 st.success("✅ Google Drive authentication successful!")
 
 # Exception handling decorator
@@ -56,7 +52,7 @@ def handle_exception(func):
 
 @handle_exception
 def initialize_session_state():
-    if not st.session_state.get("initialized", False):
+    if "initialized" not in st.session_state or not st.session_state.initialized:
         session_defaults = {
             "openai_api_key": None,
             "cart": DEFAULT_CART_STRUCTURE.copy(),
@@ -138,7 +134,7 @@ def navigate_to(page_name):
     """Ensure only valid pages are set and force rerun to update UI."""
     if page_name in PAGES:
         st.session_state.page = page_name
-        st.rerun()  # ✅ Forces the UI to update immediately after clicking a button
+        st.rerun()  # Forces the UI to update immediately after clicking a button
     else:
         st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
         st.session_state.page = "Main Menu"
@@ -205,23 +201,21 @@ def render_api_key_page():
     if st.button("Login"):
         if openai_key:
             st.session_state["openai_api_key"] = openai_key
-            st.session_state["authenticated"] = True  # ✅ Ensuring it's saved before rerun
-            st.session_state["page"] = "Main Menu"  # ✅ Redirect to Main Menu after login
+            st.session_state["authenticated"] = True  # Ensuring it's saved before rerun
+            st.session_state["page"] = "Main Menu"  # Redirect to Main Menu after login
 
             st.success("✅ Access Granted!")
 
-            # ✅ Debugging Output
+            # Debugging Output
             st.write("🔍 Debug: API Key Saved", st.session_state["openai_api_key"])
             st.write("🔍 Debug: Authenticated?", st.session_state["authenticated"])
             st.write("🔍 Debug: Page Set To", st.session_state["page"])
 
-            # ✅ Use st.stop() before rerun (if needed)
             st.stop()  # Prevents execution from continuing before rerun
-            st.rerun()
         else:
             st.error("❌ Please enter your OpenAI API Key.")
 
-# ✅ Authentication & Navigation Check: Redirect to Main Menu if authenticated
+# Authentication & Navigation Check: Redirect to Main Menu if authenticated
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
@@ -232,7 +226,7 @@ if not st.session_state["authenticated"]:
     render_api_key_page()
     st.stop()
 else:
-    st.session_state["page"] = "Main Menu"  # ✅ Redirect to Main Menu if authenticated
+    st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
 
 
 def render_main_menu_page():
@@ -263,12 +257,12 @@ def render_cart_page():
                     st.subheader("Modify Selected Content")
                     edited_content = st.text_area("Edit before saving:", selected_file, height=300)
     
-                    # ✅ Save to Vault after reviewing
+                    # Save to Vault after reviewing
                     if st.button("📁 Save to Vault", key="send_to_vault"):
                         if edited_content.strip():
                             base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
                             safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-                            save_to_vault(selected_category, edited_content)  # ✅ Saves reviewed content to vault
+                            save_to_vault(selected_category, edited_content)  # Saves reviewed content to vault
                         else:
                             st.warning("Content is empty! Modify before sending to vault.")
             else:
@@ -417,7 +411,7 @@ def render_generate_npc_page():
         st.text_area("Generated NPC:", npc, height=250)  
       
     if getattr(st.session_state, "generated_npc", None):
-        add_to_cart("NPCs", "generated_npc")  # ✅ Fixed indentation
+        add_to_cart("NPCs", "generated_npc")
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
