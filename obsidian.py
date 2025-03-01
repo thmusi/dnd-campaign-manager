@@ -10,33 +10,37 @@ from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
 
 
-GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials"
-
+GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"  # ✅ Correct Render Secret File Path
 
 def load_google_credentials():
-    """Loads Google Drive API credentials securely from GitHub Secrets."""
-
+    """Loads Google Drive API credentials securely from a Render Secret File."""
     try:
-        # 1️⃣ Read from Environment Variables (Passed by GitHub Actions)
-        credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+        # ✅ Check if the secret file exists
+        if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
+            raise FileNotFoundError(f"❌ Secret file not found at {GOOGLE_CREDENTIALS_PATH}")
 
-        if credentials_json:
-            credentials_dict = json.loads(credentials_json)  # Convert JSON string to dictionary
-            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")  # Fix newlines
-            return service_account.Credentials.from_service_account_info(credentials_dict)
+        # ✅ Read the JSON credentials file
+        with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
+            credentials_json = f.read().strip()
 
-        else:
-            raise FileNotFoundError("❌ GOOGLE_DRIVE_CREDENTIALS not found in environment variables.")
+        # ✅ Convert JSON string to dictionary
+        credentials_dict = json.loads(credentials_json)
+
+        # ✅ Fix newlines in the private key
+        if "private_key" in credentials_dict:
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+
+        return service_account.Credentials.from_service_account_info(credentials_dict)
 
     except json.JSONDecodeError:
-        st.error("❌ Invalid GOOGLE_DRIVE_CREDENTIALS format. Please check your GitHub Secret.")
+        st.error("❌ Invalid JSON format in Google Credentials file. Please check the secret file.")
         st.stop()
 
     except Exception as e:
-        st.error(f"❌ An unexpected error occurred while loading credentials: {e}")
+        st.error(f"❌ Error loading Google Drive credentials: {e}")
         st.stop()
 
-# ✅ Load credentials
+# ✅ Load credentials and check if successful
 credentials = load_google_credentials()
 
 if credentials:
