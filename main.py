@@ -199,15 +199,24 @@ def render_api_key_page():
     st.title("Enter Your OpenAI API Key")
 
     openai_key = st.text_input("Enter OpenAI API Key:", type="password")
-    if st.button("Login"):
-        if openai_key:
-            st.session_state["authenticated"] = True
+
+    if st.button("Login"):  # ✅ Proper indentation starts here
+        if openai_key:  # ✅ This must be indented inside the button check
             st.session_state["openai_api_key"] = openai_key
-            st.success("Access Granted!")
+            st.session_state["authenticated"] = True  # ✅ Ensure it's saved BEFORE rerun
+            st.success("✅ Access Granted!")
+
+            # ✅ Debugging Output
+            st.write("🔍 Debug: API Key Saved", st.session_state["openai_api_key"])
+            st.write("🔍 Debug: Authenticated?", st.session_state["authenticated"])
+
+            # ✅ Use st.stop() before rerun (if needed)
+            st.stop()  # Prevents execution from continuing before rerun
             st.rerun()
         else:
-            st.error("Please enter your OpenAI API Key.")
+            st.error("❌ Please enter your OpenAI API Key.")
 
+# ✅ Authentication Check: If not authenticated, show API Key page
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
