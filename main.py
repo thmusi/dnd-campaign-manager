@@ -4,16 +4,26 @@ import json
 import logging
 import re
 from dotenv import load_dotenv
+from google.oauth2 import service_account
 from obsidian import load_google_credentials
-from ai import generate_npc, generate_shop , generate_location 
-from pathlib import Path
-from obsidian import drive_service
+from ai import (
+    generate_npc,
+    generate_shop,
+    generate_location,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Default cart structure
-DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
+DEFAULT_CART_STRUCTURE = {
+    "NPCs": [],
+    "Shops": [],
+    "Locations": [],
+    "Encounters": [],
+    "Dungeons": [],
+    "Quests": []
+}
 
 # Load environment variables
 load_dotenv()
@@ -28,18 +38,21 @@ def handle_exception(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (FileNotFoundError, ValueError) as e:
-            st.error(f"⚠️ Error: {str(e)}")
-            logging.error(f"Error in {func.__name__}: {e}")
+        except FileNotFoundError as e:
+            st.error("⚠️ File not found. Please check the file path.")
+            logging.error(f"File error in {func.__name__}: {e}")
+        except ValueError as e:
+            st.error("⚠️ Invalid value encountered. Please check your input.")
+            logging.error(f"Value error in {func.__name__}: {e}")
         except Exception as e:
             st.error(f"❌ An unexpected error occurred: {e}")
-            logging.error(f"Unexpected error in {func.__name__}: {e}")
+            logging.error(f"Error in {func.__name__}: {e}")
         return None
     return wrapper
 
 @handle_exception
 def initialize_session_state():
-    if not getattr(st.session_state, "initialized", False):
+    if "initialized" not in st.session_state or not st.session_state.initialized:
         session_defaults = {
             "openai_api_key": None,
             "cart": DEFAULT_CART_STRUCTURE.copy(),
@@ -50,108 +63,85 @@ def initialize_session_state():
             "generated_npc": None,
             "generated_shop": None,
             "generated_location": None,
+            "generated_dungeon": None,
+            "generated_encounter": None,
             "initialized": True
         }
-        st.session_state.update(session_defaults)
+
+        for key, value in session_defaults.items():
+            setattr(st.session_state, key, value)
 
 initialize_session_state()
 
-# Load the cart from JSON (ensure persistence)
-CART_FILE = Path("cart.json")
+@handle_exception
+def save_cart():
+    """Save the current cart to a structured local file."""
+    st.session_state.cart = {**DEFAULT_CART_STRUCTURE, **st.session_state.cart}
+
+    with open("cart.json", "w", encoding="utf-8") as f:
+        json.dump(st.session_state.cart, f, indent=4)
+    
+    st.success("✅ Cart saved with structured format!")
+
+@handle_exception
+def save_to_vault(category, item):
+    """Save content to the vault only when manually confirmed from the cart page."""
+    if st.session_state.page == "Cart":
+        save_cart()
+        st.success(f"✅ {item} saved to the vault!")
 
 @handle_exception
 def load_cart():
-    if CART_FILE.exists():
-        with open(CART_FILE, "r") as file:
-            return json.load(file)
-    return {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
-   
+    file_path = "cart.json"
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            st.session_state.cart = json.load(f)
+    else:
+        st.session_state.cart = DEFAULT_CART_STRUCTURE.copy()
+        st.success("✅ Cart loaded with structured format!")
+
 if "cart" not in st.session_state:
-    st.session_state["cart"] = load_cart()  # Assign loaded cart
+    load_cart()
 
-@handle_exception
-def save_cart(cart):
-    st.session_state["cart"] = cart  # Keep session in sync
-    with open(CART_FILE, "w") as file:
-        json.dump(cart, file, indent=4)
-        
-@handle_exception
-def save_to_vault(category, item):
-    """Save content to the vault only when manually confirmed from the cart page.
-    
-    Args:
-        category (str): The category under which the item will be saved.
-        item (str): The content that needs to be saved to the vault.
-    """
-    if "selected_content_to_save" not in st.session_state:
-        st.session_state["selected_content_to_save"] = ""
+if st.session_state.selected_content_to_save and st.session_state.page == "Cart":
+    st.subheader("Modify Selected Content Before Saving")
+    edited_content = st.text_area("Edit before saving to vault:", st.session_state["selected_content_to_save"], height=300)
 
-    if st.session_state["selected_content_to_save"] and st.session_state.get("page") == "Cart":
-        st.subheader("Modify Selected Content Before Saving")
-        edited_content = st.text_area("Edit before saving to vault:", 
-                                       st.session_state["selected_content_to_save"], height=300)
+    if st.button("📁 Save to Vault", key="send_to_vault"):
+        if edited_content.strip():
+            save_to_vault(st.session_state["selected_category"], edited_content)
+            st.success(f"✅ Saved {st.session_state['selected_file']} to the vault!")
+            st.session_state["selected_content_to_save"] = None  # Clear after saving
+        else:
+            st.warning("⚠️ Content is empty! Modify before sending to vault.")
 
-        if st.button("📁 Save to Vault", key="send_to_vault"):
-            if edited_content.strip():
-                # Save the item
-                save_content_to_vault(category, edited_content)
-
-                # Remove it from the cart after saving
-                cart = load_cart()
-                if item in cart.get(category, []):
-                    cart[category].remove(item)
-                    save_cart(cart)
-
-                st.success(f"✅ '{item}' saved to the vault!")
-                st.session_state["selected_content_to_save"] = ""
-            else:
-                st.warning("⚠️ Content is empty! Please modify before sending to vault.")
-
-@handle_exception
-def save_content_to_vault(category, content):
-    """Handles the actual saving of content to the Obsidian vault (or cloud storage).
-    
-    Args:
-        category (str): The category under which the content will be saved.
-        content (str): The content to be saved.
-    """
-    vault_path = Path(f"obsidian_vault/{category}.md")
-    vault_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(vault_path, "a") as file:
-        file.write(f"\n---\n{content}\n")
-
-    st.success(f"✅ Successfully saved under {category} in the vault!")
-
-@handle_exception
 def add_to_cart(category, session_key):
     """Add generated content to the cart without saving to vault, ensuring correct naming."""
     if st.session_state.get(session_key):
         item = st.session_state[session_key]
+        
+        # Extract NPC Name (or Shop/Location Name) if available
+        name_match = re.search(r"\*\*Nom\*\* ?: (.+)", item) if isinstance(item, str) else None
+        item_name = name_match.group(1) if name_match else f"New {category[:-1]}"
 
-        # Ensure the cart category exists
-        if category not in st.session_state["cart"]:
-            st.session_state["cart"][category] = []
+        if st.button(f"🛒 Add {item_name} to Cart", key=f"add_{session_key}_to_cart"):
+            st.session_state.cart[category] = st.session_state.cart.get(category, [])
+            st.session_state.cart[category].append(item)
+            save_cart()
+            st.success(f"✅ {item_name} added to {category} in the cart!")
 
-        # Avoid duplicates
-        if item not in st.session_state["cart"][category]:
-            st.session_state["cart"][category].append(item)
-            save_cart(st.session_state["cart"])  # Save the updated cart
-            st.success(f"✅ Added to {category} in the cart!")
-        else:
-            st.warning(f"⚠️ This item is already in {category}!")
-            
 def navigate_to(page_name):
-    """Navigate to a specific page and persist state."""
+    """Ensure only valid pages are set and force rerun to update UI."""
     if page_name in PAGES:
         st.session_state.page = page_name
-        st.query_params["page"] = page_name
-        st.rerun()
+        st.query_params["page"] = page_name  # ✅ Set URL parameters for persistence
+        st.rerun()  # ✅ Forces the UI to update immediately after clicking a button
     else:
-        st.warning(f"⚠️ Invalid page: {page_name}")
+        st.warning(f"⚠️ Attempted to navigate to invalid page: {page_name}")
         st.session_state.page = "Main Menu"
+        st.query_params["page"] = "Main Menu"
         st.rerun()
-        
+
 def render_sidebar():
     """Render the sidebar navigation menu."""
     with st.sidebar:
@@ -212,8 +202,8 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True,
-    )
-    
+)
+
 # Page Functions
 def render_api_key_page():
     st.title("Enter Your OpenAI API Key")
@@ -225,7 +215,14 @@ def render_api_key_page():
             st.session_state["openai_api_key"] = openai_key
             st.session_state["authenticated"] = True  # Ensuring it's saved before rerun
             st.session_state["page"] = "Main Menu"  # Redirect to Main Menu after login
+
             st.success("✅ Access Granted!")
+
+            # Debugging Output
+            st.write("🔍 Debug: API Key Saved", st.session_state["openai_api_key"])
+            st.write("🔍 Debug: Authenticated?", st.session_state["authenticated"])
+            st.write("🔍 Debug: Page Set To", st.session_state["page"])
+
             st.stop()  # Prevents execution from continuing before rerun
         else:
             st.error("❌ Please enter your OpenAI API Key.")
@@ -447,12 +444,25 @@ PAGES = {
 
 def render_page():
     """Render the correct page based on session state."""
+    if "page" not in st.session_state:
+        st.session_state.page = "Main Menu"
+
+    # ✅ Check for page from URL parameters using the new Streamlit method
     query_params = st.query_params
-    requested_page = query_params.get("page", "Main Menu")
-    if isinstance(requested_page, list):
-        requested_page = requested_page[0]
-    st.session_state.page = requested_page if requested_page in PAGES else "Main Menu"
-    PAGES[st.session_state.page]()
+    if "page" in query_params:
+        requested_page = query_params["page"]
+        if isinstance(requested_page, list):
+            requested_page = requested_page[0]  # Ensure we get a single string value
+        if requested_page in PAGES:
+            st.session_state.page = requested_page
+
+    # ✅ Render the correct page
+    if st.session_state.page in PAGES:
+        PAGES[st.session_state.page]()
+    else:
+        st.warning("⚠️ Page not found, redirecting to Main Menu...")
+        st.session_state.page = "Main Menu"
+        render_main_menu_page()
 
 if __name__ == "__main__":
     render_page()
