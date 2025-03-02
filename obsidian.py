@@ -12,34 +12,26 @@ from dotenv import load_dotenv
 # Load .env variables
 load_dotenv()
 
-# Debugging: Print available environment variables
-print("🔍 ENVIRONMENT VARIABLES LOADED:")
-for key, value in os.environ.items():
-    if "GOOGLE" in key:  # To avoid printing all secrets, just show related ones
-        print(f"{key}: {value[:30]}... (truncated for security)")
-
 def authenticate_google_drive():
-    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+    # ✅ Read credentials from Streamlit Secrets instead of environment variables
+    credentials_json = st.secrets["google_drive"]["credentials"]
 
     if not credentials_json:
-        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set in GitHub Secrets.")
+        raise Exception("❌ Google Drive credentials not found! Ensure they are set in Streamlit Secrets.")
 
     try:
         creds_dict = json.loads(credentials_json)
 
-        # ✅ Write credentials to a temporary file
+        # ✅ Write credentials to a temporary file (if necessary)
         temp_credentials_path = "/tmp/google_credentials.json"
         with open(temp_credentials_path, "w") as temp_file:
             json.dump(creds_dict, temp_file)
 
-        # ✅ Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_credentials_path
-
-        # ✅ Authenticate using the temp credentials file
+        # ✅ Authenticate using the temporary credentials file
         creds = Credentials.from_service_account_file(temp_credentials_path, scopes=["https://www.googleapis.com/auth/drive"])
 
     except json.JSONDecodeError as e:
-        raise Exception(f"❌ Failed to decode GOOGLE_DRIVE_CREDENTIALS: {str(e)}")
+        raise Exception(f"❌ Failed to decode Google Drive credentials: {str(e)}")
 
     return build("drive", "v3", credentials=creds)
 
