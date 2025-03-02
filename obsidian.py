@@ -12,6 +12,22 @@ from google.oauth2 import service_account
 
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"  # ✅ Correct Render Secret File Path
 
+# Load credentials from environment variable or JSON file
+def authenticate_google_drive():
+    creds = None
+    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # Ensure this env var is correctly set
+
+    if credentials_json:
+        creds_dict = json.loads(credentials_json)
+        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
+    else:
+        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set.")
+
+    return build("drive", "v3", credentials=creds)
+
+# Initialize Drive Service
+drive_service = authenticate_google_drive()
+
 def load_google_credentials():
     """Loads Google Drive API credentials securely from a Render Secret File."""
     try:
@@ -47,24 +63,21 @@ if credentials:
     st.success("✅ Google Drive authentication successful!")
 else:
     st.error("❌ Google Drive authentication failed!")
-# Load credentials from environment variable or JSON file
-def authenticate_google_drive():
-    creds = None
-    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # Ensure this env var is correctly set
-
-    if credentials_json:
-        creds_dict = json.loads(credentials_json)
-        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
-    else:
-        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set.")
-
-    return build("drive", "v3", credentials=creds)
-
-# Initialize Drive Service
-drive_service = authenticate_google_drive()
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
+
+def upload_file(file_path):
+    file_metadata = {"name": os.path.basename(file_path)}
+    media = MediaFileUpload(file_path, mimetype="text/markdown")
+
+    file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id"
+    ).execute()
+
+    return file.get("id")
 
 def list_campaign_files():
     """Lists all campaign-related files stored in Google Drive."""
