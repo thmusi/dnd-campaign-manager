@@ -9,70 +9,31 @@ import re
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 
-
-GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"  # ✅ Correct Render Secret File Path
-
 # Load .env variables
 load_dotenv()
 
+# Debugging: Print available environment variables
+print("🔍 ENVIRONMENT VARIABLES LOADED:")
+for key, value in os.environ.items():
+    if "GOOGLE" in key:  # To avoid printing all secrets, just show related ones
+        print(f"{key}: {value[:30]}... (truncated for security)")
+
 def authenticate_google_drive():
-    creds = None
-    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # ✅ Use GitHub Secrets, not a file path
 
     if not credentials_json:
-        print("❌ GOOGLE_DRIVE_CREDENTIALS is NOT found in the environment.")
         raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set in GitHub Secrets.")
-    
+
     try:
-        print("✅ GOOGLE_DRIVE_CREDENTIALS found. Attempting to decode JSON...")
-        creds_dict = json.loads(credentials_json)
-        creds = Credentials.from_service_account_info(
-            creds_dict, scopes=["https://www.googleapis.com/auth/drive"]
-        )
-        print("✅ Google Drive authentication successful!")
+        creds_dict = json.loads(credentials_json)  # ✅ Parse JSON directly from the environment variable
+        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
     except json.JSONDecodeError as e:
         raise Exception(f"❌ Failed to decode GOOGLE_DRIVE_CREDENTIALS: {str(e)}")
 
     return build("drive", "v3", credentials=creds)
 
-# Initialize Drive Service
+# ✅ Initialize Drive Service
 drive_service = authenticate_google_drive()
-
-def load_google_credentials():
-    """Loads Google Drive API credentials securely from a Render Secret File."""
-    try:
-        # ✅ Check if the secret file exists
-        if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
-            raise FileNotFoundError(f"❌ Secret file not found at {GOOGLE_CREDENTIALS_PATH}")
-
-        # ✅ Read the JSON credentials file
-        with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
-            credentials_json = f.read().strip()
-
-        # ✅ Convert JSON string to dictionary
-        credentials_dict = json.loads(credentials_json)
-
-        # ✅ Fix newlines in the private key
-        if "private_key" in credentials_dict:
-            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
-
-        return service_account.Credentials.from_service_account_info(credentials_dict)
-
-    except json.JSONDecodeError:
-        st.error("❌ Invalid JSON format in Google Credentials file. Please check the secret file.")
-        st.stop()
-
-    except Exception as e:
-        st.error(f"❌ Error loading Google Drive credentials: {e}")
-        st.stop()
-
-# ✅ Load credentials and check if successful
-credentials = load_google_credentials()
-
-if credentials:
-    st.success("✅ Google Drive authentication successful!")
-else:
-    st.error("❌ Google Drive authentication failed!")
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
