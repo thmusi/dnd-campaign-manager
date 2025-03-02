@@ -7,25 +7,33 @@ from datetime import datetime
 import streamlit as st
 import re
 from google.oauth2.service_account import Credentials
-from google.oauth2 import service_account
+from dotenv import load_dotenv
 
 
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"  # ✅ Correct Render Secret File Path
 
-# Load credentials from environment variable or JSON file
+# ✅ Load environment variables from .env file
+load_dotenv()
+
 def authenticate_google_drive():
     creds = None
-    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # Ensure this env var is correctly set
+    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
 
     if credentials_json:
-        creds_dict = json.loads(credentials_json)
-        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
+        try:
+            creds_dict = json.loads(credentials_json)
+            creds = Credentials.from_service_account_info(
+                creds_dict, 
+                scopes=["https://www.googleapis.com/auth/drive"]
+            )
+        except json.JSONDecodeError as e:
+            raise Exception(f"❌ Failed to decode GOOGLE_DRIVE_CREDENTIALS: {str(e)}")
     else:
-        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set.")
+        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set in GitHub Secrets.")
 
     return build("drive", "v3", credentials=creds)
 
-# Initialize Drive Service
+# ✅ Initialize Drive Service
 drive_service = authenticate_google_drive()
 
 def load_google_credentials():
