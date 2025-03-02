@@ -28,8 +28,6 @@ DEFAULT_CART_STRUCTURE = {
 # Load environment variables
 load_dotenv()
 
-# Load Google Drive Credentials
-st.success("✅ Google Drive authentication successful!")
 
 # Exception handling decorator
 def handle_exception(func):
