@@ -4,8 +4,8 @@ import json
 import logging
 import re
 from dotenv import load_dotenv
+from obsidian import drive_service  # ✅ Import the initialized Google Drive service
 from google.oauth2 import service_account
-from obsidian import load_google_credentials
 from ai import (
     generate_npc,
     generate_shop,
@@ -29,7 +29,6 @@ DEFAULT_CART_STRUCTURE = {
 load_dotenv()
 
 # Load Google Drive Credentials
-credentials = load_google_credentials()
 st.success("✅ Google Drive authentication successful!")
 
 # Exception handling decorator
