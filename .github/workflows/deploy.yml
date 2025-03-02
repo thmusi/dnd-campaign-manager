@@ -26,3 +26,9 @@ jobs:
 
       - name: Debug Environment Variables
         run: printenv | grep GOOGLE
+
+       - name: Create .env file from GitHub Secrets
+        run: |
+          echo "GOOGLE_DRIVE_CREDENTIALS=${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" >> .env
+          echo "✅ .env file created"
+
