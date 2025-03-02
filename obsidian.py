@@ -13,29 +13,28 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def authenticate_google_drive():
-    # ✅ Read credentials from Streamlit Secrets instead of environment variables
-    try: 
-        credentials_json = st.secrets["google_drive"]["credentials"]
-    except Exception as e:
-        raise Exception("❌ Streamlit Secrets not found! Ensure secrets are set in Render.")
-
-
-    if not credentials_json:
-        raise Exception("❌ Google Drive credentials not found! Ensure they are set in Streamlit Secrets.")
-
     try:
-        creds_dict = json.loads(credentials_json)
+        # ✅ Try to read secrets from Streamlit first
+        credentials_json = st.secrets["google_drive"]["credentials"]
+    except Exception:
+        print("❌ Streamlit Secrets not found! Writing secrets to a file...")
 
-        # ✅ Write credentials to a temporary file (if necessary)
-        temp_credentials_path = "/tmp/google_credentials.json"
-        with open(temp_credentials_path, "w") as temp_file:
-            json.dump(creds_dict, temp_file)
+        # ✅ Try reading from environment variables (Render)
+        credentials_json = os.getenv("STREAMLIT_SECRETS")
+        if not credentials_json:
+            raise Exception("❌ Streamlit Secrets not found! Ensure secrets are set in Render.")
 
-        # ✅ Authenticate using the temporary credentials file
-        creds = Credentials.from_service_account_file(temp_credentials_path, scopes=["https://www.googleapis.com/auth/drive"])
+        # ✅ Manually write the secrets to a file for Streamlit
+        os.makedirs("/opt/render/.streamlit", exist_ok=True)
+        with open("/opt/render/.streamlit/secrets.toml", "w") as f:
+            f.write("[google_drive]\n")
+            f.write(f'credentials = """{credentials_json}"""\n')
 
-    except json.JSONDecodeError as e:
-        raise Exception(f"❌ Failed to decode Google Drive credentials: {str(e)}")
+    # ✅ Convert JSON string to dictionary
+    creds_dict = json.loads(credentials_json)
+
+    # ✅ Authenticate using Google Service Account
+    creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
 
     return build("drive", "v3", credentials=creds)
 
