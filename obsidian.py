@@ -14,7 +14,11 @@ load_dotenv()
 
 def authenticate_google_drive():
     # ✅ Read credentials from Streamlit Secrets instead of environment variables
-    credentials_json = st.secrets["google_drive"]["credentials"]
+    try: 
+        credentials_json = st.secrets["google_drive"]["credentials"]
+    except Exception as e:
+        raise Exception("❌ Streamlit Secrets not found! Ensure secrets are set in Render.")
+
 
     if not credentials_json:
         raise Exception("❌ Google Drive credentials not found! Ensure they are set in Streamlit Secrets.")
