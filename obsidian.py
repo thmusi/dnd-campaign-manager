@@ -9,44 +9,44 @@ import re
 from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
 
+
 GOOGLE_CREDENTIALS_PATH = "/etc/secrets/google_credentials.json"  # ✅ Correct Render Secret File Path
 
 def load_google_credentials():
-    """Loads Google Drive API credentials securely."""
-    creds_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # ✅ Load from Render Secret
-
-    if not creds_json:
-        raise ValueError("❌ Google Drive credentials are not set! Check your environment variables.")
-
+    """Loads Google Drive API credentials securely from a Render Secret File."""
     try:
-        creds_dict = json.loads(creds_json)
+        # ✅ Check if the secret file exists
+        if not os.path.exists(GOOGLE_CREDENTIALS_PATH):
+            raise FileNotFoundError(f"❌ Secret file not found at {GOOGLE_CREDENTIALS_PATH}")
 
-        # ✅ Fix private key newlines
-        if "private_key" in creds_dict:
-            creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        # ✅ Read the JSON credentials file
+        with open(GOOGLE_CREDENTIALS_PATH, "r") as f:
+            credentials_json = f.read().strip()
 
-        return service_account.Credentials.from_service_account_info(
-            creds_dict, scopes=["https://www.googleapis.com/auth/drive"]
-        )
+        # ✅ Convert JSON string to dictionary
+        credentials_dict = json.loads(credentials_json)
+
+        # ✅ Fix newlines in the private key
+        if "private_key" in credentials_dict:
+            credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+
+        return service_account.Credentials.from_service_account_info(credentials_dict)
 
     except json.JSONDecodeError:
-        st.error("❌ Invalid JSON format in GOOGLE_DRIVE_CREDENTIALS. Please check your Render secret.")
+        st.error("❌ Invalid JSON format in Google Credentials file. Please check the secret file.")
         st.stop()
 
     except Exception as e:
         st.error(f"❌ Error loading Google Drive credentials: {e}")
         st.stop()
 
-# ✅ Load credentials once
+# ✅ Load credentials and check if successful
 credentials = load_google_credentials()
 
 if credentials:
     st.success("✅ Google Drive authentication successful!")
 else:
     st.error("❌ Google Drive authentication failed!")
-
-# ✅ Initialize Google Drive service
-drive_service = build("drive", "v3", credentials=credentials)
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
