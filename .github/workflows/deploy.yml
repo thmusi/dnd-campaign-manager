@@ -11,15 +11,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Pulls your latest code from GitHub
+        uses: actions/checkout@v3
 
-      - name: Create .env file
+      - name: Inject GitHub Secrets into .env
         run: |
-          echo "GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'" >> .env
-          cat .env  # Debugging: Ensure the .env file is created
+          echo "GOOGLE_DRIVE_CREDENTIALS=${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" >> $GITHUB_ENV
+          echo "✅ GOOGLE_DRIVE_CREDENTIALS added to environment"
 
       - name: Deploy to Render
         env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # ✅ Render API Key
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Render API Key
         run: |
           curl -X POST "https://api.render.com/deploy/srv-your-service-id?key=${{ secrets.RENDER_API_KEY }}"
+
+      - name: Debug Environment Variables
+        run: printenv | grep GOOGLE
