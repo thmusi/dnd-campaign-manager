@@ -19,14 +19,25 @@ for key, value in os.environ.items():
         print(f"{key}: {value[:30]}... (truncated for security)")
 
 def authenticate_google_drive():
-    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # ✅ Use GitHub Secrets, not a file path
+    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
 
     if not credentials_json:
         raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set in GitHub Secrets.")
 
     try:
-        creds_dict = json.loads(credentials_json)  # ✅ Parse JSON directly from the environment variable
-        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
+        creds_dict = json.loads(credentials_json)
+
+        # ✅ Write credentials to a temporary file
+        temp_credentials_path = "/tmp/google_credentials.json"
+        with open(temp_credentials_path, "w") as temp_file:
+            json.dump(creds_dict, temp_file)
+
+        # ✅ Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_credentials_path
+
+        # ✅ Authenticate using the temp credentials file
+        creds = Credentials.from_service_account_file(temp_credentials_path, scopes=["https://www.googleapis.com/auth/drive"])
+
     except json.JSONDecodeError as e:
         raise Exception(f"❌ Failed to decode GOOGLE_DRIVE_CREDENTIALS: {str(e)}")
 
@@ -34,6 +45,7 @@ def authenticate_google_drive():
 
 # ✅ Initialize Drive Service
 drive_service = authenticate_google_drive()
+
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
