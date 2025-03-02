@@ -16,22 +16,25 @@ def authenticate_google_drive():
     try:
         # ✅ Try to read secrets from Streamlit first
         credentials_json = st.secrets["google_drive"]["credentials"]
+        print(f"🔍 Successfully loaded credentials from Streamlit secrets.")
     except Exception:
-        print("❌ Streamlit Secrets not found! Writing secrets to a file...")
+        print("⚠️ Streamlit Secrets not found! Trying Render environment variables...")
 
         # ✅ Try reading from environment variables (Render)
         credentials_json = os.getenv("STREAMLIT_SECRETS")
         if not credentials_json:
-            raise Exception("❌ Streamlit Secrets not found! Ensure secrets are set in Render.")
+            raise Exception("❌ No Google Drive credentials found! Check Render environment settings.")
 
-        # ✅ Manually write the secrets to a file for Streamlit
-        os.makedirs("/opt/render/.streamlit", exist_ok=True)
-        with open("/opt/render/.streamlit/secrets.toml", "w") as f:
-            f.write("[google_drive]\n")
-            f.write(f'credentials = """{credentials_json}"""\n')
+        print("✅ Successfully loaded credentials from Render environment variables.")
+
+    # 🔍 Debugging: Print the first 50 characters to verify it's not empty
+    print(f"🔍 First 50 characters of credentials: {credentials_json[:50]}...")
 
     # ✅ Convert JSON string to dictionary
-    creds_dict = json.loads(credentials_json)
+    try:
+        creds_dict = json.loads(credentials_json)
+    except json.JSONDecodeError as e:
+        raise Exception(f"❌ Failed to parse Google Drive credentials JSON: {e}")
 
     # ✅ Authenticate using Google Service Account
     creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
