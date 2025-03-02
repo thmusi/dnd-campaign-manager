@@ -47,6 +47,21 @@ if credentials:
     st.success("✅ Google Drive authentication successful!")
 else:
     st.error("❌ Google Drive authentication failed!")
+# Load credentials from environment variable or JSON file
+def authenticate_google_drive():
+    creds = None
+    credentials_json = os.getenv("GOOGLE_DRIVE_CREDENTIALS")  # Ensure this env var is correctly set
+
+    if credentials_json:
+        creds_dict = json.loads(credentials_json)
+        creds = Credentials.from_service_account_info(creds_dict, scopes=["https://www.googleapis.com/auth/drive"])
+    else:
+        raise Exception("❌ Google Drive credentials not found! Ensure GOOGLE_DRIVE_CREDENTIALS is set.")
+
+    return build("drive", "v3", credentials=creds)
+
+# Initialize Drive Service
+drive_service = authenticate_google_drive()
 
 # Your Google Drive folder where Obsidian files will be stored
 DRIVE_FOLDER_ID = "1ekTkv_vWBBcm6S7Z8wZiTEof8m8wcfwJ"
