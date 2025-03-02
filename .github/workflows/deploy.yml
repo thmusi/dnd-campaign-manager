@@ -18,3 +18,10 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Render API Key (Still needed)
         run: |
           curl -X POST "https://api.render.com/deploy/srv-your-service-id?key=${{ secrets.RENDER_API_KEY }}"
+          
+      - name: Create Streamlit Secrets File
+        run: |
+          mkdir -p ~/.streamlit
+          echo "[google_drive]" > ~/.streamlit/secrets.toml
+          echo 'credentials = """${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}"""' >> ~/.streamlit/secrets.toml
+          echo "✅ Streamlit secrets file created!"
