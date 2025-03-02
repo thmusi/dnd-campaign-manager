@@ -15,20 +15,16 @@ jobs:
 
       - name: Inject GitHub Secrets into .env
         run: |
-          echo "GOOGLE_DRIVE_CREDENTIALS=${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" >> $GITHUB_ENV
-          echo "✅ GOOGLE_DRIVE_CREDENTIALS added to environment"
+          echo "GOOGLE_DRIVE_CREDENTIALS=${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" > .env
+          echo "✅ .env file created with GOOGLE_DRIVE_CREDENTIALS"
+
+      - name: Debug Environment Variables
+        run: |
+          printenv | grep GOOGLE
+          cat .env  # Debugging: Check if .env is properly created
 
       - name: Deploy to Render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Render API Key
         run: |
           curl -X POST "https://api.render.com/deploy/srv-your-service-id?key=${{ secrets.RENDER_API_KEY }}"
-
-      - name: Debug Environment Variables
-        run: printenv | grep GOOGLE
-
-       - name: Create .env file from GitHub Secrets
-        run: |
-          echo "GOOGLE_DRIVE_CREDENTIALS=${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}" >> .env
-          echo "✅ .env file created"
-
