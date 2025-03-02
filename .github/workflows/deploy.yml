@@ -3,7 +3,7 @@ name: Deploy to Render
 on:
   push:
     branches:
-      - main  # Adjust this if using a different branch
+      - main  # Adjust if using a different branch
 
 jobs:
   deploy:
@@ -13,9 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3  # Pulls your latest code from GitHub
 
+      - name: Create .env file
+        run: |
+          echo "GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'" >> .env
+          cat .env  # Debugging: Ensure the .env file is created
+
       - name: Deploy to Render
         env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # ✅ Render API Key (Already Set)
-          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}  # ✅ Inject Google API Key
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # ✅ Render API Key
         run: |
           curl -X POST "https://api.render.com/deploy/srv-your-service-id?key=${{ secrets.RENDER_API_KEY }}"
