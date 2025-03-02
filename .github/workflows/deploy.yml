@@ -13,15 +13,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Inject GitHub Secrets into Render
-        uses: aasmal97/RenderSecretsSync@v1.1.0
-        with:
-          ENV_FILE_PATH: "./.env"
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_NAME: "dnd-campaign-manager"
-
       - name: Deploy to Render
         env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # Render API Key (Still needed)
         run: |
           curl -X POST "https://api.render.com/deploy/srv-your-service-id?key=${{ secrets.RENDER_API_KEY }}"
