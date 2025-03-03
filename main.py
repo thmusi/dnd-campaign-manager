@@ -24,7 +24,7 @@ load_dotenv()
 
 def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params()
 
     if "code" in query_params:
         auth_code = query_params["code"][0]  # Extract the auth code
