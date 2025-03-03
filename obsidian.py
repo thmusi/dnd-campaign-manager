@@ -34,6 +34,22 @@ def create_obsidian_note(title, content):
     print(f"📝 Note created: {file_name}")
     return file_name
 
+def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
+    """Saves a Markdown note to the Dropbox-linked Obsidian folder."""
+    if not DROPBOX_ACCESS_TOKEN:
+        raise ValueError("❌ Dropbox access token is missing!")
+
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    dropbox_path = f"{obsidian_folder}/{filename}.md"
+
+    try:
+        dbx.files_upload(content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+        return f"✅ Note saved to {dropbox_path}"
+    except dropbox.exceptions.AuthError:
+        return "❌ Dropbox authentication error! Please reconnect."
+    except Exception as e:
+        return f"❌ Error saving note: {e}"
+
 def build_index(vault_path, keywords, keyword_weights):
     """
     Scan the Obsidian vault directory and compute a relevance score for each .md file.
