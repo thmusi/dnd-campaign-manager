@@ -260,6 +260,7 @@ if "page" not in st.session_state:
 if not st.session_state["authenticated"]:
     render_api_key_page()
     st.stop()
+    handle_oauth_callback()
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
 
