@@ -21,8 +21,6 @@ DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters"
 
 # Load environment variables
 load_dotenv()
-handle_oauth_callback()
-
 
 def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
@@ -39,6 +37,8 @@ def handle_oauth_callback():
             st.success("✅ Dropbox connected successfully! You can now upload and retrieve files.")
         else:
             st.error("❌ Failed to authenticate with Dropbox.")
+
+handle_oauth_callback()
 
 
 def upload_to_dropbox(file_path, dropbox_folder):
