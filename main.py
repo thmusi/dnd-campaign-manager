@@ -21,17 +21,19 @@ DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters"
 # Load environment variables
 load_dotenv()
 
-# Function to handle the Dropbox OAuth callback
+# Function to handle Dropbox OAuth callback
 def handle_oauth_callback():
-    query_params = st.query_params
+    query_params = st.experimental_get_query_params()
+
     if "code" in query_params:
-        auth_code = query_params["code"]
+        auth_code = query_params["code"][0]  # Extract the auth code
         st.success("✅ Authorization code received!")
 
-        # Exchange the auth code for tokens
+        # Exchange the authorization code for tokens
         tokens = exchange_code_for_tokens(auth_code)
         if tokens:
-            st.success("✅ Dropbox connected successfully!")
+            st.success("✅ Dropbox connected successfully! You can now upload and retrieve files.")
+            st.session_state["dropbox_authenticated"] = True  # Store authentication status
         else:
             st.error("❌ Failed to authenticate with Dropbox.")
 
