@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 # Load Dropbox credentials from Render environment variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
-OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com/oauth_callback"  # Replace with your actual Render app URL
+OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com"  # Replace with your actual Render app URL
 
 # Generate a PKCE code verifier and challenge
 def generate_pkce():
