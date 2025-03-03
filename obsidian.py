@@ -6,6 +6,8 @@ import re
 import requests
 from urllib.parse import urlencode
 import secrets  # Fix NameError
+import base64  # Fix for base64 module
+
 
 
 # Load Dropbox credentials from Render environment variables
