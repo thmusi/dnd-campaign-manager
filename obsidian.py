@@ -69,8 +69,18 @@ def exchange_code_for_tokens(auth_code):
         print("❌ Error exchanging code for tokens:", tokens)
         return None
         
+def get_access_token():
+    """Retrieve a valid Dropbox access token, refreshing if necessary."""
+    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+
+    if not access_token:
+        print("🔄 Access token missing or expired. Refreshing...")
+        access_token = refresh_access_token()
+
+    return access_token
+
 def refresh_access_token():
-    """Refresh the Dropbox access token when it expires."""
+    """Refresh the Dropbox access token using the stored refresh token."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
     data = {
@@ -81,13 +91,14 @@ def refresh_access_token():
     }
 
     response = requests.post(token_url, data=data)
-    new_tokens = response.json()
+    tokens = response.json()
 
-    if "access_token" in new_tokens:
-        os.environ["DROPBOX_ACCESS_TOKEN"] = new_tokens["access_token"]
-        return new_tokens["access_token"]
+    if "access_token" in tokens:
+        print("🔄 Access token refreshed successfully!")
+        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]  # Store in memory
+        return tokens["access_token"]
     else:
-        print("❌ Error refreshing token:", new_tokens)
+        print("❌ Error refreshing token:", tokens)
         return None
 
 def format_markdown_header(text):
