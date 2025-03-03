@@ -9,7 +9,11 @@ import secrets  # Fix NameError
 import base64  # Fix for base64 module
 import hashlib
 
+# Ensure the environment variable is loaded
+DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 
+if not DROPBOX_ACCESS_TOKEN:
+    print("⚠️ Warning: DROPBOX_ACCESS_TOKEN is not set. Authentication may fail.")
 
 # Load Dropbox credentials from Render environment variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
