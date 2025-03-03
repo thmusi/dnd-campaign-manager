@@ -21,6 +21,28 @@ def get_authorization_url():
     }
     return f"https://www.dropbox.com/oauth2/authorize?{urlencode(params)}"
 
+def exchange_code_for_tokens(auth_code):
+    """Exchange an authorization code for Dropbox access and refresh tokens."""
+    token_url = "https://api.dropbox.com/oauth2/token"
+    data = {
+        "code": auth_code,
+        "grant_type": "authorization_code",
+        "client_id": os.getenv("DROPBOX_CLIENT_ID"),
+        "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
+        "redirect_uri": "https://your-app-url.onrender.com"  # Ensure this matches Dropbox settings
+    }
+
+    response = requests.post(token_url, data=data)
+    tokens = response.json()
+
+    if "access_token" in tokens and "refresh_token" in tokens:
+        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
+        os.environ["DROPBOX_REFRESH_TOKEN"] = tokens["refresh_token"]
+        return tokens
+    else:
+        print("Error:", tokens)
+        return None
+
 def format_markdown_header(text):
     """Formats text as a Markdown header."""
     return f"# {text}\n"
