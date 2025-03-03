@@ -21,10 +21,12 @@ DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters"
 
 # Load environment variables
 load_dotenv()
+handle_oauth_callback()
+
 
 def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
-    query_params = st.query_params
+    query_params = st.query_params  # Fetch query parameters from the URL
 
     if "code" in query_params and "dropbox_authenticated" not in st.session_state:
         auth_code = query_params["code"][0]  # Extract the auth code
