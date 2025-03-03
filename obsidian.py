@@ -34,23 +34,27 @@ def get_authorization_url():
     return f"https://www.dropbox.com/oauth2/authorize?{urlencode(params)}"
 
 def exchange_code_for_tokens(auth_code):
-    """Exchange an authorization code for Dropbox access and refresh tokens using PKCE."""
+    """Exchange an authorization code for Dropbox access and refresh tokens."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
     data = {
         "code": auth_code,
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
-        "code_verifier": os.getenv("DROPBOX_CODE_VERIFIER"),
-        "redirect_uri": "https://your-app-url.onrender.com"  # Ensure this matches Dropbox settings
+        "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
+        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match Dropbox settings
     }
 
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
     if "access_token" in tokens and "refresh_token" in tokens:
+        print("✅ Authentication successful! Storing tokens in Render environment.")
+
+        # Store the refresh token in Render manually
+        print(f"🔑 Refresh Token (Save this in Render!): {tokens['refresh_token']}")
+
         os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
-        os.environ["DROPBOX_REFRESH_TOKEN"] = tokens["refresh_token"]
         return tokens
     else:
         print("❌ Error:", tokens)
