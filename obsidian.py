@@ -8,28 +8,41 @@ from urllib.parse import urlencode
 
 # Load Dropbox credentials from Render environment variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
-DROPBOX_CLIENT_SECRET = os.getenv("DROPBOX_CLIENT_SECRET")
-OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com"  # Replace with your actual Render app URL
+OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com/oauth_callback"  # Replace with your actual Render app URL
+
+# Generate a PKCE code verifier and challenge
+def generate_pkce():
+    code_verifier = secrets.token_urlsafe(64)[:128]  # Generate a random 43-128 char string
+    code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest()).decode().rstrip("=")
+    return code_verifier, code_challenge
 
 def get_authorization_url():
-    """Generate a Dropbox authorization URL for the user."""
+    """Generate a Dropbox authorization URL with PKCE."""
+    code_verifier, code_challenge = generate_pkce()
+    
+    # Store the code_verifier temporarily
+    os.environ["DROPBOX_CODE_VERIFIER"] = code_verifier
+
     params = {
         "client_id": DROPBOX_CLIENT_ID,
         "response_type": "code",
         "redirect_uri": OAUTH_REDIRECT_URI,
-        "token_access_type": "offline"  # Ensures we get a refresh token
+        "token_access_type": "offline",
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256"
     }
     return f"https://www.dropbox.com/oauth2/authorize?{urlencode(params)}"
 
 def exchange_code_for_tokens(auth_code):
-    """Exchange an authorization code for Dropbox access and refresh tokens."""
+    """Exchange an authorization code for Dropbox access and refresh tokens using PKCE."""
     token_url = "https://api.dropbox.com/oauth2/token"
+
     data = {
         "code": auth_code,
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
-        "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
-        "redirect_uri": "https://your-app-url.onrender.com"  # Must match the redirect URI in Dropbox settings
+        "code_verifier": os.getenv("DROPBOX_CODE_VERIFIER"),
+        "redirect_uri": "https://your-app-url.onrender.com"  # Ensure this matches Dropbox settings
     }
 
     response = requests.post(token_url, data=data)
@@ -40,7 +53,7 @@ def exchange_code_for_tokens(auth_code):
         os.environ["DROPBOX_REFRESH_TOKEN"] = tokens["refresh_token"]
         return tokens
     else:
-        print("Error:", tokens)
+        print("❌ Error:", tokens)
         return None
 
 def format_markdown_header(text):
