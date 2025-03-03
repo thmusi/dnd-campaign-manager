@@ -10,7 +10,8 @@ from obsidian import get_authorization_url
 import requests
 from urllib.parse import urlparse, parse_qs
 from obsidian import exchange_code_for_tokens
-
+import dropbox
+from dropbox.exceptions import AuthError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +47,19 @@ st.markdown(f"[🔗 Click here to connect Dropbox]({auth_url})")
 # Handle OAuth callback
 handle_oauth_callback()
 
+def upload_to_dropbox(file_path, dropbox_folder):
+    """Upload a file to Dropbox, auto-refreshing the token if needed."""
+    global DROPBOX_ACCESS_TOKEN
+    try:
+        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+        with open(file_path, "rb") as f:
+            dbx.files_upload(f.read(), f"{dropbox_folder}/{os.path.basename(file_path)}", mode=dropbox.files.WriteMode("overwrite"))
+    except AuthError:
+        print("🔄 Access token expired, refreshing...")
+        DROPBOX_ACCESS_TOKEN = refresh_access_token()
+        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+        with open(file_path, "rb") as f:
+            dbx.files_upload(f.read(), f"{dropbox_folder}/{os.path.basename(file_path)}", mode=dropbox.files.WriteMode("overwrite"))
 
 # Exception handling decorator
 def handle_exception(func):
