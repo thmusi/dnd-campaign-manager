@@ -22,7 +22,6 @@ DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters"
 # Load environment variables
 load_dotenv()
 
-handle_oauth_callback()
 
 def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
