@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
 from obsidian import get_authorization_url
+import requests
+from urllib.parse import urlparse, parse_qs
+from obsidian import exchange_code_for_tokens
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +21,19 @@ DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters"
 # Load environment variables
 load_dotenv()
 
+# Function to handle the Dropbox OAuth callback
+def handle_oauth_callback():
+    query_params = st.query_params
+    if "code" in query_params:
+        auth_code = query_params["code"]
+        st.success("✅ Authorization code received!")
+
+        # Exchange the auth code for tokens
+        tokens = exchange_code_for_tokens(auth_code)
+        if tokens:
+            st.success("✅ Dropbox connected successfully!")
+        else:
+            st.error("❌ Failed to authenticate with Dropbox.")
 
 
 # Exception handling decorator
