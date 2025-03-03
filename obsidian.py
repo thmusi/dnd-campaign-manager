@@ -29,7 +29,7 @@ def exchange_code_for_tokens(auth_code):
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
         "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
-        "redirect_uri": "https://your-app-url.onrender.com"  # Ensure this matches Dropbox settings
+        "redirect_uri": "https://your-app-url.onrender.com"  # Must match the redirect URI in Dropbox settings
     }
 
     response = requests.post(token_url, data=data)
