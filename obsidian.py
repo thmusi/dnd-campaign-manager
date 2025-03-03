@@ -5,6 +5,8 @@ import streamlit as st
 import re
 import requests
 from urllib.parse import urlencode
+import secrets  # Fix NameError
+
 
 # Load Dropbox credentials from Render environment variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
