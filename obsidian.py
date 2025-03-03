@@ -105,8 +105,14 @@ def create_obsidian_note(title, content):
 
 def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
     """Saves a Markdown note to the Dropbox-linked Obsidian folder."""
+    global DROPBOX_ACCESS_TOKEN  # Ensure we use the global variable
+
     if not DROPBOX_ACCESS_TOKEN:
-        raise ValueError("❌ Dropbox access token is missing!")
+        print("⚠️ Warning: DROPBOX_ACCESS_TOKEN is missing, attempting to refresh...")
+        DROPBOX_ACCESS_TOKEN = refresh_access_token()  # Try refreshing the token
+
+    if not DROPBOX_ACCESS_TOKEN:  # Still missing?
+        raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
 
     dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
     dropbox_path = f"{obsidian_folder}/{filename}.md"
