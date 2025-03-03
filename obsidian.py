@@ -53,18 +53,20 @@ def exchange_code_for_tokens(auth_code):
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
+    print("🔍 Dropbox API Response:", tokens)  # Print response for debugging
+
     if "access_token" in tokens and "refresh_token" in tokens:
         print("✅ Authentication successful! Storing tokens in Render environment.")
 
-        # Store the refresh token in Render manually
-        print(f"🔑 Refresh Token (Save this in Render!): {tokens['refresh_token']}")
-
+        # Store access token in memory (not permanent)
         os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
+
+        # Return tokens for immediate use
         return tokens
     else:
-        print("❌ Error:", tokens)
+        print("❌ Error exchanging code for tokens:", tokens)
         return None
-
+        
 def refresh_access_token():
     """Refresh the Dropbox access token when it expires."""
     token_url = "https://api.dropbox.com/oauth2/token"
