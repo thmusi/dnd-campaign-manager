@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 # Load Dropbox credentials from Render environment variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
 DROPBOX_CLIENT_SECRET = os.getenv("DROPBOX_CLIENT_SECRET")
-OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com/oauth_callback"  # Replace with your actual Render app URL
+OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com"  # Replace with your actual Render app URL
 
 def get_authorization_url():
     """Generate a Dropbox authorization URL for the user."""
