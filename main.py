@@ -26,26 +26,18 @@ def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
     query_params = st.query_params
 
-    if "code" in query_params:
+    if "code" in query_params and "dropbox_authenticated" not in st.session_state:
         auth_code = query_params["code"][0]  # Extract the auth code
         st.success("✅ Authorization code received!")
 
         # Exchange the authorization code for access/refresh tokens
         tokens = exchange_code_for_tokens(auth_code)
         if tokens:
-            st.success("✅ Dropbox connected successfully! You can now upload and retrieve files.")
             st.session_state["dropbox_authenticated"] = True
+            st.success("✅ Dropbox connected successfully! You can now upload and retrieve files.")
         else:
             st.error("❌ Failed to authenticate with Dropbox.")
 
-st.title("Connect to Dropbox")
-
-# Generate the Dropbox login link
-auth_url = get_authorization_url()
-st.markdown(f"[🔗 Click here to connect Dropbox]({auth_url})")
-
-# Handle OAuth callback
-handle_oauth_callback()
 
 def upload_to_dropbox(file_path, dropbox_folder):
     """Upload a file to Dropbox, auto-refreshing the token if needed."""
