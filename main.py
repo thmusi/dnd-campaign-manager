@@ -30,8 +30,11 @@ def handle_oauth_callback():
     st.write(f"🔍 Debug: Query Params - {query_params}")  # Show query params on the page
 
     if "code" in query_params and "dropbox_authenticated" not in st.session_state:
-        auth_code = query_params["code"][0]  # Extract the auth code
-        st.success(f"✅ Authorization code received: {auth_code}")
+        auth_code = query_params["code"]  # Extract the auth code
+        if isinstance(auth_code, list):  # Handle lists
+            auth_code = auth_code[0]
+
+        st.success(f"✅ Authorization code received: {auth_code}")  # Debugging
 
         # Exchange the authorization code for access/refresh tokens
         tokens = exchange_code_for_tokens(auth_code)
