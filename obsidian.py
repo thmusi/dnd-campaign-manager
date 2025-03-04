@@ -54,13 +54,18 @@ def exchange_code_for_tokens(auth_code):
         "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match Dropbox settings
     }
 
+    print("🔍 Sending request to Dropbox API...")
+    sys.stdout.flush()  # Force logs to show immediately
+
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
-    print("🔍 Full Dropbox API Response:", tokens)  # Debugging
+    print("🔍 Full Dropbox API Response:", tokens)
+    sys.stdout.flush()  # Ensure logs are displayed immediately
 
     if "error" in tokens:
         print(f"❌ Dropbox Authentication Error: {tokens.get('error_description', 'No description provided')}")
+        sys.stdout.flush()
 
     return tokens if "access_token" in tokens else None
 
