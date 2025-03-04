@@ -93,8 +93,13 @@ def refresh_access_token():
     client_id = os.getenv("DROPBOX_CLIENT_ID")
     client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
 
-    if not refresh_token:
-        print("❌ ERROR: DROPBOX_REFRESH_TOKEN is missing! Cannot refresh token.")
+    # Debugging: Log values to confirm they are loaded
+    print(f"🔍 DROPBOX_REFRESH_TOKEN: {refresh_token[:10]}... (length: {len(refresh_token)})")
+    print(f"🔍 DROPBOX_CLIENT_ID: {client_id}")
+    print(f"🔍 DROPBOX_CLIENT_SECRET: {'Set' if client_secret else 'Not Set'}")
+
+    if not refresh_token or not client_id or not client_secret:
+        print("❌ ERROR: Missing environment variables! Cannot refresh token.")
         return None
 
     data = {
