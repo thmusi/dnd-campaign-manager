@@ -86,25 +86,33 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Refresh the Dropbox access token when it expires."""
+    """Manually refresh the Dropbox access token using the stored refresh token."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
+    refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
+    client_id = os.getenv("DROPBOX_CLIENT_ID")
+    client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
+
+    if not refresh_token:
+        print("❌ ERROR: DROPBOX_REFRESH_TOKEN is missing! Cannot refresh token.")
+        return None
+
     data = {
-        "refresh_token": os.getenv("DROPBOX_REFRESH_TOKEN"),
+        "refresh_token": refresh_token,
         "grant_type": "refresh_token",
-        "client_id": os.getenv("DROPBOX_CLIENT_ID"),
-        "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
+        "client_id": client_id,
+        "client_secret": client_secret,
     }
 
+    print("🔄 Refreshing Dropbox access token...")
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
+    print("🔍 Dropbox Token Refresh Response:", tokens)
+
     if "access_token" in tokens:
-        print("🔄 Access token refreshed successfully!")
-
-        # ✅ Update the access token in memory
-        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
-
+        print("✅ Access token refreshed successfully!")
+        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]  # Update in memory
         return tokens["access_token"]
     else:
         print("❌ Error refreshing token:", tokens)
@@ -124,12 +132,12 @@ def create_obsidian_note(title, content):
     return file_name
 
 def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
-    """Saves a Markdown note to Dropbox inside the linked Obsidian folder."""
+    """Saves a Markdown note to Dropbox inside the linked Obsidian vault."""
     access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
 
     if not access_token:
         print("🔄 Access token missing! Attempting to refresh...")
-        access_token = refresh_access_token()  # ✅ Try refreshing if missing
+        access_token = refresh_access_token()  # ✅ Refresh if missing
 
     if not access_token:  # If still missing, authentication failed
         raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
@@ -138,12 +146,15 @@ def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
     dropbox_path = f"{obsidian_folder}/{filename}.md"
 
     try:
+        print(f"📂 Uploading {filename} to Dropbox at {dropbox_path}...")
         dbx.files_upload(content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+        print(f"✅ Note saved successfully to {dropbox_path}")
         return f"✅ Note saved to {dropbox_path}"
-    except dropbox.exceptions.AuthError:
-        print("❌ Dropbox authentication error! Please reconnect.")
-        return "❌ Dropbox authentication error! Please reconnect."
+    except dropbox.exceptions.AuthError as e:
+        print(f"❌ Dropbox authentication error: {e}")
+        return f"❌ Dropbox authentication error: {e}"
     except Exception as e:
+        print(f"❌ Error saving note: {e}")
         return f"❌ Error saving note: {e}"
 
 def build_index(vault_path, keywords, keyword_weights):
