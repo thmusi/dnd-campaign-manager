@@ -42,7 +42,7 @@ def get_authorization_url():
     }
     return f"https://www.dropbox.com/oauth2/authorize?{urlencode(params)}"
 
- def exchange_code_for_tokens(auth_code):
+def exchange_code_for_tokens(auth_code):
     """Exchange an authorization code for Dropbox access and refresh tokens."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
@@ -51,18 +51,19 @@ def get_authorization_url():
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
         "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
-        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must exactly match Dropbox settings
+        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match Dropbox settings
     }
 
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
-    print("🔍 Full Dropbox API Response:", tokens)  # Print the entire response
+    print("🔍 Full Dropbox API Response:", tokens)  # Debug print
 
     if "error" in tokens:
         print(f"❌ Dropbox Authentication Error: {tokens.get('error_description', 'No description provided')}")
 
     return tokens if "access_token" in tokens else None
+
         
 def get_access_token():
     """Retrieve a valid Dropbox access token, refreshing if necessary."""
