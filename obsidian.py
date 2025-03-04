@@ -57,7 +57,7 @@ def exchange_code_for_tokens(auth_code):
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
-    print("🔍 Full Dropbox API Response:", tokens)  # Debug print
+    print("🔍 Full Dropbox API Response:", tokens)  # Debugging
 
     if "error" in tokens:
         print(f"❌ Dropbox Authentication Error: {tokens.get('error_description', 'No description provided')}")
