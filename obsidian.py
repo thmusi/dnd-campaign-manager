@@ -9,6 +9,7 @@ import secrets  # Fix NameError
 import base64  # Fix for base64 module
 import hashlib
 import sys
+import dropbox
 
 # Ensure the environment variable is loaded
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
