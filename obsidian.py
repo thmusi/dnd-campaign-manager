@@ -85,7 +85,7 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Refresh the Dropbox access token using the stored refresh token."""
+    """Refresh the Dropbox access token when it expires."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
     data = {
@@ -100,7 +100,10 @@ def refresh_access_token():
 
     if "access_token" in tokens:
         print("🔄 Access token refreshed successfully!")
-        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]  # Store in memory
+
+        # ✅ Update the access token in memory
+        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
+
         return tokens["access_token"]
     else:
         print("❌ Error refreshing token:", tokens)
@@ -120,23 +123,24 @@ def create_obsidian_note(title, content):
     return file_name
 
 def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
-    """Saves a Markdown note to the Dropbox-linked Obsidian folder."""
-    global DROPBOX_ACCESS_TOKEN  # Ensure we use the global variable
+    """Saves a Markdown note to Dropbox inside the linked Obsidian folder."""
+    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
 
-    if not DROPBOX_ACCESS_TOKEN:
-        print("⚠️ Warning: DROPBOX_ACCESS_TOKEN is missing, attempting to refresh...")
-        DROPBOX_ACCESS_TOKEN = refresh_access_token()  # Try refreshing the token
+    if not access_token:
+        print("🔄 Access token missing! Attempting to refresh...")
+        access_token = refresh_access_token()  # ✅ Try refreshing if missing
 
-    if not DROPBOX_ACCESS_TOKEN:  # Still missing?
+    if not access_token:  # If still missing, authentication failed
         raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
 
-    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    dbx = dropbox.Dropbox(access_token)
     dropbox_path = f"{obsidian_folder}/{filename}.md"
 
     try:
         dbx.files_upload(content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
         return f"✅ Note saved to {dropbox_path}"
     except dropbox.exceptions.AuthError:
+        print("❌ Dropbox authentication error! Please reconnect.")
         return "❌ Dropbox authentication error! Please reconnect."
     except Exception as e:
         return f"❌ Error saving note: {e}"
