@@ -112,8 +112,11 @@ def refresh_access_token():
 
     if "access_token" in tokens:
         print("✅ Access token refreshed successfully!")
-        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]  # Update in memory
-        return tokens["access_token"]
+
+        # ✅ Save new access token immediately
+        new_access_token = tokens["access_token"]
+        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  # Store in memory
+        return new_access_token
     else:
         print("❌ Error refreshing token:", tokens)
         return None
