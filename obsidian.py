@@ -51,23 +51,18 @@ def exchange_code_for_tokens(auth_code):
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
         "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
-        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match Dropbox settings exactly
+        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match exactly with Dropbox settings
     }
 
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
-    print("🔍 Dropbox API Response:", tokens)
+    print("🔍 Dropbox API Response:", tokens)  # Debug print to Render logs
 
-    if "access_token" in tokens and "refresh_token" in tokens:
-        print("✅ Authentication successful! Storing tokens in Render environment.")
+    if "error" in tokens:
+        print(f"❌ Dropbox Authentication Error: {tokens['error_description']}")
 
-        os.environ["DROPBOX_ACCESS_TOKEN"] = tokens["access_token"]
-        os.environ["DROPBOX_REFRESH_TOKEN"] = tokens["refresh_token"]
-        return tokens
-    else:
-        print("❌ Error exchanging code for tokens:", tokens)
-        return None
+    return tokens if "access_token" in tokens else None
         
 def get_access_token():
     """Retrieve a valid Dropbox access token, refreshing if necessary."""
