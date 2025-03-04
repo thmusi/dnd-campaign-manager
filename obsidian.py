@@ -76,7 +76,7 @@ def exchange_code_for_tokens(auth_code):
 
         
 def get_access_token():
-    """Retrieve a valid Dropbox access token, refreshing if necessary."""
+    """Ensure a valid Dropbox access token is always used."""
     access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
 
     if not access_token:
@@ -86,20 +86,15 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Manually refresh the Dropbox access token using the stored refresh token."""
+    """Refresh the Dropbox access token when it expires."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
     client_id = os.getenv("DROPBOX_CLIENT_ID")
     client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
 
-    # Debugging: Log values to confirm they are loaded
-    print(f"🔍 DROPBOX_REFRESH_TOKEN: {refresh_token[:10]}... (length: {len(refresh_token)})")
-    print(f"🔍 DROPBOX_CLIENT_ID: {client_id}")
-    print(f"🔍 DROPBOX_CLIENT_SECRET: {'Set' if client_secret else 'Not Set'}")
-
-    if not refresh_token or not client_id or not client_secret:
-        print("❌ ERROR: Missing environment variables! Cannot refresh token.")
+    if not refresh_token:
+        print("❌ ERROR: DROPBOX_REFRESH_TOKEN is missing! Cannot refresh token.")
         return None
 
     data = {
@@ -122,7 +117,7 @@ def refresh_access_token():
     else:
         print("❌ Error refreshing token:", tokens)
         return None
-
+        
 def format_markdown_header(text):
     """Formats text as a Markdown header."""
     return f"# {text}\n"
@@ -138,13 +133,9 @@ def create_obsidian_note(title, content):
 
 def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
     """Saves a Markdown note to Dropbox inside the linked Obsidian vault."""
-    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+    access_token = get_access_token()  # ✅ Always get a fresh token
 
     if not access_token:
-        print("🔄 Access token missing! Attempting to refresh...")
-        access_token = refresh_access_token()  # ✅ Refresh if missing
-
-    if not access_token:  # If still missing, authentication failed
         raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
 
     dbx = dropbox.Dropbox(access_token)
