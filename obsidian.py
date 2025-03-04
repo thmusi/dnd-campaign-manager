@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 import secrets  # Fix NameError
 import base64  # Fix for base64 module
 import hashlib
+import sys
 
 # Ensure the environment variable is loaded
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
@@ -21,37 +22,40 @@ OAUTH_REDIRECT_URI = "https://dnd-campaign-manager.onrender.com"  # Replace with
 
 # Generate a PKCE code verifier and challenge
 def generate_pkce():
+    """Generate a PKCE code_verifier and code_challenge."""
     code_verifier = secrets.token_urlsafe(64)[:128]  # Generate a random 43-128 char string
     code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest()).decode().rstrip("=")
+    os.environ["DROPBOX_CODE_VERIFIER"] = code_verifier  # ✅ Store code_verifier in memory
     return code_verifier, code_challenge
-
+    
 def get_authorization_url():
     """Generate a Dropbox authorization URL with PKCE."""
     code_verifier, code_challenge = generate_pkce()
-    
-    # Store the code_verifier temporarily
-    os.environ["DROPBOX_CODE_VERIFIER"] = code_verifier
 
     params = {
-        "client_id": DROPBOX_CLIENT_ID,
+        "client_id": os.getenv("DROPBOX_CLIENT_ID"),
         "response_type": "code",
-        "redirect_uri": OAUTH_REDIRECT_URI,
+        "redirect_uri": "https://dnd-campaign-manager.onrender.com",
         "token_access_type": "offline",
-        "code_challenge": code_challenge,
+        "code_challenge": code_challenge,  # ✅ Send code_challenge
         "code_challenge_method": "S256"
     }
+
     return f"https://www.dropbox.com/oauth2/authorize?{urlencode(params)}"
 
 def exchange_code_for_tokens(auth_code):
-    """Exchange an authorization code for Dropbox access and refresh tokens."""
+    """Exchange an authorization code for Dropbox access and refresh tokens using PKCE."""
     token_url = "https://api.dropbox.com/oauth2/token"
+
+    # Retrieve the code_verifier that was generated earlier
+    code_verifier = os.getenv("DROPBOX_CODE_VERIFIER")
 
     data = {
         "code": auth_code,
         "grant_type": "authorization_code",
         "client_id": os.getenv("DROPBOX_CLIENT_ID"),
-        "client_secret": os.getenv("DROPBOX_CLIENT_SECRET"),
-        "redirect_uri": "https://dnd-campaign-manager.onrender.com"  # Must match Dropbox settings
+        "code_verifier": code_verifier,  # ✅ Include PKCE code_verifier
+        "redirect_uri": "https://dnd-campaign-manager.onrender.com"
     }
 
     print("🔍 Sending request to Dropbox API...")
