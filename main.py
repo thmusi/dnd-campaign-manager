@@ -469,6 +469,7 @@ def render_create_shop_page():
 
     if getattr(st.session_state, "generated_shop", None):
         add_to_cart("Shops", "generated_shop")
+        st.success("Added to Cart!")
 
 def render_create_location_page():
     st.title("📍 Create Location")
@@ -495,6 +496,7 @@ def render_generate_npc_page():
       
     if getattr(st.session_state, "generated_npc", None):
         add_to_cart("NPCs", "generated_npc")
+        st.success("Added to Cart!")
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
