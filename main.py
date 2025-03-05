@@ -14,8 +14,8 @@ from dropbox.exceptions import AuthError
 from dropbox import DropboxOAuth2FlowNoRedirect, Dropbox
 
 # Load Environment Variables
-DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
-DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
+DROPBOX_CLIENT_SECRET = os.getenv("DROPBOX_CLIENT_SECRET")
 DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
 
 # Debugging: Show which environment variables are loaded (REMOVE this in production)
@@ -33,10 +33,6 @@ logging.basicConfig(level=logging.INFO)
 
 # Default cart structure
 DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
-
-# Load environment variables
-load_dotenv()
-
 
 def handle_oauth_callback():
     """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
