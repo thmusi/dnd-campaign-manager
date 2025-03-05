@@ -120,7 +120,7 @@ def save_to_vault(category, item):
     
     Args:
         category (str): The category under which the item will be saved.
-        item (str): The content that needs to be saved to the vault.
+        item (dict): The content that needs to be saved to the vault.
     """
     if "selected_content_to_save" not in st.session_state:
         st.session_state["selected_content_to_save"] = ""
@@ -132,17 +132,23 @@ def save_to_vault(category, item):
 
         if st.button("📁 Save to Vault", key="send_to_vault"):
             if edited_content.strip():
-                # Save the item
-                save_content_to_vault(category, edited_content)
+                # Ensure filename is formatted properly
+                filename = f"{category}_{item['name'].replace(' ', '_')}.md"
 
-                # Remove it from the cart after saving
-                cart = load_cart()
-                if item in cart.get(category, []):
-                    cart[category].remove(item)
-                    save_cart(cart)
+                # Save the item to Dropbox
+                success_message = write_note(filename, edited_content)
 
-                st.success(f"✅ '{item}' saved to the vault!")
-                st.session_state["selected_content_to_save"] = ""
+                if "✅" in success_message:
+                    # Remove it from the cart after saving
+                    cart = load_cart()
+                    if item in cart.get(category, []):
+                        cart[category].remove(item)
+                        save_cart(cart)
+
+                    st.success(f"✅ '{item['name']}' saved to the vault!")
+                    st.session_state["selected_content_to_save"] = ""
+                else:
+                    st.error(f"❌ Failed to save '{item['name']}' to the vault!")
             else:
                 st.warning("⚠️ Content is empty! Please modify before sending to vault.")
 
