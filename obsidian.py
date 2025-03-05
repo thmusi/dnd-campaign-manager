@@ -136,13 +136,17 @@ def create_obsidian_note(title, content):
 
 def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
     """Saves a Markdown note to Dropbox inside the linked Obsidian vault."""
-    access_token = get_access_token()  # ✅ Always get a fresh token
+    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+
+    if not access_token:
+        print("🔄 Access token missing! Attempting to refresh...")
+        access_token = refresh_access_token()  # ✅ Refresh if missing
 
     if not access_token:
         raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
 
     dbx = dropbox.Dropbox(access_token)
-    dropbox_path = f"{obsidian_folder}/{filename}.md"
+    dropbox_path = f"{obsidian_folder}/{filename}"
 
     try:
         print(f"📂 Uploading {filename} to Dropbox at {dropbox_path}...")
@@ -155,7 +159,7 @@ def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
     except Exception as e:
         print(f"❌ Error saving note: {e}")
         return f"❌ Error saving note: {e}"
-
+        
 def build_index(vault_path, keywords, keyword_weights):
     """
     Scan the Obsidian vault directory and compute a relevance score for each .md file.
