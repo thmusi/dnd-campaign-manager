@@ -86,15 +86,19 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Refresh the Dropbox access token when it expires."""
+    """Forcefully refresh the Dropbox access token using the stored refresh token."""
     token_url = "https://api.dropbox.com/oauth2/token"
 
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
     client_id = os.getenv("DROPBOX_CLIENT_ID")
     client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
 
-    if not refresh_token:
-        print("❌ ERROR: DROPBOX_REFRESH_TOKEN is missing! Cannot refresh token.")
+    print(f"🔍 DEBUG: Refresh Token Loaded: {refresh_token[:10]}... (Length: {len(refresh_token)})")
+    print(f"🔍 DEBUG: Client ID: {client_id}")
+    print(f"🔍 DEBUG: Client Secret: {'Set' if client_secret else 'Not Set'}")
+
+    if not refresh_token or not client_id or not client_secret:
+        print("❌ ERROR: Missing required environment variables! Cannot refresh token.")
         return None
 
     data = {
@@ -113,12 +117,12 @@ def refresh_access_token():
     if "access_token" in tokens:
         print("✅ Access token refreshed successfully!")
 
-        # ✅ Save new access token immediately
+        # ✅ Update the token before returning it
         new_access_token = tokens["access_token"]
         os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  # Store in memory
         return new_access_token
     else:
-        print("❌ Error refreshing token:", tokens)
+        print("❌ ERROR: Could not refresh token:", tokens)
         return None
         
 def format_markdown_header(text):
