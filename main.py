@@ -19,11 +19,11 @@ DROPBOX_CLIENT_SECRET = os.getenv("DROPBOX_CLIENT_SECRET")
 DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
 
 # Debugging: Show which environment variables are loaded (REMOVE this in production)
-st.write(f"App Key: {DROPBOX_APP_KEY}")
-st.write(f"App Secret: {DROPBOX_APP_SECRET}")
+st.write(f"App Key: {DROPBOX_CLIENT_ID}")
+st.write(f"App Secret: {DROPBOX_CLIENT_SECRET}")
 st.write(f"Refresh Token: {DROPBOX_REFRESH_TOKEN}")
 
-if not DROPBOX_APP_KEY or not DROPBOX_APP_SECRET or not DROPBOX_REFRESH_TOKEN:
+if not DROPBOX_CLIENT_SECRET or not DROPBOX_CLIENT_SECRET or not DROPBOX_REFRESH_TOKEN:
     st.error("🚨 Missing Dropbox API credentials. Make sure they are set in Render's environment variables!")
 else:
     st.success("✅ Dropbox API credentials loaded successfully.")
