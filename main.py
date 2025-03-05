@@ -3,7 +3,6 @@ import os
 import json
 import logging
 import re
-from dotenv import load_dotenv
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
 from obsidian import get_authorization_url
@@ -12,6 +11,22 @@ from urllib.parse import urlparse, parse_qs
 from obsidian import exchange_code_for_tokens
 import dropbox
 from dropbox.exceptions import AuthError
+from dropbox import DropboxOAuth2FlowNoRedirect, Dropbox
+
+# Load Environment Variables
+DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
+DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
+
+# Debugging: Show which environment variables are loaded (REMOVE this in production)
+st.write(f"App Key: {DROPBOX_APP_KEY}")
+st.write(f"App Secret: {DROPBOX_APP_SECRET}")
+st.write(f"Refresh Token: {DROPBOX_REFRESH_TOKEN}")
+
+if not DROPBOX_APP_KEY or not DROPBOX_APP_SECRET or not DROPBOX_REFRESH_TOKEN:
+    st.error("🚨 Missing Dropbox API credentials. Make sure they are set in Render's environment variables!")
+else:
+    st.success("✅ Dropbox API credentials loaded successfully.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
