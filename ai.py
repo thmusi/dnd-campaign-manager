@@ -1,5 +1,4 @@
 import openai
-from obsidian import write_note  # Ensure this is present at the top
 from utils import summarize_text
 import streamlit as st
 
@@ -104,10 +103,7 @@ def generate_npc(api_key, occupation):
 - **Sorts mineurs (utilisation illimitée) :**
   - [Liste]
 - **Sorts à emplacements (X/Repos Long) :**
-  - **Niveau 1 (X/Repos Long) :** [Liste] 
-  - **Niveau 2 (X/Repos Long) :** [Liste] 
-  - **Niveau 3 (X/Repos Long) :** [Liste] 
-  - **Niveau X (X = niveau de sort disponible en fonction du niveau du personnage/NPJ) (X/Repos Long) :** [Liste] 
+  - **Niveau Y (Y = niveau de sort disponible en fonction du niveau du personnage/NPJ) (X/Repos Long) :** [Liste] 
 
     **Attaques (si applicable) :**
     - Armes ou autres (précision) +X : XdX dégâts de (type de dégâts)
@@ -133,21 +129,13 @@ def generate_npc(api_key, occupation):
         messages=[{"role": "user", "content": prompt}]
     )
 
+
     npc_content = response.choices[0].message.content.strip()
 
     if not npc_content:
         return "❌ AI failed to generate NPC."
-
-    markdown_content = f"# {occupation}\n\n{npc_content}"
     
-    success = write_note(f"NPC_{occupation.replace(' ', '_')}.md", markdown_content)
-    
-    if success:
-        print(f"✅ NPC '{occupation}' saved to Obsidian via Dropbox.")
-    else:
-        print("❌ Failed to save NPC to Dropbox.")
-    
-    return npc_content
+    return npc_content  # Just return NPC content, no Dropbox call
 
 def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     """Generates a detailed D&D shop description, including inventory, owner, security measures, and lore."""
@@ -209,15 +197,6 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
     if not shop_content:
         return "❌ AI failed to generate Shop."
 
-    markdown_content = f"# {shop_type}\n\n{shop_content}"
-
-    success = write_note(f"Shop_{shop_type.replace(' ', '_')}.md", markdown_content)
-    
-    if success:
-        print(f"✅ Shop '{shop_type}' saved to Obsidian via Dropbox.")
-    else:
-        print("❌ Failed to save Shop to Dropbox.")
-
     return shop_content
 
 def generate_location(api_key, prompt=None):
@@ -236,13 +215,8 @@ def generate_location(api_key, prompt=None):
 
     if not location_content:
         return "❌ AI failed to generate Location."
-
-    markdown_content = f"# Location\n\n{location_content}"
     
-    success = write_note("Location_Generated.md", markdown_content)
-    
-    return location_content if success else "❌ Failed to save Location."
-
+    return location_content
 
 
 def modify_campaign_chapter(existing_text, api_key, prompt=None):
