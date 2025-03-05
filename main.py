@@ -295,6 +295,11 @@ if not st.session_state["authenticated"]:
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
 
+# Debug environment variables
+print("DROPBOX_ACCESS_TOKEN:", os.getenv("DROPBOX_ACCESS_TOKEN"))
+print("DROPBOX_REFRESH_TOKEN:", os.getenv("DROPBOX_REFRESH_TOKEN"))
+print("DROPBOX_APP_KEY:", os.getenv("DROPBOX_APP_KEY"))
+print("DROPBOX_APP_SECRET:", os.getenv("DROPBOX_APP_SECRET"))
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
