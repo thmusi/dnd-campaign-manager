@@ -146,10 +146,24 @@ def save_to_vault(category, item):
                 # Ensure filename is formatted properly
                 filename = f"{category}_{item['name'].replace(' ', '_')}.md"
 
-                # Save the item to Dropbox
-                success_message = write_note(filename, edited_content)
+                # Save the item to Dropbox (move logic from `save_ai_generated_content` here)
+                dropbox_path = f"/ObsidianNotes/{filename}"  # Adjust as needed
 
-                if "✅" in success_message:
+                access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+                if not access_token:
+                    print("🔄 Access token missing! Attempting to refresh...")
+                    access_token = refresh_access_token()  # ✅ Ensure valid token
+
+                if not access_token:
+                    st.error("❌ Dropbox authentication failed! Please reconnect.")
+                    return
+
+                try:
+                    dbx = dropbox.Dropbox(access_token)
+                    print(f"📂 Uploading {filename} to Dropbox at {dropbox_path}...")
+                    dbx.files_upload(edited_content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+                    print(f"✅ Note saved successfully to {dropbox_path}")
+                    
                     # Remove it from the cart after saving
                     cart = load_cart()
                     if item in cart.get(category, []):
@@ -158,26 +172,13 @@ def save_to_vault(category, item):
 
                     st.success(f"✅ '{item['name']}' saved to the vault!")
                     st.session_state["selected_content_to_save"] = ""
-                else:
-                    st.error(f"❌ Failed to save '{item['name']}' to the vault!")
+                except dropbox.exceptions.AuthError as e:
+                    st.error(f"❌ Dropbox authentication error: {e}")
+                except Exception as e:
+                    st.error(f"❌ Error saving note: {e}")
             else:
                 st.warning("⚠️ Content is empty! Please modify before sending to vault.")
 
-@handle_exception
-def save_content_to_vault(category, content):
-    """Handles the actual saving of content to the Obsidian vault (or cloud storage).
-    
-    Args:
-        category (str): The category under which the content will be saved.
-        content (str): The content to be saved.
-    """
-    vault_path = Path(f"obsidian_vault/{category}.md")
-    vault_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(vault_path, "a") as file:
-        file.write(f"\n---\n{content}\n")
-
-    st.success(f"✅ Successfully saved under {category} in the vault!")
 
 @handle_exception
 def add_to_cart(category, session_key):
