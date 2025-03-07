@@ -86,16 +86,12 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Refresh the Dropbox access token and ensure it's stored correctly."""
+    """Refresh the Dropbox access token and store it properly."""
     token_url = "https://api.dropboxapi.com/oauth2/token"
 
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
     client_id = os.getenv("DROPBOX_CLIENT_ID")
     client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
-
-    print("🔍 DEBUG: Refreshing token...")
-    print(f"🔍 DEBUG: Refresh Token: {refresh_token[:10]}...")  # Hide full token for security
-    print(f"🔍 DEBUG: Client ID: {client_id}")
 
     if not refresh_token or not client_id or not client_secret:
         print("❌ ERROR: Missing required environment variables! Cannot refresh token.")
@@ -108,6 +104,7 @@ def refresh_access_token():
         "client_secret": client_secret,
     }
 
+    print("🔄 Refreshing Dropbox access token...")
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
@@ -116,8 +113,10 @@ def refresh_access_token():
     if "access_token" in tokens:
         new_access_token = tokens["access_token"]
 
-        # ✅ Store the token in the environment and print confirmation
-        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  
+        # ✅ Store the token in both the environment and Streamlit session
+        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token
+        st.session_state["dropbox_access_token"] = new_access_token  
+
         print(f"✅ DEBUG: New access token stored: {new_access_token[:10]}...")
 
         return new_access_token
