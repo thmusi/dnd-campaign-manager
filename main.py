@@ -349,7 +349,13 @@ def render_cart_page():
                         st.write("📂 Select an item to save to your vault.")
                         for category, items in load_cart().items():
                             for item in items:
-                                if st.button(f"📁 Save {item['name']} to Vault", key=f"save_{item['name']}"):
+                                for category, items in load_cart().items():
+                                    for item in items:
+                                        if isinstance(item, str):  # Convert strings to dictionaries
+                                            item = {"name": "Unknown", "content": item}
+                                            
+                                        if st.button(f"📁 Save {item['name']} to Vault", key=f"save_{item['name']}"):
+                                            save_to_vault(category, item)
                                     save_to_vault(category, item)
             else:
                 st.warning("Content is empty! Modify before sending to vault.")
@@ -497,9 +503,11 @@ def render_generate_npc_page():
         st.session_state.generated_npc = npc  
         st.text_area("Generated NPC:", npc, height=250)  
       
-    if getattr(st.session_state, "generated_npc", None):
-        add_to_cart("NPCs", "generated_npc")
-        st.success("Added to Cart!")
+    if st.button("➕ Add to Cart", key="add_to_cart"):
+        cart = load_cart()
+        cart["NPCs"].append({"name": npc["name"], "content": npc})  # Ensure dictionary format
+        add_to_cart(cart)
+        st.success("✅ NPC added to cart!")
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
