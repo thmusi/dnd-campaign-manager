@@ -139,6 +139,17 @@ def save_to_vault(category, item):
         category (str): The category under which the item will be saved.
         item (dict): The content that needs to be saved to the vault.
     """
+    # ✅ Ensure access token is up-to-date at the very beginning
+    access_token = st.session_state.get("dropbox_access_token", None)
+    if not access_token:
+        print("🔄 Access token missing! Refreshing...")
+        access_token = refresh_access_token()
+        st.session_state["dropbox_access_token"] = access_token  # ✅ Store it in session state
+
+    if not access_token:
+        st.error("❌ Dropbox authentication failed! Please reconnect.")
+        return
+
     if "selected_content_to_save" not in st.session_state:
         st.session_state["selected_content_to_save"] = ""
 
@@ -149,20 +160,9 @@ def save_to_vault(category, item):
 
         if st.button("📁 Save to Vault", key="send_to_vault"):
             if edited_content.strip():
-                # Ensure filename is formatted properly
+                # ✅ Ensure filename is formatted properly
                 filename = f"{category}_{item['name'].replace(' ', '_')}.md"
-
-                # Save the item to Dropbox (move logic from `save_ai_generated_content` here)
                 dropbox_path = f"/ObsidianNotes/{filename}"  # Adjust as needed
-
-                access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
-                if not access_token:
-                    print("🔄 Access token missing! Attempting to refresh...")
-                    access_token = refresh_access_token()  # ✅ Ensure valid token
-
-                if not access_token:
-                    st.error("❌ Dropbox authentication failed! Please reconnect.")
-                    return
 
                 try:
                     dbx = dropbox.Dropbox(access_token)
@@ -170,7 +170,7 @@ def save_to_vault(category, item):
                     dbx.files_upload(edited_content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
                     print(f"✅ Note saved successfully to {dropbox_path}")
                     
-                    # Remove it from the cart after saving
+                    # ✅ Remove it from the cart after saving
                     cart = load_cart()
                     if item in cart.get(category, []):
                         cart[category].remove(item)
@@ -184,7 +184,6 @@ def save_to_vault(category, item):
                     st.error(f"❌ Error saving note: {e}")
             else:
                 st.warning("⚠️ Content is empty! Please modify before sending to vault.")
-
 
 @handle_exception
 def add_to_cart(category, session_key):
