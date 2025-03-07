@@ -202,6 +202,30 @@ def add_to_cart(category, session_key):
             st.success(f"✅ Added to {category} in the cart!")
         else:
             st.warning(f"⚠️ This item is already in {category}!")
+
+def add_to_cart_button(category, item_key, item_data):
+    """Reusable 'Add to Cart' button for any item.
+    
+    Args:
+        category (str): The category to store the item in (e.g., "NPCs", "Quests").
+        item_key (str): A unique key for session storage (e.g., "generated_npc").
+        item_data (dict): The actual content to be stored in the cart.
+    """
+    # Ensure session state storage exists
+    if item_key not in st.session_state:
+        st.session_state[item_key] = None  
+
+    # Button to add to cart
+    if st.session_state[item_key]:  # Ensure something is generated before saving
+        if st.button(f"➕ Add {category[:-1]} to Cart", key=f"add_{category.lower()}"):
+            cart = load_cart()
+            item = st.session_state[item_key]  # Retrieve stored item
+            cart[category].append({"name": item.get("name", "Unnamed"), "content": item})  
+            save_cart(cart)
+            st.success(f"✅ {category[:-1]} added to cart!")
+            st.session_state[item_key] = None  # Clear after adding
+    else:
+        st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
             
 def navigate_to(page_name):
     """Navigate to a specific page and persist state."""
@@ -395,7 +419,10 @@ def render_dungeon_generator_page():
         # Placeholder logic for dungeon generation
         st.session_state.generated_dungeon = "A mysterious dungeon layout appears..."
         st.text_area("Generated Dungeon:", st.session_state.generated_dungeon, height=250)
-          
+
+    # Use the reusable button
+    add_to_cart_button("Dungeons", "generated_dungeon", st.session_state["generated_dungeon"])
+
     if getattr(st.session_state, "generated_dungeon", None):
         if st.button("🗺️ Generate Grid Battle Map", key="generate_battle_map"):
             import numpy as np
@@ -476,9 +503,9 @@ def render_create_shop_page():
          st.session_state.generated_shop = shop  
          st.text_area(f"Generated {shop_type}:", shop, height=250)
 
-    if getattr(st.session_state, "generated_shop", None):
-        add_to_cart("Shops", "generated_shop")
-        st.success("Added to Cart!")
+    # Use the reusable button
+    add_to_cart_button("Shops", "generated_shop", st.session_state["generated_shop"])
+
 
 def render_create_location_page():
     st.title("📍 Create Location")
@@ -489,25 +516,32 @@ def render_create_location_page():
         st.session_state.generated_location = location  
         st.text_area("Generated Location:", location, height=250)
 
-    if getattr(st.session_state, "generated_location", None):
-        add_to_cart("Locations", "generated_location")
-        st.success("Added to Cart!")
+    # Use the reusable button
+    add_to_cart_button("Locations", "generated_location", st.session_state["generated_location"])
+
 
 def render_generate_npc_page():
     st.title("🧙 Generate NPC")
     render_sidebar()
+    
     npc_prompt = st.text_area("What do you already know about this NPC? (Optional)")
-        
+    
+    # Ensure NPC storage exists in session state
+    if "generated_npc" not in st.session_state:
+        st.session_state["generated_npc"] = None  
+
+    # Generate NPC and store in session
     if st.button("Generate NPC", key="generate_npc_button"):
         npc = generate_npc(st.session_state.openai_api_key, npc_prompt)  
-        st.session_state.generated_npc = npc  
-        st.text_area("Generated NPC:", npc, height=250)  
-      
-    if st.button("➕ Add to Cart", key="add_to_cart"):
-        cart = load_cart()
-        cart["NPCs"].append({"name": npc["name"], "content": npc})  # Ensure dictionary format
-        add_to_cart(cart)
-        st.success("✅ NPC added to cart!")
+        if npc:  
+            st.session_state["generated_npc"] = npc  # Store NPC in session
+            st.text_area("Generated NPC:", npc, height=250)  
+        else:
+            st.error("❌ NPC generation failed. Try again.")
+
+    # Use the reusable button
+    add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
+
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
