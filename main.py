@@ -342,13 +342,14 @@ def render_cart_page():
                     edited_content = st.text_area("Edit before saving:", selected_file, height=300)
     
                     # Save to Vault after reviewing
-                    if st.button("📁 Save to Vault", key="send_to_vault"):
-                        if edited_content.strip():
-                            base_filename = f"{selected_category}_{selected_file}"[:50]  # Limit to 50 chars
-                            safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', base_filename) + ".md"
-                            save_to_vault(selected_category, edited_content)  # Saves reviewed content to vault
-                        else:
-                            st.warning("Content is empty! Modify before sending to vault.")
+                    if st.session_state.get("page") == "Cart":
+                        st.write("📂 Select an item to save to your vault.")
+                        for category, items in load_cart().items():
+                            for item in items:
+                                if st.button(f"📁 Save {item['name']} to Vault", key=f"save_{item['name']}"):
+                                    save_to_vault(category, item)
+                     else:
+                         st.warning("Content is empty! Modify before sending to vault.")
             else:
                 st.warning(f"No files found in {selected_category}.")
         else:
