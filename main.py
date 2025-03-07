@@ -331,20 +331,20 @@ def render_cart_page():
     
     if categories:
         selected_category = st.selectbox("📂 Select Folder", categories)
-            
+        
         if selected_category in st.session_state.cart:
             files = st.session_state.cart[selected_category]
             if files:
                 selected_file = st.selectbox(f"📜 Files in {selected_category}", files)
-                    
+                
                 if selected_file:
                     st.markdown("### 📖 Preview")
                     st.markdown(selected_file)
-    
+
                     # Modify Content Directly in Cart
                     st.subheader("Modify Selected Content")
                     edited_content = st.text_area("Edit before saving:", selected_file, height=300)
-    
+
                     # Save to Vault after reviewing
                     if st.session_state.get("page") == "Cart":
                         st.write("📂 Select an item to save to your vault.")
@@ -352,12 +352,10 @@ def render_cart_page():
                             for item in items:
                                 if st.button(f"📁 Save {item['name']} to Vault", key=f"save_{item['name']}"):
                                     save_to_vault(category, item)
-                     else:
-                         st.warning("Content is empty! Modify before sending to vault.")
             else:
-                st.warning(f"No files found in {selected_category}.")
+                st.warning("Content is empty! Modify before sending to vault.")
         else:
-            st.warning("Selected category does not exist.")
+            st.warning(f"No files found in {selected_category}.")
     else:
         st.warning("Your cart is empty.")
 
