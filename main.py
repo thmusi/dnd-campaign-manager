@@ -23,6 +23,12 @@ st.write(f"App Key: {DROPBOX_CLIENT_ID}")
 st.write(f"App Secret: {DROPBOX_CLIENT_SECRET}")
 st.write(f"Refresh Token: {DROPBOX_REFRESH_TOKEN}")
 
+# Debug environment variables
+print("DROPBOX_ACCESS_TOKEN:", os.getenv("DROPBOX_ACCESS_TOKEN"))
+print("DROPBOX_REFRESH_TOKEN:", os.getenv("DROPBOX_REFRESH_TOKEN"))
+print("DROPBOX_APP_KEY:", os.getenv("DROPBOX_CLIENT_ID"))
+print("DROPBOX_APP_SECRET:", os.getenv("DROPBOX_CLIENT_SECRET"))
+
 if not DROPBOX_CLIENT_SECRET or not DROPBOX_CLIENT_SECRET or not DROPBOX_REFRESH_TOKEN:
     st.error("🚨 Missing Dropbox API credentials. Make sure they are set in Render's environment variables!")
 else:
@@ -307,17 +313,15 @@ if not st.session_state["authenticated"]:
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
 
-# Debug environment variables
-print("DROPBOX_ACCESS_TOKEN:", os.getenv("DROPBOX_ACCESS_TOKEN"))
-print("DROPBOX_REFRESH_TOKEN:", os.getenv("DROPBOX_REFRESH_TOKEN"))
-print("DROPBOX_APP_KEY:", os.getenv("DROPBOX_APP_KEY"))
-print("DROPBOX_APP_SECRET:", os.getenv("DROPBOX_APP_SECRET"))
+
 
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
     st.markdown("Select an option from the buttons below to get started.")
     render_main_menu_buttons()
     render_sidebar()
+    print("✅ DEBUG: Access token at main page load:", os.getenv("DROPBOX_ACCESS_TOKEN"))
+
 
 def render_cart_page():
     st.title("🛒 Your Cart")
