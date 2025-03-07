@@ -86,16 +86,16 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Forcefully refresh the Dropbox access token using the stored refresh token."""
-    token_url = "https://api.dropbox.com/oauth2/token"
+    """Refresh the Dropbox access token and ensure it's stored correctly."""
+    token_url = "https://api.dropboxapi.com/oauth2/token"
 
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
     client_id = os.getenv("DROPBOX_CLIENT_ID")
     client_secret = os.getenv("DROPBOX_CLIENT_SECRET")
 
-    print(f"🔍 DEBUG: Refresh Token Loaded: {refresh_token[:10]}... (Length: {len(refresh_token)})")
+    print("🔍 DEBUG: Refreshing token...")
+    print(f"🔍 DEBUG: Refresh Token: {refresh_token[:10]}...")  # Hide full token for security
     print(f"🔍 DEBUG: Client ID: {client_id}")
-    print(f"🔍 DEBUG: Client Secret: {'Set' if client_secret else 'Not Set'}")
 
     if not refresh_token or not client_id or not client_secret:
         print("❌ ERROR: Missing required environment variables! Cannot refresh token.")
@@ -108,18 +108,18 @@ def refresh_access_token():
         "client_secret": client_secret,
     }
 
-    print("🔄 Refreshing Dropbox access token...")
     response = requests.post(token_url, data=data)
     tokens = response.json()
 
     print("🔍 Dropbox Token Refresh Response:", tokens)
 
     if "access_token" in tokens:
-        print("✅ Access token refreshed successfully!")
-
-        # ✅ Update the token before returning it
         new_access_token = tokens["access_token"]
-        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  # Store in memory
+
+        # ✅ Store the token in the environment and print confirmation
+        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  
+        print(f"✅ DEBUG: New access token stored: {new_access_token[:10]}...")
+
         return new_access_token
     else:
         print("❌ ERROR: Could not refresh token:", tokens)
@@ -137,32 +137,6 @@ def create_obsidian_note(title, content):
         f.write(note_content)
     print(f"📝 Note created: {file_name}")
     return file_name
-
-def write_note(filename, content, obsidian_folder="/ObsidianNotes"):
-    """Saves a Markdown note to Dropbox inside the linked Obsidian vault."""
-    access_token = os.getenv("DROPBOX_ACCESS_TOKEN")
-
-    if not access_token:
-        print("🔄 Access token missing! Attempting to refresh...")
-        access_token = refresh_access_token()  # ✅ Refresh if missing
-
-    if not access_token:
-        raise ValueError("❌ Dropbox authentication failed! Please reconnect.")
-
-    dbx = dropbox.Dropbox(access_token)
-    dropbox_path = f"{obsidian_folder}/{filename}"
-
-    try:
-        print(f"📂 Uploading {filename} to Dropbox at {dropbox_path}...")
-        dbx.files_upload(content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
-        print(f"✅ Note saved successfully to {dropbox_path}")
-        return f"✅ Note saved to {dropbox_path}"
-    except dropbox.exceptions.AuthError as e:
-        print(f"❌ Dropbox authentication error: {e}")
-        return f"❌ Dropbox authentication error: {e}"
-    except Exception as e:
-        print(f"❌ Error saving note: {e}")
-        return f"❌ Error saving note: {e}"
         
 def build_index(vault_path, keywords, keyword_weights):
     """
@@ -214,12 +188,3 @@ def get_relevant_notes(query, vault_path):
     relevant_notes = [note for note in index if note["score"] >= threshold]
     return relevant_notes[:5]
 
-def save_ai_generated_content(title, content):
-    """Save AI-generated content as a Markdown file in Obsidian via Google Drive."""
-    note_name = f"{title.replace(' ', '_')}.md"
-    markdown_content = f"# {title}\n\n{content}"
-    file_path = os.path.join("obsidian_vault", note_name)
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(markdown_content)
-    upload_file(file_path)
-    print(f"AI-generated content saved: {note_name}")
