@@ -205,29 +205,31 @@ def add_to_cart(category, session_key):
         else:
             st.warning(f"⚠️ This item is already in {category}!")
 
-def add_to_cart_button(category, item_key, item_data):
+def add_to_cart_button(category, item_key):
     """Reusable 'Add to Cart' button for any item.
     
     Args:
         category (str): The category to store the item in (e.g., "NPCs", "Quests").
         item_key (str): A unique key for session storage (e.g., "generated_npc").
-        item_data (dict): The actual content to be stored in the cart.
     """
-    # Ensure session state storage exists
     if item_key not in st.session_state:
         st.session_state[item_key] = None  
 
-    # Button to add to cart
-    if st.session_state[item_key]:  # Ensure something is generated before saving
+    # Ensure item exists and is a dictionary
+    item = st.session_state[item_key]
+    if item and isinstance(item, str):  # Convert strings to dictionaries
+        item = {"name": "Unnamed", "content": item}
+
+    if item:  # Ensure there's content before saving
         if st.button(f"➕ Add {category[:-1]} to Cart", key=f"add_{category.lower()}"):
             cart = load_cart()
-            item = st.session_state[item_key]  # Retrieve stored item
-            cart[category].append({"name": item.get("name", "Unnamed"), "content": item})  
+            cart[category].append({"name": item.get("name", "Unnamed"), "content": item})
             save_cart(cart)
             st.success(f"✅ {category[:-1]} added to cart!")
             st.session_state[item_key] = None  # Clear after adding
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
+
             
 def navigate_to(page_name):
     """Navigate to a specific page and persist state."""
