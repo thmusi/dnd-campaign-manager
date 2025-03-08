@@ -12,6 +12,8 @@ from obsidian import exchange_code_for_tokens
 import dropbox
 from dropbox.exceptions import AuthError
 from dropbox import DropboxOAuth2FlowNoRedirect, Dropbox
+from obsidian import refresh_access_token
+
 
 # Load Environment Variables
 DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
@@ -335,7 +337,19 @@ if not st.session_state["authenticated"]:
     handle_oauth_callback()
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
+# ✅ Check if the token is already stored
+if "dropbox_access_token" not in st.session_state:
+    st.session_state["dropbox_access_token"] = os.getenv("DROPBOX_ACCESS_TOKEN")
 
+# ✅ If still missing, refresh it
+if not st.session_state["dropbox_access_token"]:
+    print("🔄 No access token found! Refreshing...")
+    refreshed_token = refresh_access_token()
+    
+    if refreshed_token:
+        st.session_state["dropbox_access_token"] = refreshed_token
+    else:
+        print("❌ Token refresh failed!")
 
 
 def render_main_menu_page():
