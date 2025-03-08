@@ -86,7 +86,7 @@ def get_access_token():
     return access_token
 
 def refresh_access_token():
-    """Refresh and persist the Dropbox access token."""
+    """Refresh and persist the Dropbox access token across sessions."""
     token_url = "https://api.dropboxapi.com/oauth2/token"
 
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
@@ -105,14 +105,15 @@ def refresh_access_token():
     })
 
     tokens = response.json()
+
     if "access_token" in tokens:
         new_access_token = tokens["access_token"]
 
-        # ✅ Store token properly
-        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token
+        # ✅ Store the token in BOTH environment and session state
+        os.environ["DROPBOX_ACCESS_TOKEN"] = new_access_token  
         st.session_state["dropbox_access_token"] = new_access_token  
 
-        print(f"✅ Token refreshed: {new_access_token[:10]}...")
+        print(f"✅ Token refreshed and stored: {new_access_token[:10]}...")
         return new_access_token
     else:
         print("❌ ERROR: Could not refresh token:", tokens)
