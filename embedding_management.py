@@ -4,6 +4,7 @@ import os
 import json
 from pathlib import Path
 import openai
+from main import render_sidebar
 
 CHROMA_DB_PATH = "chroma_db/"
 
