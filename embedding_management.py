@@ -79,26 +79,29 @@ def generate_ai_response(query, api_key):
 # Function to pull the latest GitHub Vault updates
 def pull_github_vault():
     """Pulls the latest changes from the secret GitHub Vault repository."""
+    GITHUB_USERNAME = "thmusi"
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+
+    if not GITHUB_TOKEN:
+        st.error("❌ GITHUB_TOKEN is missing! Set it in Render Environment Variables.")
+        return
+
+    repo_url = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/thmusi/my-obsidian-vault.git"
+
     if not os.path.exists(OBSIDIAN_VAULT_PATH):
         try:
-            subprocess.run(["git", "clone", "https://github.com/thmusi/my-obsidian-vault.git", OBSIDIAN_VAULT_PATH], check=True)
+            subprocess.run(["git", "clone", repo_url, OBSIDIAN_VAULT_PATH], check=True)
             st.success("✅ Cloned the secret GitHub Vault repository!")
         except subprocess.CalledProcessError as e:
             st.error(f"❌ Git clone failed: {e}")
             return
 
     try:
-        GITHUB_USERNAME = "thmusi"
-        GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-        
-        repo_url = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/thmusi/my-obsidian-vault.git"
-        
         subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "remote", "set-url", "origin", repo_url], check=True)
         subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)        
         st.success("✅ Pulled latest changes from the secret Vault!")
     except subprocess.CalledProcessError as e:
         st.error(f"❌ Git pull failed: {e}")
-
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
