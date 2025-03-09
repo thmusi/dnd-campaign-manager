@@ -7,6 +7,7 @@ from ai import generate_npc, generate_shop , generate_location
 from pathlib import Path
 import requests
 from embedding_management import render_embedding_page
+import chromadb
 
 
 # Configure logging
