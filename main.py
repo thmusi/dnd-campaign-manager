@@ -10,7 +10,7 @@ import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
 from embedding_management import load_config, save_config
 import yaml
-import streamlit_nested_layout
+import pandas as pd
 
 
 VAULT_PATH = "obsidian_vault"  # Adjust this if needed
@@ -415,30 +415,25 @@ def render_folder_management_page():
         pull_github_vault()
     
     config = load_config()
-    folders_to_embed = config.get("folders_to_embed", [])
-    folder_tree = build_folder_tree(VAULT_PATH)
+    folders_to_embed = set(config.get("folders_to_embed", []))
+    all_folders = get_all_folders(VAULT_PATH)
     
-    col1, col2 = st.columns(2)
+    # Create a DataFrame for displaying in the editor
+    df = pd.DataFrame({
+        "Folder": all_folders,
+        "Embed in AI": [folder in folders_to_embed for folder in all_folders]
+    })
     
-    with col1:
-        st.subheader("📂 Obsidian Vault (Not Saved for AI)")
-        display_folder_tree(folder_tree, VAULT_PATH, folders_to_embed, config)
+    st.subheader("📂 Manage Folders for AI Embedding")
+    edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
     
-    with col2:
-        st.subheader("✅ Obsidian Vault (Saved for AI)")
-        for folder in folders_to_embed:
-            cols = st.columns([0.8, 0.2])
-            with cols[0]:
-                st.markdown(f"📂 **{os.path.relpath(folder, VAULT_PATH)}**")
-            with cols[1]:
-                if st.button("❌", key=f"remove_{folder}"):
-                    folders_to_embed.remove(folder)
-                    config["folders_to_embed"] = folders_to_embed
-                    save_config(config)
-                    st.rerun()
-        
-        st.subheader("🔄 Re-Embed Files in AI")
-        reembed_modified_files()
+    # Detect changes
+    new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
+    if new_folders_to_embed != folders_to_embed:
+        config["folders_to_embed"] = list(new_folders_to_embed)
+        save_config(config)
+        st.rerun()
+
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
