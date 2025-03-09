@@ -112,7 +112,15 @@ def add_to_cart_button(category, item_key):
             st.session_state[item_key] = None  # Clear after adding
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
-            
+
+def load_config():
+    with open(CONFIG_PATH, "r") as file:
+        return yaml.safe_load(file)
+
+def save_config(config):
+    with open(CONFIG_PATH, "w") as file:
+        yaml.safe_dump(config, file)
+
 def navigate_to(page_name):
     """Navigate to a specific page and persist state."""
     if page_name in PAGES:
