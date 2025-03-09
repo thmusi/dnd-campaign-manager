@@ -165,7 +165,7 @@ def save_last_update():
         json.dump({"last_update": os.path.getmtime(OBSIDIAN_VAULT_PATH)}, f)
 
 def get_all_folders(base_path):
-    """ Recursively retrieve all valid folders inside the Obsidian Vault, excluding .git """
+    """Retrieve all folders inside the Obsidian Vault, excluding .git."""
     folder_list = []
     for root, dirs, _ in os.walk(base_path):
         dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
