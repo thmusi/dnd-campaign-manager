@@ -317,12 +317,17 @@ def render_encounter_generator_page():
     st.button("Generate Encounter", key="generate_encounter_button")
 
 def render_campaign_assistant_page():
-    st.title("📖 Campaign Assistant")
+    st.title("🧠 Campaign Assistant")
     render_sidebar()
-    st.write("Ask me anything!")
-    st.text_input("Enter your query:", key="query_input")
-    st.button("Submit Query", key="submit_query")
-
+    user_query = st.text_input("Ask something about your campaign:")
+    if st.button("Get AI Answer"):
+        if "openai_api_key" in st.session_state and st.session_state.openai_api_key:
+            response = generate_ai_response(user_query, st.session_state.openai_api_key)
+            st.markdown("### 🤖 AI Response")
+            st.write(response)
+        else:
+            st.error("⚠️ Please enter your OpenAI API key in settings.")
+    
 def render_adapt_chapter_page():
     st.title("📖 Adapt Chapter to Campaign")
     render_sidebar()
