@@ -5,80 +5,14 @@ import logging
 import re
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
-from obsidian import get_authorization_url
 import requests
 from urllib.parse import urlparse, parse_qs
-from obsidian import exchange_code_for_tokens
-import dropbox
-from dropbox.exceptions import AuthError
-from dropbox import DropboxOAuth2FlowNoRedirect, Dropbox
-from obsidian import refresh_access_token
-
-
-# Load Environment Variables
-DROPBOX_CLIENT_ID = os.getenv("DROPBOX_CLIENT_ID")
-DROPBOX_CLIENT_SECRET = os.getenv("DROPBOX_CLIENT_SECRET")
-DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
-
-# Debugging: Show which environment variables are loaded (REMOVE this in production)
-st.write(f"App Key: {DROPBOX_CLIENT_ID}")
-st.write(f"App Secret: {DROPBOX_CLIENT_SECRET}")
-st.write(f"Refresh Token: {DROPBOX_REFRESH_TOKEN}")
-
-# Debug environment variables
-print("DROPBOX_ACCESS_TOKEN:", os.getenv("DROPBOX_ACCESS_TOKEN"))
-print("DROPBOX_REFRESH_TOKEN:", os.getenv("DROPBOX_REFRESH_TOKEN"))
-print("DROPBOX_APP_KEY:", os.getenv("DROPBOX_CLIENT_ID"))
-print("DROPBOX_APP_SECRET:", os.getenv("DROPBOX_CLIENT_SECRET"))
-
-if not DROPBOX_CLIENT_SECRET or not DROPBOX_CLIENT_SECRET or not DROPBOX_REFRESH_TOKEN:
-    st.error("🚨 Missing Dropbox API credentials. Make sure they are set in Render's environment variables!")
-else:
-    st.success("✅ Dropbox API credentials loaded successfully.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Default cart structure
 DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
-
-def handle_oauth_callback():
-    """Check if Dropbox authorization code exists in the URL and exchange it for tokens."""
-    query_params = st.query_params  # Fetch query parameters from the URL
-
-    st.write(f"🔍 Debug: Query Params - {query_params}")  # Show query params on the page
-
-    if "code" in query_params and "dropbox_authenticated" not in st.session_state:
-        auth_code = query_params["code"]  # Extract the auth code
-        if isinstance(auth_code, list):  # Handle lists
-            auth_code = auth_code[0]
-
-        st.success(f"✅ Authorization code received: {auth_code}")  # Debugging
-
-        # Exchange the authorization code for access/refresh tokens
-        tokens = exchange_code_for_tokens(auth_code)
-        if tokens:
-            st.session_state["dropbox_authenticated"] = True
-            st.success("✅ Dropbox connected successfully! You can now upload and retrieve files.")
-        else:
-            st.error("❌ Failed to authenticate with Dropbox.")
-
-handle_oauth_callback()
-
-
-def upload_to_dropbox(file_path, dropbox_folder):
-    """Upload a file to Dropbox, auto-refreshing the token if needed."""
-    global DROPBOX_ACCESS_TOKEN
-    try:
-        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-        with open(file_path, "rb") as f:
-            dbx.files_upload(f.read(), f"{dropbox_folder}/{os.path.basename(file_path)}", mode=dropbox.files.WriteMode("overwrite"))
-    except AuthError:
-        print("🔄 Access token expired, refreshing...")
-        DROPBOX_ACCESS_TOKEN = refresh_access_token()
-        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-        with open(file_path, "rb") as f:
-            dbx.files_upload(f.read(), f"{dropbox_folder}/{os.path.basename(file_path)}", mode=dropbox.files.WriteMode("overwrite"))
 
 # Exception handling decorator
 def handle_exception(func):
@@ -133,59 +67,6 @@ def save_cart(cart):
     with open(CART_FILE, "w") as file:
         json.dump(cart, file, indent=4)
         
-@handle_exception
-def save_to_vault(category, item):
-    """Save content to the vault only when manually confirmed from the cart page.
-    
-    Args:
-        category (str): The category under which the item will be saved.
-        item (dict): The content that needs to be saved to the vault.
-    """
-    # ✅ Ensure access token is up-to-date at the very beginning
-    access_token = st.session_state.get("dropbox_access_token", None)
-    if not access_token:
-        print("🔄 Access token missing! Refreshing...")
-        access_token = refresh_access_token()
-        st.session_state["dropbox_access_token"] = access_token  # ✅ Store it in session state
-
-    if not access_token:
-        st.error("❌ Dropbox authentication failed! Please reconnect.")
-        return
-
-    if "selected_content_to_save" not in st.session_state:
-        st.session_state["selected_content_to_save"] = ""
-
-    if st.session_state["selected_content_to_save"] and st.session_state.get("page") == "Cart":
-        st.subheader("Modify Selected Content Before Saving")
-        edited_content = st.text_area("Edit before saving to vault:", 
-                                       st.session_state["selected_content_to_save"], height=300)
-
-        if st.button("📁 Save to Vault", key="send_to_vault"):
-            if edited_content.strip():
-                # ✅ Ensure filename is formatted properly
-                filename = f"{category}_{item['name'].replace(' ', '_')}.md"
-                dropbox_path = f"/ObsidianNotes/{filename}"  # Adjust as needed
-
-                try:
-                    dbx = dropbox.Dropbox(access_token)
-                    print(f"📂 Uploading {filename} to Dropbox at {dropbox_path}...")
-                    dbx.files_upload(edited_content.encode("utf-8"), dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
-                    print(f"✅ Note saved successfully to {dropbox_path}")
-                    
-                    # ✅ Remove it from the cart after saving
-                    cart = load_cart()
-                    if item in cart.get(category, []):
-                        cart[category].remove(item)
-                        save_cart(cart)
-
-                    st.success(f"✅ '{item['name']}' saved to the vault!")
-                    st.session_state["selected_content_to_save"] = ""
-                except dropbox.exceptions.AuthError as e:
-                    st.error(f"❌ Dropbox authentication error: {e}")
-                except Exception as e:
-                    st.error(f"❌ Error saving note: {e}")
-            else:
-                st.warning("⚠️ Content is empty! Please modify before sending to vault.")
 
 @handle_exception
 def add_to_cart(category, session_key):
@@ -311,11 +192,6 @@ def render_api_key_page():
     # OpenAI API Key input
     openai_key = st.text_input("Enter OpenAI API Key:", type="password")
 
-    # Dropbox OAuth login link
-    st.subheader("Connect to Dropbox")
-    auth_url = get_authorization_url()
-    st.markdown(f"[🔗 Click here to connect Dropbox]({auth_url})")
-
     if st.button("Login"):
         if openai_key:
             st.session_state["openai_api_key"] = openai_key
@@ -336,22 +212,8 @@ if "page" not in st.session_state:
 if not st.session_state["authenticated"]:
     render_api_key_page()
     st.stop()
-    handle_oauth_callback()
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
-# ✅ Check if the token is already stored
-if "dropbox_access_token" not in st.session_state:
-    st.session_state["dropbox_access_token"] = os.getenv("DROPBOX_ACCESS_TOKEN")
-
-# ✅ If still missing, refresh it
-if not st.session_state["dropbox_access_token"]:
-    print("🔄 No access token found! Refreshing...")
-    refreshed_token = refresh_access_token()
-    
-    if refreshed_token:
-        st.session_state["dropbox_access_token"] = refreshed_token
-    else:
-        print("❌ Token refresh failed!")
 
 
 def render_main_menu_page():
@@ -359,8 +221,6 @@ def render_main_menu_page():
     st.markdown("Select an option from the buttons below to get started.")
     render_main_menu_buttons()
     render_sidebar()
-    print("✅ DEBUG: Access token at main page load:", os.getenv("DROPBOX_ACCESS_TOKEN"))
-
 
 def render_cart_page():
     st.title("🛒 Your Cart")
@@ -384,21 +244,6 @@ def render_cart_page():
                     st.subheader("Modify Selected Content")
                     edited_content = st.text_area("Edit before saving:", selected_file, height=300)
 
-                    # Save to Vault after reviewing
-                    if st.session_state.get("page") == "Cart":
-                        st.write("📂 Select an item to save to your vault.")
-                        for category, items in load_cart().items():
-                            for item in items:
-                                for category, items in load_cart().items():
-                                    for item in items:
-                                        if isinstance(item, str):  # Convert strings to dictionaries
-                                            item = {"name": "Unknown", "content": item}
-                                            
-                                        if st.button(f"📁 Save {item['name']} to Vault", key=f"save_{item['name']}"):
-                                            save_to_vault(category, item)
-                                    save_to_vault(category, item)
-            else:
-                st.warning("Content is empty! Modify before sending to vault.")
         else:
             st.warning(f"No files found in {selected_category}.")
     else:
