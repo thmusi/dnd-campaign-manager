@@ -6,6 +6,8 @@ import subprocess
 import yaml
 from pathlib import Path
 import openai
+import streamlit_nested_layout
+
 
 CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
@@ -187,22 +189,25 @@ def build_folder_tree(base_path):
 COLORS = ["#FF5733", "#FF8D1A", "#FFC300", "#DAF7A6", "#33FF57", "#1AFFD5", "#1A8DFF", "#5733FF"]
 
 def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=0):
-    """Recursively display folders with color-based indentation."""
+    """Recursively display folders with nested layout support."""
     color = COLORS[level % len(COLORS)]  # Cycle through colors for each level
     for folder, subfolders in folder_tree.items():
         folder_path = os.path.join(base_path, folder)
         indent = "&nbsp;&nbsp;&nbsp;&nbsp;" * level  # Indentation for nested folders
-        st.markdown(
-            f"{indent}<span style='color:{color}; font-weight:bold;'>📂 {folder}</span>",
-            unsafe_allow_html=True
-        )
         
-        if folder_path not in folders_to_embed:
-            if st.button(f"➡ Add {folder}", key=f"add_{folder_path}"):
-                folders_to_embed.append(folder_path)
-                config["folders_to_embed"] = folders_to_embed
-                save_config(config)
-                st.rerun()
+        with st.container():
+            cols = st.columns([0.8, 0.2])  # Create a two-column layout for better button placement
+            with cols[0]:
+                st.markdown(
+                    f"{indent}<span style='color:{color}; font-weight:bold;'>📂 {folder}</span>",
+                    unsafe_allow_html=True
+                )
+            with cols[1]:
+                if folder_path not in folders_to_embed:
+                    if st.button(f"➡", key=f"add_{folder_path}"):
+                        folders_to_embed.append(folder_path)
+                        config["folders_to_embed"] = folders_to_embed
+                        save_config(config)
+                        st.rerun()
         
         display_folder_tree(subfolders, folder_path, folders_to_embed, config, level+1)
-
