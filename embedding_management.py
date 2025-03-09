@@ -7,6 +7,7 @@ import openai
 
 # Initialize ChromaDB
 CHROMA_DB_PATH = "chroma_db/"
+os.makedirs(CHROMA_DB_PATH, exist_ok=True)  # Ensure the directory exists
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 collection = chroma_client.get_or_create_collection(name="campaign_notes")
 
@@ -23,6 +24,8 @@ def remove_embedding(embedding_id):
 # Function to manually add an embedding
 def add_embedding(text, metadata):
     embedding_id = f"doc_{len(list_embeddings()['ids']) + 1}"
+    if not metadata:
+        metadata = {"source": "manual"}  # Ensure metadata is a valid dictionary
     collection.add(ids=[embedding_id], documents=[text], metadatas=[metadata])
     st.success("✅ Added embedding successfully!")
 
@@ -73,6 +76,8 @@ def render_embedding_page():
     if st.button("Add Embedding"):
         try:
             metadata = json.loads(metadata_input)
+            if not isinstance(metadata, dict):
+                metadata = {"source": "manual"}  # Ensure metadata is a dictionary
             add_embedding(new_text, metadata)
             st.rerun()
         except json.JSONDecodeError:
