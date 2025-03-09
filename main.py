@@ -6,8 +6,7 @@ import re
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
 import requests
-from urllib.parse import urlparse, parse_qs
-import chromadb
+from embedding_management import render_embedding_page
 
 
 # Configure logging
@@ -119,26 +118,6 @@ def add_to_cart_button(category, item_key):
             st.session_state[item_key] = None  # Clear after adding
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
-
-# Function to list stored embeddings
-@handle_exception
-def list_embeddings():
-    docs = collection.get()
-    return docs if docs else {"ids": [], "documents": []}
-
-# Function to remove an embedding
-@handle_exception
-def remove_embedding(embedding_id):
-    collection.delete(ids=[embedding_id])
-    st.success(f"✅ Removed embedding {embedding_id}")
-
-# Function to manually add an embedding
-@handle_exception
-def add_embedding(text, metadata):
-    embedding_id = f"doc_{len(list_embeddings()['ids']) + 1}"
-    collection.add(ids=[embedding_id], documents=[text], metadatas=[metadata])
-    st.success("✅ Added embedding successfully!")
-
             
 def navigate_to(page_name):
     """Navigate to a specific page and persist state."""
@@ -241,34 +220,6 @@ def render_main_menu_page():
     st.markdown("Select an option from the buttons below to get started.")
     render_main_menu_buttons()
     render_sidebar()
-
-# Streamlit Page Rendering
-def render_embedding_page():
-    st.title("📚 Embedding Management")
-    st.write("Manage your campaign embeddings stored in ChromaDB.")
-    
-    st.subheader("🔍 View Stored Embeddings")
-    embeddings = list_embeddings()
-    if embeddings["ids"]:
-        for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
-            with st.expander(f"📄 {eid}"):
-                st.write(doc)
-                if st.button(f"❌ Remove {eid}", key=f"remove_{i}"):
-                    remove_embedding(eid)
-                    st.rerun()
-    else:
-        st.info("No embeddings stored yet.")
-    
-    st.subheader("➕ Add New Embedding")
-    new_text = st.text_area("Enter text to embed:")
-    metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
-    if st.button("Add Embedding"):
-        try:
-            metadata = json.loads(metadata_input)
-            add_embedding(new_text, metadata)
-            st.rerun()
-        except json.JSONDecodeError:
-            st.error("Invalid metadata JSON format.")
 
 def render_cart_page():
     st.title("🛒 Your Cart")
