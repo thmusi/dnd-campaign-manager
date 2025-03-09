@@ -9,8 +9,6 @@ import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files
 
-
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -164,9 +162,12 @@ def render_main_menu_buttons():
         navigate_to("Worldbuilding")
     if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
-    if st.button("📚 Embedding Management", key="embedding_sidebar"):
-        navigate_to("Embedding Management")
-        
+    if st.button("📋 Folder Embedding Management", key="embedding_management_sidebar"):
+        navigate_to("Folder Embedding Management")  
+    if st.button("📚 Embedding Process", key="embedding_sidebar"):
+        navigate_to("Embedding Process")
+
+
 # Apply custom styling to buttons
 st.markdown(
     """
@@ -403,18 +404,44 @@ def render_generate_npc_page():
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
-def render_embedding_page():
-    st.title("📚 Embedding Management")
-    st.write("Manage your campaign embeddings stored in ChromaDB.")
-    render_sidebar()
+def render_folder_management_page():
+    st.title("📋 Folder Embedding Management")
     
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
     
-    st.subheader("🔍 View Modified Files & Re-Embed")
-    reembed_modified_files()
+    config = load_config()
+    folders = config.get("folders_to_embed", [])
+    
+    st.subheader("📂 Current Folders to Embed:")
+    for folder in folders:
+        col1, col2 = st.columns([0.8, 0.2])
+        col1.write(folder)
+        if col2.button("❌ Remove", key=folder):
+            folders.remove(folder)
+            config["folders_to_embed"] = folders
+            save_config(config)
+            st.experimental_rerun()
+    
+    new_folder = st.text_input("➕ Add a new folder:")
+    if st.button("Add Folder"):
+        if new_folder and new_folder not in folders:
+            folders.append(new_folder)
+            config["folders_to_embed"] = folders
+            save_config(config)
+            st.experimental_rerun()
 
-    st.subheader("🔍 View Stored Embeddings")
+def render_embedding_page():
+    st.title("📚 Embedding Process")
+    st.write("Manage campaign embeddings stored in ChromaDB.")
+    
+    st.subheader("🔄 Re-Embed Modified Files")
+    if st.button("Re-Embed Selected Folders"):
+        st.info("Processing embeddings...")
+        reembed_modified_files()
+        st.success("✅ Embedding completed!")
+    
+    st.subheader("📋 View Stored Embeddings")
     embeddings = list_embeddings()
     if embeddings["ids"]:
         for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
@@ -424,10 +451,15 @@ def render_embedding_page():
                     remove_embedding(eid)
                     st.rerun()
     else:
-        st.info("No embeddings stored yet.")
+        st.info("ℹ️ No embeddings stored yet.")
     
     st.subheader("➕ Add New Embedding")
-    new_text = st.text_area("Enter text to embed:")
+    uploaded_file = st.file_uploader("Upload a file to embed", type=["txt", "md"])
+    if uploaded_file is not None:
+        new_text = uploaded_file.getvalue().decode("utf-8")
+    else:
+        new_text = st.text_area("Or enter text to embed:")
+    
     metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
     if st.button("Add Embedding"):
         try:
@@ -437,17 +469,7 @@ def render_embedding_page():
             add_embedding(new_text, metadata)
             st.rerun()
         except json.JSONDecodeError:
-            st.error("Invalid metadata JSON format.")
-    
-    st.subheader("🧠 Campaign Assistant")
-    user_query = st.text_input("Ask something about your campaign:")
-    if st.button("Get AI Answer"):
-        if "openai_api_key" in st.session_state and st.session_state.openai_api_key:
-            response = generate_ai_response(user_query, st.session_state.openai_api_key)
-            st.markdown("### 🤖 AI Response")
-            st.write(response)
-        else:
-            st.error("⚠️ Please enter your OpenAI API key in settings.")
+            st.error("❌ Invalid metadata JSON format.")
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
@@ -464,7 +486,8 @@ PAGES = {
     "Create Location": render_create_location_page,
     "Generate NPC": render_generate_npc_page,
     "Worldbuilding and Lore": render_worldbuilding_page,
-    "Embedding Management": render_embedding_page
+    "Folder Embedding Management": render_folder_management_page,
+    "Embedding Process": render_embedding_page
     
 }
 
