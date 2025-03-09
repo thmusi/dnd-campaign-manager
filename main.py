@@ -7,6 +7,7 @@ from ai import generate_npc, generate_shop , generate_location
 from pathlib import Path
 import requests
 from urllib.parse import urlparse, parse_qs
+import chromadb
 
 
 # Configure logging
