@@ -9,13 +9,22 @@ import openai
 
 CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
+CONFIG_PATH = "config.yaml"
 
 # Load configuration from config.yaml
 def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            return yaml.safe_load(f)
-    return {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
+    try:
+        with open(CONFIG_PATH, "r") as file:
+            return yaml.safe_load(file) or {}
+    except FileNotFoundError:
+        return {}  # Return empty config if file is missing
+    except yaml.YAMLError:
+        st.error("⚠️ Error reading config.yaml. Check file format.")
+        return {}
+
+def save_config(config):
+    with open(CONFIG_PATH, "w") as file:
+        yaml.safe_dump(config, file)
 
 config = load_config()
 OBSIDIAN_VAULT_PATH = config["obsidian_vault_path"]
