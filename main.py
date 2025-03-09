@@ -427,8 +427,12 @@ def render_folder_management_page():
     st.subheader("📂 Manage Folders for AI Embedding")
     edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
     
-    # Detect changes
-    new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
+    # Ensure column exists before accessing
+    if "Folder" in edited_df.columns and "Embed in AI" in edited_df.columns:
+        new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
+    else:
+        new_folders_to_embed = folders_to_embed  # Keep previous state if missing
+    
     if new_folders_to_embed != folders_to_embed:
         config["folders_to_embed"] = list(new_folders_to_embed)
         save_config(config)
