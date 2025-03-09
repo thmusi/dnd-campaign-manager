@@ -6,8 +6,9 @@ import re
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
 import requests
-from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response
 import chromadb
+from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files
+
 
 
 # Configure logging
@@ -401,6 +402,10 @@ def render_embedding_page():
     st.title("📚 Embedding Management")
     st.write("Manage your campaign embeddings stored in ChromaDB.")
     render_sidebar()
+    
+    if st.button("🔄 Sync Vault & Re-Embed"):
+        pull_github_vault()
+        reembed_modified_files()
     
     st.subheader("🔍 View Stored Embeddings")
     embeddings = list_embeddings()
