@@ -88,8 +88,7 @@ def pull_github_vault():
 
     repo_url = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/thmusi/my-obsidian-vault.git"
 
-    # If the repo does not exist, clone it
-    if not os.path.exists(OBSIDIAN_VAULT_PATH) or not os.path.isdir(OBSIDIAN_VAULT_PATH):
+    if not os.path.exists(OBSIDIAN_VAULT_PATH):
         try:
             subprocess.run(["git", "clone", repo_url, OBSIDIAN_VAULT_PATH], check=True)
             st.success("✅ Cloned the secret GitHub Vault repository!")
@@ -97,14 +96,19 @@ def pull_github_vault():
             st.error(f"❌ Git clone failed: {e}")
             return
     else:
-        # If repo already exists, pull the latest updates
+        # Check if obsidian_vault is a valid Git repository
+        git_dir = os.path.join(OBSIDIAN_VAULT_PATH, ".git")
+        if not os.path.exists(git_dir):
+            st.error("❌ obsidian_vault is not a valid Git repository. Try deleting it and pulling again.")
+            return
+
         try:
+            # Ensure the correct remote URL is set
             subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "remote", "set-url", "origin", repo_url], check=True)
             subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)        
             st.success("✅ Pulled latest changes from the secret Vault!")
         except subprocess.CalledProcessError as e:
             st.error(f"❌ Git pull failed: {e}")
-
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
