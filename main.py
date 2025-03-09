@@ -7,8 +7,9 @@ from ai import generate_npc, generate_shop , generate_location
 from pathlib import Path
 import requests
 import chromadb
-from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files
+from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, get_all_folders
 import yaml
+
 
 
 # Configure logging
@@ -425,71 +426,40 @@ def render_generate_npc_page():
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
 def render_folder_management_page():
-    st.title("📋 Folder Embedding Management")
+    st.title("📁 Folder Embedding Management")
     
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
     
     config = load_config()
-    folders = config.get("folders_to_embed", [])
+    folders_to_embed = config.get("folders_to_embed", [])
+    all_folders = get_all_folders(VAULT_PATH)
     
-    st.subheader("📂 Current Folders to Embed:")
-    for folder in folders:
-        col1, col2 = st.columns([0.8, 0.2])
-        col1.write(folder)
-        if col2.button("❌ Remove", key=folder):
-            folders.remove(folder)
-            config["folders_to_embed"] = folders
-            save_config(config)
-            st.experimental_rerun()
+    col1, col2 = st.columns(2)
     
-    new_folder = st.text_input("➕ Add a new folder:")
-    if st.button("Add Folder"):
-        if new_folder and new_folder not in folders:
-            folders.append(new_folder)
-            config["folders_to_embed"] = folders
-            save_config(config)
-            st.experimental_rerun()
-
-def render_embedding_page():
-    st.title("📚 Embedding Process")
-    st.write("Manage campaign embeddings stored in ChromaDB.")
+    with col1:
+        st.subheader("📂 Obsidian Vault (Not Saved for AI)")
+        for folder in all_folders:
+            if folder not in folders_to_embed:
+                with st.expander(folder, expanded=False):
+                    if st.button("➡ Add to AI", key=f"add_{folder}"):
+                        folders_to_embed.append(folder)
+                        config["folders_to_embed"] = folders_to_embed
+                        save_config(config)
+                        st.experimental_rerun()
     
-    st.subheader("🔄 Re-Embed Modified Files")
-    if st.button("Re-Embed Selected Folders"):
-        st.info("Processing embeddings...")
+    with col2:
+        st.subheader("✅ Obsidian Vault (Saved for AI)")
+        for folder in folders_to_embed:
+            with st.expander(folder, expanded=False):
+                if st.button("❌ Remove", key=f"remove_{folder}"):
+                    folders_to_embed.remove(folder)
+                    config["folders_to_embed"] = folders_to_embed
+                    save_config(config)
+                    st.experimental_rerun()
+        
+        st.subheader("🔄 Re-Embed Files in AI")
         reembed_modified_files()
-        st.success("✅ Embedding completed!")
-    
-    st.subheader("📋 View Stored Embeddings")
-    embeddings = list_embeddings()
-    if embeddings["ids"]:
-        for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
-            with st.expander(f"📄 {eid}"):
-                st.write(doc)
-                if st.button(f"❌ Remove {eid}", key=f"remove_{i}"):
-                    remove_embedding(eid)
-                    st.rerun()
-    else:
-        st.info("ℹ️ No embeddings stored yet.")
-    
-    st.subheader("➕ Add New Embedding")
-    uploaded_file = st.file_uploader("Upload a file to embed", type=["txt", "md"])
-    if uploaded_file is not None:
-        new_text = uploaded_file.getvalue().decode("utf-8")
-    else:
-        new_text = st.text_area("Or enter text to embed:")
-    
-    metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
-    if st.button("Add Embedding"):
-        try:
-            metadata = json.loads(metadata_input)
-            if not isinstance(metadata, dict):
-                metadata = {"source": "manual"}  # Ensure metadata is a dictionary
-            add_embedding(new_text, metadata)
-            st.rerun()
-        except json.JSONDecodeError:
-            st.error("❌ Invalid metadata JSON format.")
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
@@ -507,7 +477,6 @@ PAGES = {
     "Generate NPC": render_generate_npc_page,
     "Worldbuilding and Lore": render_worldbuilding_page,
     "Folder Embedding Management": render_folder_management_page,
-    "Embedding Process": render_embedding_page
     
 }
 
