@@ -88,6 +88,12 @@ def pull_github_vault():
 
     repo_url = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/thmusi/my-obsidian-vault.git"
 
+    # If the folder exists but is not a valid Git repo, delete and re-clone
+    git_dir = os.path.join(OBSIDIAN_VAULT_PATH, ".git")
+    if os.path.exists(OBSIDIAN_VAULT_PATH) and not os.path.exists(git_dir):
+        st.warning("⚠️ obsidian_vault exists but is not a Git repository. Deleting and re-cloning...")
+        subprocess.run(["rm", "-rf", OBSIDIAN_VAULT_PATH], check=True)
+
     if not os.path.exists(OBSIDIAN_VAULT_PATH):
         try:
             subprocess.run(["git", "clone", repo_url, OBSIDIAN_VAULT_PATH], check=True)
@@ -95,20 +101,14 @@ def pull_github_vault():
         except subprocess.CalledProcessError as e:
             st.error(f"❌ Git clone failed: {e}")
             return
-    else:
-        # Check if obsidian_vault is a valid Git repository
-        git_dir = os.path.join(OBSIDIAN_VAULT_PATH, ".git")
-        if not os.path.exists(git_dir):
-            st.error("❌ obsidian_vault is not a valid Git repository. Try deleting it and pulling again.")
-            return
 
-        try:
-            # Ensure the correct remote URL is set
-            subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "remote", "set-url", "origin", repo_url], check=True)
-            subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)        
-            st.success("✅ Pulled latest changes from the secret Vault!")
-        except subprocess.CalledProcessError as e:
-            st.error(f"❌ Git pull failed: {e}")
+    try:
+        subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "remote", "set-url", "origin", repo_url], check=True)
+        subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)        
+        st.success("✅ Pulled latest changes from the secret Vault!")
+    except subprocess.CalledProcessError as e:
+        st.error(f"❌ Git pull failed: {e}")
+
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
