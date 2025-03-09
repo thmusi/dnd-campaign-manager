@@ -8,6 +8,8 @@ from pathlib import Path
 import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files
+import yaml
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -117,9 +119,15 @@ CONFIG_PATH = "config.yaml"
 
 @handle_exception
 def load_config():
-    with open(CONFIG_PATH, "r") as file:
-        return yaml.safe_load(file)
-
+    try:
+        with open(CONFIG_PATH, "r") as file:
+            return yaml.safe_load(file) or {}
+    except FileNotFoundError:
+        return {}  # Return empty config if file is missing
+    except yaml.YAMLError:
+        st.error("⚠️ Error reading config.yaml. Check file format.")
+        return {}
+        
 @handle_exception
 def save_config(config):
     with open(CONFIG_PATH, "w") as file:
