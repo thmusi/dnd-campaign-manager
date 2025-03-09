@@ -10,6 +10,8 @@ import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
 from embedding_management import load_config, save_config
 import yaml
+import streamlit_nested_layout
+
 
 VAULT_PATH = "obsidian_vault"  # Adjust this if needed
 # Load the cart from JSON (ensure persistence)
@@ -408,8 +410,7 @@ def render_generate_npc_page():
 
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
-    render_sidebar()
-     
+    
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
     
@@ -426,12 +427,15 @@ def render_folder_management_page():
     with col2:
         st.subheader("✅ Obsidian Vault (Saved for AI)")
         for folder in folders_to_embed:
-            st.markdown(f"📂 **{os.path.relpath(folder, VAULT_PATH)}**")
-            if st.button("❌ Remove", key=f"remove_{folder}"):
-                folders_to_embed.remove(folder)
-                config["folders_to_embed"] = folders_to_embed
-                save_config(config)
-                st.experimental_rerun()
+            cols = st.columns([0.8, 0.2])
+            with cols[0]:
+                st.markdown(f"📂 **{os.path.relpath(folder, VAULT_PATH)}**")
+            with cols[1]:
+                if st.button("❌", key=f"remove_{folder}"):
+                    folders_to_embed.remove(folder)
+                    config["folders_to_embed"] = folders_to_embed
+                    save_config(config)
+                    st.rerun()
         
         st.subheader("🔄 Re-Embed Files in AI")
         reembed_modified_files()
