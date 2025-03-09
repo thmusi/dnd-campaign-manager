@@ -113,10 +113,14 @@ def add_to_cart_button(category, item_key):
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
 
+CONFIG_PATH = "config.yaml"
+
+@handle_exception
 def load_config():
     with open(CONFIG_PATH, "r") as file:
         return yaml.safe_load(file)
 
+@handle_exception
 def save_config(config):
     with open(CONFIG_PATH, "w") as file:
         yaml.safe_dump(config, file)
