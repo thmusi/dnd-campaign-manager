@@ -8,7 +8,7 @@ from pathlib import Path
 import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
-from embedding_management import load_config, save_config, get_all_folders
+from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure
 import yaml
 import pandas as pd
 
@@ -416,29 +416,42 @@ def render_folder_management_page():
     
     config = load_config()
     folders_to_embed = set(config.get("folders_to_embed", []))
-    all_folders = get_all_folders(VAULT_PATH)
+    folder_tree = get_folder_structure(VAULT_PATH)
     
-    if all_folders:  # Ensure there are folders before creating DataFrame
-        df = pd.DataFrame({
-            "Folder": all_folders,
-            "Embed in AI": [folder in folders_to_embed for folder in all_folders]
-        })
-    else:
-        df = pd.DataFrame(columns=["Folder", "Embed in AI"])  # Create empty DataFrame with correct columns
+    selected_folders = st.session_state.get("selected_folders", "")
     
-    st.subheader("📂 Manage Folders for AI Embedding")
-    edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
+    columns = st.columns(5)  # Create multiple columns for nesting
     
-    # Ensure column exists before accessing
-    if "Folder" in edited_df.columns and "Embed in AI" in edited_df.columns:
-        new_folders_to_embed = set(edited_df.loc[edited_df["Embed in AI"], "Folder"])
-    else:
-        new_folders_to_embed = folders_to_embed  # Keep previous state if missing
-    
-    if new_folders_to_embed != folders_to_embed:
-        config["folders_to_embed"] = list(new_folders_to_embed)
-        save_config(config)
-        st.rerun()
+    current_level = ""
+    for i, col in enumerate(columns):
+        subfolders = get_subfolders(folder_tree, current_level)
+        if not subfolders:
+            break  # Stop when there are no more nested levels
+        
+        with col:
+            st.subheader(f"📂 Level {i+1}")
+            for folder in subfolders:
+                folder_path = os.path.join(current_level, folder) if current_level else folder
+                checked = folder_path in folders_to_embed
+                
+                if st.checkbox(folder, checked=checked, key=folder_path):
+                    # If checked, add all subfolders automatically
+                    if folder_path not in folders_to_embed:
+                        folders_to_embed.add(folder_path)
+                        subfolder_paths = [os.path.join(folder_path, sub) for sub in get_subfolders(folder_tree, folder_path)]
+                        folders_to_embed.update(subfolder_paths)
+                        config["folders_to_embed"] = list(folders_to_embed)
+                        save_config(config)
+                        st.rerun()
+                else:
+                    if folder_path in folders_to_embed:
+                        folders_to_embed.remove(folder_path)
+                        config["folders_to_embed"] = list(folders_to_embed)
+                        save_config(config)
+                        st.rerun()
+        
+        # Update current level to navigate deeper
+        current_level = os.path.join(current_level, selected_folders) if selected_folders else ""
 
 
 # Dynamic Page Rendering Dictionary
