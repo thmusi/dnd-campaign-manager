@@ -441,12 +441,12 @@ def render_folder_management_page():
     with col2:
         st.subheader("✅ Obsidian Vault (Saved for AI)")
         for folder in folders_to_embed:
-            with st.expander(os.path.relpath(folder, VAULT_PATH), expanded=False):
-                if st.button("❌ Remove", key=f"remove_{folder}"):
-                    folders_to_embed.remove(folder)
-                    config["folders_to_embed"] = folders_to_embed
-                    save_config(config)
-                    st.experimental_rerun()
+            st.markdown(f"📂 **{os.path.relpath(folder, VAULT_PATH)}**")
+            if st.button("❌ Remove", key=f"remove_{folder}"):
+                folders_to_embed.remove(folder)
+                config["folders_to_embed"] = folders_to_embed
+                save_config(config)
+                st.experimental_rerun()
         
         st.subheader("🔄 Re-Embed Files in AI")
         reembed_modified_files()
