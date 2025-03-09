@@ -112,12 +112,12 @@ def pull_github_vault():
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
-    """Lists all markdown files in selected folders and allows manual selection for embedding."""
+    """Lists all markdown files and allows manual selection for embedding."""
     updated_files = []
 
     for root, _, files in os.walk(OBSIDIAN_VAULT_PATH):
-        # Only include files from folders specified in config.yaml
-        if not any(folder in root for folder in FOLDERS_TO_EMBED):
+        # If folders_to_embed is empty, allow all files
+        if FOLDERS_TO_EMBED and not any(folder in root for folder in FOLDERS_TO_EMBED):
             continue  
 
         for file in files:
