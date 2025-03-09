@@ -2,60 +2,6 @@ import openai
 from utils import summarize_text
 import streamlit as st
 
-@st.cache_data(ttl=1800)  # Cache summaries for 30 minutes
-def cached_summarize_text(text):
-    return summarize_text(text)
-
-def get_summarized_relevant_notes(query, vault_path):
-    notes = get_relevant_notes(query, vault_path)
-    summarized_notes = []
-    
-    for note in notes:
-        summary = cached_summarize_text(note["content"])  # Use cached version
-        summarized_notes.append({
-            "file_path": note["file_path"],
-            "summary": summary
-        })
-    
-    return summarized_notes
-
-
-def get_summarized_relevant_notes(query, vault_path):
-    notes = get_relevant_notes(query, vault_path)
-    summarized_notes = []
-    for note in notes:
-        # Summarize the note content; this could be an API call or a local function.
-        summary = summarize_text(note["content"])
-        summarized_notes.append({
-            "file_path": note["file_path"],
-            "summary": summary,
-            "score": note["score"]
-        })
-    return summarized_notes
-
-
-def ai_search_campaign_notes(query, campaign_notes):
-    """Uses AI to process campaign notes and answer user queries."""
-    combined_notes = "\n".join(campaign_notes)  # Combine notes for AI analysis
-    prompt = f"""You are an AI assisting a Dungeon Master. 
-    Answer the following question based on these campaign notes:
-    
-    {combined_notes}
-    
-    Question: {query}
-    
-    Answer:"""
-
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "system", "content": prompt}]
-    )
-    return response["choices"][0]["message"]["content"]
-
-def save_ai_generated_content(file_name, content):
-    """Uploads AI-generated content to the Obsidian vault on Dropbox."""
-    return write_note(note_name, content)
-
 def generate_npc(api_key, occupation):
     client = openai.OpenAI(api_key=api_key)
 
