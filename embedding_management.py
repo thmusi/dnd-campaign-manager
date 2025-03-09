@@ -209,3 +209,22 @@ def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=
                         st.rerun()
         
         display_folder_tree(subfolders, folder_path, folders_to_embed, config, level+1)
+
+def get_folder_structure(base_path):
+    """Creates a nested dictionary representing the folder structure."""
+    folder_tree = {}
+    for root, dirs, _ in os.walk(base_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
+        rel_path = os.path.relpath(root, base_path)
+        parts = rel_path.split(os.sep) if rel_path != '.' else []
+        node = folder_tree
+        for part in parts:
+            node = node.setdefault(part, {})
+    return folder_tree
+
+def get_subfolders(tree, path):
+    """Returns the subfolder dictionary at a given path."""
+    node = tree
+    for part in path.split(os.sep):
+        node = node.get(part, {})
+    return node
