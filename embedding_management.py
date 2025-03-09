@@ -154,10 +154,36 @@ def save_last_update():
         json.dump({"last_update": os.path.getmtime(OBSIDIAN_VAULT_PATH)}, f)
 
 def get_all_folders(base_path):
-    """ Recursively retrieve all folders inside the Obsidian Vault """
+    """ Recursively retrieve all valid folders inside the Obsidian Vault, excluding .git """
     folder_list = []
     for root, dirs, _ in os.walk(base_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
         for directory in dirs:
             full_path = os.path.relpath(os.path.join(root, directory), base_path)
             folder_list.append(full_path)
     return sorted(folder_list)
+
+def build_folder_tree(base_path):
+    """Recursively build a nested dictionary of folders inside the Obsidian Vault."""
+    folder_tree = {}
+    for root, dirs, _ in os.walk(base_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
+        rel_path = os.path.relpath(root, base_path)
+        parts = rel_path.split(os.sep) if rel_path != '.' else []
+        node = folder_tree
+        for part in parts:
+            node = node.setdefault(part, {})
+    return folder_tree
+
+def display_folder_tree(folder_tree, base_path, folders_to_embed, config):
+    """Recursively display folders with expandable UI."""
+    for folder, subfolders in folder_tree.items():
+        with st.expander(folder, expanded=False):
+            folder_path = os.path.join(base_path, folder)
+            if folder_path not in folders_to_embed:
+                if st.button(f"➡ Add {folder}", key=f"add_{folder_path}"):
+                    folders_to_embed.append(folder_path)
+                    config["folders_to_embed"] = folders_to_embed
+                    save_config(config)
+                    st.experimental_rerun()
+            display_folder_tree(subfolders, folder_path, folders_to_embed, config)
