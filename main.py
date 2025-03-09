@@ -8,11 +8,18 @@ from pathlib import Path
 import requests
 from urllib.parse import urlparse, parse_qs
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
 # Default cart structure
 DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
+
+# Initialize ChromaDB
+CHROMA_DB_PATH = "chroma_db/"
+chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+collection = chroma_client.get_or_create_collection(name="campaign_notes")
+
 
 # Exception handling decorator
 def handle_exception(func):
@@ -86,6 +93,7 @@ def add_to_cart(category, session_key):
         else:
             st.warning(f"⚠️ This item is already in {category}!")
 
+@handle_exception
 def add_to_cart_button(category, item_key):
     """Reusable 'Add to Cart' button for any item.
     
@@ -110,6 +118,25 @@ def add_to_cart_button(category, item_key):
             st.session_state[item_key] = None  # Clear after adding
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
+
+# Function to list stored embeddings
+@handle_exception
+def list_embeddings():
+    docs = collection.get()
+    return docs if docs else {"ids": [], "documents": []}
+
+# Function to remove an embedding
+@handle_exception
+def remove_embedding(embedding_id):
+    collection.delete(ids=[embedding_id])
+    st.success(f"✅ Removed embedding {embedding_id}")
+
+# Function to manually add an embedding
+@handle_exception
+def add_embedding(text, metadata):
+    embedding_id = f"doc_{len(list_embeddings()['ids']) + 1}"
+    collection.add(ids=[embedding_id], documents=[text], metadatas=[metadata])
+    st.success("✅ Added embedding successfully!")
 
             
 def navigate_to(page_name):
@@ -143,33 +170,26 @@ def render_main_menu_buttons():
 
     if st.button("🧙 Create NPC", key="generate_npc"):
         navigate_to("Generate NPC")
-        
     if st.button("🏪 Create Shop", key="generate_shop"):
         navigate_to("Create Shop")
-
     if st.button("📍 Generate a Location", key="create_location"):
         navigate_to("Create Location")
-
     if st.button("📖 Adapt Chapter to Campaign", key="adapt_chapter"):
         navigate_to("Adapt Chapter")
-
     if st.button("🧠 Campaign Assistant", key="campaign_assistant"):
         navigate_to("Campaign Assistant")
-
     if st.button("⚔️ Encounter Generator", key="encounter_generator"):
         navigate_to("Encounter Generator")
-
     if st.button("🏰 Dungeon Generator", key="dungeon_generator"):
         navigate_to("Dungeon Generator")
-
     if st.button("📜 Quest Generator", key="quest_generator"):
         navigate_to("Quest Generator")
-
     if st.button("🌍 Worldbuilding", key="worldbuilding"):
         navigate_to("Worldbuilding")
-
     if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
+    if st.button("📚 Embedding Management", key="embedding_sidebar"):
+        navigate_to("Embedding Management")
         
 # Apply custom styling to buttons
 st.markdown(
@@ -215,12 +235,39 @@ if not st.session_state["authenticated"]:
 else:
     st.session_state["page"] = "Main Menu"  # Redirect to Main Menu if authenticated
 
-
 def render_main_menu_page():
     st.title("Welcome to the DnD Campaign Manager")
     st.markdown("Select an option from the buttons below to get started.")
     render_main_menu_buttons()
     render_sidebar()
+
+# Streamlit Page Rendering
+def render_embedding_page():
+    st.title("📚 Embedding Management")
+    st.write("Manage your campaign embeddings stored in ChromaDB.")
+    
+    st.subheader("🔍 View Stored Embeddings")
+    embeddings = list_embeddings()
+    if embeddings["ids"]:
+        for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
+            with st.expander(f"📄 {eid}"):
+                st.write(doc)
+                if st.button(f"❌ Remove {eid}", key=f"remove_{i}"):
+                    remove_embedding(eid)
+                    st.rerun()
+    else:
+        st.info("No embeddings stored yet.")
+    
+    st.subheader("➕ Add New Embedding")
+    new_text = st.text_area("Enter text to embed:")
+    metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
+    if st.button("Add Embedding"):
+        try:
+            metadata = json.loads(metadata_input)
+            add_embedding(new_text, metadata)
+            st.rerun()
+        except json.JSONDecodeError:
+            st.error("Invalid metadata JSON format.")
 
 def render_cart_page():
     st.title("🛒 Your Cart")
@@ -418,7 +465,9 @@ PAGES = {
     "Create Shop": render_create_shop_page,
     "Create Location": render_create_location_page,
     "Generate NPC": render_generate_npc_page,
-    "Worldbuilding and Lore": render_worldbuilding_page
+    "Worldbuilding and Lore": render_worldbuilding_page,
+    "Embedding Management": render_embedding_page
+    
 }
 
 def render_page():
