@@ -3,12 +3,23 @@ import chromadb
 import os
 import json
 import subprocess
+import yaml
 from pathlib import Path
 import openai
 
 CHROMA_DB_PATH = "chroma_db/"
-OBSIDIAN_VAULT_PATH = "obsidian_vault/"  # Change this to your vault's folder
-CONFIG_FILE = "config.json"  # Stores last update timestamps
+CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
+
+# Load configuration from config.yaml
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            return yaml.safe_load(f)
+    return {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
+
+config = load_config()
+OBSIDIAN_VAULT_PATH = config["obsidian_vault_path"]
+FOLDERS_TO_EMBED = set(config["folders_to_embed"])
 
 # Ensure necessary directories exist
 if not os.path.exists(CHROMA_DB_PATH):
@@ -67,47 +78,65 @@ def generate_ai_response(query, api_key):
 
 # Function to pull the latest GitHub Vault updates
 def pull_github_vault():
-    """Pulls the latest changes from the GitHub Vault repository."""
+    """Pulls the latest changes from the secret GitHub Vault repository."""
+    if not os.path.exists(OBSIDIAN_VAULT_PATH):
+        try:
+            subprocess.run(["git", "clone", "https://github.com/thmusi/my-obsidian-vault.git", OBSIDIAN_VAULT_PATH], check=True)
+            st.success("✅ Cloned the secret GitHub Vault repository!")
+        except subprocess.CalledProcessError as e:
+            st.error(f"❌ Git clone failed: {e}")
+            return
+
     try:
         subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)
-        st.success("✅ Pulled latest Obsidian Vault updates from GitHub!")
+        st.success("✅ Pulled latest changes from the secret Vault!")
     except subprocess.CalledProcessError as e:
         st.error(f"❌ Git pull failed: {e}")
 
+
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
-    """Checks for modified files in the vault and re-embeds them."""
+    """Lists modified files and allows manual selection for embedding."""
     last_update = load_last_update()
     updated_files = []
-    
+
     for root, _, files in os.walk(OBSIDIAN_VAULT_PATH):
+        if not any(folder in root for folder in FOLDERS_TO_EMBED):
+            continue  # Skip files outside selected folders
+        
         for file in files:
             if file.endswith(".md"):
                 file_path = os.path.join(root, file)
                 last_modified = os.path.getmtime(file_path)
                 if last_modified > last_update:
                     updated_files.append(file_path)
-    
+
     if updated_files:
-        for file_path in updated_files:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                add_embedding(content, {"source": file_path})
-        save_last_update()
-        st.success(f"✅ Re-embedded {len(updated_files)} modified files!")
+        st.subheader("📂 Select Files to Re-Embed")
+        selected_files = st.multiselect("Choose files to embed:", updated_files)
+        
+        if st.button("🔄 Re-Embed Selected Files"):
+            for file_path in selected_files:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    add_embedding(content, {"source": file_path})
+            save_last_update()
+            st.success(f"✅ Re-embedded {len(selected_files)} files!")
     else:
         st.info("No modified files to re-embed.")
 
+
 # Function to load last update timestamp
 def load_last_update():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
+    config_path = os.path.join(CHROMA_DB_PATH, "last_update.json")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
             config = json.load(f)
             return config.get("last_update", 0)
     return 0
 
 # Function to save last update timestamp
 def save_last_update():
-    with open(CONFIG_FILE, "w") as f:
+    config_path = os.path.join(CHROMA_DB_PATH, "last_update.json")
+    with open(config_path, "w") as f:
         json.dump({"last_update": os.path.getmtime(OBSIDIAN_VAULT_PATH)}, f)
-        
