@@ -1332,3 +1332,53 @@ if __name__ == "__main__":
     render_page()
 
 
+
+---
+
+def render_embedding_page():
+    st.title("📚 Embedding Management")
+    st.write("Manage your campaign embeddings stored in ChromaDB.")
+    render_sidebar()
+    
+    if st.button("🔄 Pull from GitHub Vault"):
+        pull_github_vault()
+    
+    st.subheader("🔍 View Modified Files & Re-Embed")
+    reembed_modified_files()
+
+    st.subheader("🔍 View Stored Embeddings")
+    embeddings = list_embeddings()
+    if embeddings["ids"]:
+        for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
+            with st.expander(f"📄 {eid}"):
+                st.write(doc)
+                if st.button(f"❌ Remove {eid}", key=f"remove_{i}"):
+                    remove_embedding(eid)
+                    st.rerun()
+    else:
+        st.info("No embeddings stored yet.")
+    
+    st.subheader("➕ Add New Embedding")
+    new_text = st.text_area("Enter text to embed:")
+    metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
+    if st.button("Add Embedding"):
+        try:
+            metadata = json.loads(metadata_input)
+            if not isinstance(metadata, dict):
+                metadata = {"source": "manual"}  # Ensure metadata is a dictionary
+            add_embedding(new_text, metadata)
+            st.rerun()
+        except json.JSONDecodeError:
+            st.error("Invalid metadata JSON format.")
+    
+    st.subheader("🧠 Campaign Assistant")
+    user_query = st.text_input("Ask something about your campaign:")
+    if st.button("Get AI Answer"):
+        if "openai_api_key" in st.session_state and st.session_state.openai_api_key:
+            response = generate_ai_response(user_query, st.session_state.openai_api_key)
+            st.markdown("### 🤖 AI Response")
+            st.write(response)
+        else:
+            st.error("⚠️ Please enter your OpenAI API key in settings.")
+
+
