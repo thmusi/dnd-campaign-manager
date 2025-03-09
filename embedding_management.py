@@ -112,35 +112,31 @@ def pull_github_vault():
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
-    """Lists modified files and allows manual selection for embedding."""
-    last_update = load_last_update()
+    """Lists all markdown files in selected folders and allows manual selection for embedding."""
     updated_files = []
 
     for root, _, files in os.walk(OBSIDIAN_VAULT_PATH):
+        # Only include files from folders specified in config.yaml
         if not any(folder in root for folder in FOLDERS_TO_EMBED):
-            continue  # Skip files outside selected folders
-        
+            continue  
+
         for file in files:
             if file.endswith(".md"):
                 file_path = os.path.join(root, file)
-                last_modified = os.path.getmtime(file_path)
-                if last_modified > last_update:
-                    updated_files.append(file_path)
+                updated_files.append(file_path)
 
     if updated_files:
         st.subheader("📂 Select Files to Re-Embed")
         selected_files = st.multiselect("Choose files to embed:", updated_files)
-        
+
         if st.button("🔄 Re-Embed Selected Files"):
             for file_path in selected_files:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     add_embedding(content, {"source": file_path})
-            save_last_update()
             st.success(f"✅ Re-embedded {len(selected_files)} files!")
     else:
         st.info("No modified files to re-embed.")
-
 
 # Function to load last update timestamp
 def load_last_update():
