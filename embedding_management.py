@@ -34,7 +34,11 @@ def retrieve_relevant_embeddings(query, top_k=3):
     """Search ChromaDB for relevant embeddings based on a user query."""
     results = collection.query(query_texts=[query], n_results=top_k)
     retrieved_docs = results.get("documents", [])
-    return retrieved_docs if retrieved_docs else []
+    
+    # Ensure retrieved_docs is a flat list of strings
+    flattened_docs = [item for sublist in retrieved_docs for item in (sublist if isinstance(sublist, list) else [sublist])]
+    
+    return flattened_docs if flattened_docs else []
 
 # Function to generate AI response with retrieved context
 def generate_ai_response(query, api_key):
