@@ -418,18 +418,20 @@ def render_folder_management_page():
     folders_to_embed = set(config.get("folders_to_embed", []))
     all_folders = get_all_folders(VAULT_PATH)
     
-    # Create a DataFrame for displaying in the editor
-    df = pd.DataFrame({
-        "Folder": all_folders,
-        "Embed in AI": [folder in folders_to_embed for folder in all_folders]
-    })
+    if all_folders:  # Ensure there are folders before creating DataFrame
+        df = pd.DataFrame({
+            "Folder": all_folders,
+            "Embed in AI": [folder in folders_to_embed for folder in all_folders]
+        })
+    else:
+        df = pd.DataFrame(columns=["Folder", "Embed in AI"])  # Create empty DataFrame with correct columns
     
     st.subheader("📂 Manage Folders for AI Embedding")
     edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
     
     # Ensure column exists before accessing
     if "Folder" in edited_df.columns and "Embed in AI" in edited_df.columns:
-        new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
+        new_folders_to_embed = set(edited_df.loc[edited_df["Embed in AI"], "Folder"])
     else:
         new_folders_to_embed = folders_to_embed  # Keep previous state if missing
     
