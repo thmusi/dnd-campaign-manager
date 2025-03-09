@@ -5,9 +5,12 @@ import json
 from pathlib import Path
 import openai
 
-# Initialize ChromaDB
 CHROMA_DB_PATH = "chroma_db/"
-os.makedirs(CHROMA_DB_PATH, exist_ok=True)  # Ensure the directory exists
+
+# Ensure directory exists and persist embeddings
+if not os.path.exists(CHROMA_DB_PATH):
+    os.makedirs(CHROMA_DB_PATH)
+
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 collection = chroma_client.get_or_create_collection(name="campaign_notes")
 
