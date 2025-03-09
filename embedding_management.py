@@ -175,12 +175,18 @@ def build_folder_tree(base_path):
             node = node.setdefault(part, {})
     return folder_tree
 
+COLORS = ["#FF5733", "#FF8D1A", "#FFC300", "#DAF7A6", "#33FF57", "#1AFFD5", "#1A8DFF", "#5733FF"]
+
 def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=0):
-    """Recursively display folders with indentation instead of nested expanders."""
+    """Recursively display folders with color-based indentation."""
+    color = COLORS[level % len(COLORS)]  # Cycle through colors for each level
     for folder, subfolders in folder_tree.items():
         folder_path = os.path.join(base_path, folder)
         indent = "&nbsp;&nbsp;&nbsp;&nbsp;" * level  # Indentation for nested folders
-        st.markdown(f"{indent}📂 **{folder}**", unsafe_allow_html=True)
+        st.markdown(
+            f"{indent}<span style='color:{color}; font-weight:bold;'>📂 {folder}</span>",
+            unsafe_allow_html=True
+        )
         
         if folder_path not in folders_to_embed:
             if st.button(f"➡ Add {folder}", key=f"add_{folder_path}"):
