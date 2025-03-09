@@ -64,6 +64,7 @@ def generate_ai_response(query, api_key):
 def render_embedding_page():
     st.title("📚 Embedding Management")
     st.write("Manage your campaign embeddings stored in ChromaDB.")
+    render_sidebar()
     
     st.subheader("🔍 View Stored Embeddings")
     embeddings = list_embeddings()
