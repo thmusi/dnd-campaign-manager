@@ -6,8 +6,6 @@ import subprocess
 import yaml
 from pathlib import Path
 import openai
-import streamlit_nested_layout
-
 
 CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
