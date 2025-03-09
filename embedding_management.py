@@ -152,3 +152,12 @@ def save_last_update():
     config_path = os.path.join(CHROMA_DB_PATH, "last_update.json")
     with open(config_path, "w") as f:
         json.dump({"last_update": os.path.getmtime(OBSIDIAN_VAULT_PATH)}, f)
+
+def get_all_folders(base_path):
+    """ Recursively retrieve all folders inside the Obsidian Vault """
+    folder_list = []
+    for root, dirs, _ in os.walk(base_path):
+        for directory in dirs:
+            full_path = os.path.relpath(os.path.join(root, directory), base_path)
+            folder_list.append(full_path)
+    return sorted(folder_list)
