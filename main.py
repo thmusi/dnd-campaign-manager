@@ -6,7 +6,7 @@ import re
 from ai import generate_npc, generate_shop , generate_location 
 from pathlib import Path
 import requests
-from embedding_management import render_embedding_page
+from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response
 import chromadb
 
 
@@ -15,12 +15,6 @@ logging.basicConfig(level=logging.INFO)
 
 # Default cart structure
 DEFAULT_CART_STRUCTURE = {"NPCs": [], "Shops": [], "Locations": [], "Encounters": [], "Dungeons": [], "Quests": []}
-
-# Initialize ChromaDB
-CHROMA_DB_PATH = "chroma_db/"
-chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-collection = chroma_client.get_or_create_collection(name="campaign_notes")
-
 
 # Exception handling decorator
 def handle_exception(func):
@@ -402,6 +396,46 @@ def render_generate_npc_page():
 
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
+
+def render_embedding_page():
+    st.title("📚 Embedding Management")
+    st.write("Manage your campaign embeddings stored in ChromaDB.")
+    render_sidebar()
+    
+    st.subheader("🔍 View Stored Embeddings")
+    embeddings = list_embeddings()
+    if embeddings["ids"]:
+        for i, (eid, doc) in enumerate(zip(embeddings["ids"], embeddings["documents"])):
+            with st.expander(f"📄 {eid}"):
+                st.write(doc)
+                if st.button(f"❌ Remove {eid}", key=f"remove_{i}"):
+                    remove_embedding(eid)
+                    st.rerun()
+    else:
+        st.info("No embeddings stored yet.")
+    
+    st.subheader("➕ Add New Embedding")
+    new_text = st.text_area("Enter text to embed:")
+    metadata_input = st.text_input("Enter metadata (optional, JSON format):", "{}")
+    if st.button("Add Embedding"):
+        try:
+            metadata = json.loads(metadata_input)
+            if not isinstance(metadata, dict):
+                metadata = {"source": "manual"}  # Ensure metadata is a dictionary
+            add_embedding(new_text, metadata)
+            st.rerun()
+        except json.JSONDecodeError:
+            st.error("Invalid metadata JSON format.")
+    
+    st.subheader("🧠 Campaign Assistant")
+    user_query = st.text_input("Ask something about your campaign:")
+    if st.button("Get AI Answer"):
+        if "openai_api_key" in st.session_state and st.session_state.openai_api_key:
+            response = generate_ai_response(user_query, st.session_state.openai_api_key)
+            st.markdown("### 🤖 AI Response")
+            st.write(response)
+        else:
+            st.error("⚠️ Please enter your OpenAI API key in settings.")
 
 
 # Dynamic Page Rendering Dictionary
