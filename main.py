@@ -8,9 +8,13 @@ from pathlib import Path
 import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
+from embedding_management import load_config, save_config
 import yaml
 
 VAULT_PATH = "obsidian_vault"  # Adjust this if needed
+# Load the cart from JSON (ensure persistence)
+CART_FILE = Path("cart.json")
+CONFIG_PATH = "config.yaml"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,9 +55,6 @@ def initialize_session_state():
         st.session_state.update(session_defaults)
 
 initialize_session_state()
-
-# Load the cart from JSON (ensure persistence)
-CART_FILE = Path("cart.json")
 
 @handle_exception
 def load_cart():
@@ -116,23 +117,6 @@ def add_to_cart_button(category, item_key):
     else:
         st.warning(f"⚠️ Generate a {category[:-1]} first before adding to the cart.")
 
-CONFIG_PATH = "config.yaml"
-
-@handle_exception
-def load_config():
-    try:
-        with open(CONFIG_PATH, "r") as file:
-            return yaml.safe_load(file) or {}
-    except FileNotFoundError:
-        return {}  # Return empty config if file is missing
-    except yaml.YAMLError:
-        st.error("⚠️ Error reading config.yaml. Check file format.")
-        return {}
-        
-@handle_exception
-def save_config(config):
-    with open(CONFIG_PATH, "w") as file:
-        yaml.safe_dump(config, file)
 
 def navigate_to(page_name):
     """Navigate to a specific page and persist state."""
