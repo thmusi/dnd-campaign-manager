@@ -10,7 +10,7 @@ import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, get_all_folders
 import yaml
 
-
+VAULT_PATH = "obsidian_vault"  # Adjust this if needed
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
