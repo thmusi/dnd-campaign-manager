@@ -403,10 +403,12 @@ def render_embedding_page():
     st.write("Manage your campaign embeddings stored in ChromaDB.")
     render_sidebar()
     
-    if st.button("🔄 Sync Vault & Re-Embed"):
+    if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
-        reembed_modified_files()
     
+    st.subheader("🔍 View Modified Files & Re-Embed")
+    reembed_modified_files()
+
     st.subheader("🔍 View Stored Embeddings")
     embeddings = list_embeddings()
     if embeddings["ids"]:
@@ -441,7 +443,6 @@ def render_embedding_page():
             st.write(response)
         else:
             st.error("⚠️ Please enter your OpenAI API key in settings.")
-
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
