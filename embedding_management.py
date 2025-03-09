@@ -88,7 +88,13 @@ def pull_github_vault():
             return
 
     try:
-        subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)
+        GITHUB_USERNAME = "thmusi"
+        GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+        
+        repo_url = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/thmusi/my-obsidian-vault.git"
+        
+        subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "remote", "set-url", "origin", repo_url], check=True)
+        subprocess.run(["git", "-C", OBSIDIAN_VAULT_PATH, "pull", "origin", "main"], check=True)        
         st.success("✅ Pulled latest changes from the secret Vault!")
     except subprocess.CalledProcessError as e:
         st.error(f"❌ Git pull failed: {e}")
