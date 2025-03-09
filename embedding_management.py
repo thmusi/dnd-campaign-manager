@@ -175,15 +175,19 @@ def build_folder_tree(base_path):
             node = node.setdefault(part, {})
     return folder_tree
 
-def display_folder_tree(folder_tree, base_path, folders_to_embed, config):
-    """Recursively display folders with expandable UI."""
+def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=0):
+    """Recursively display folders with indentation instead of nested expanders."""
     for folder, subfolders in folder_tree.items():
-        with st.expander(folder, expanded=False):
-            folder_path = os.path.join(base_path, folder)
-            if folder_path not in folders_to_embed:
-                if st.button(f"➡ Add {folder}", key=f"add_{folder_path}"):
-                    folders_to_embed.append(folder_path)
-                    config["folders_to_embed"] = folders_to_embed
-                    save_config(config)
-                    st.experimental_rerun()
-            display_folder_tree(subfolders, folder_path, folders_to_embed, config)
+        folder_path = os.path.join(base_path, folder)
+        indent = "&nbsp;&nbsp;&nbsp;&nbsp;" * level  # Indentation for nested folders
+        st.markdown(f"{indent}📂 **{folder}**", unsafe_allow_html=True)
+        
+        if folder_path not in folders_to_embed:
+            if st.button(f"➡ Add {folder}", key=f"add_{folder_path}"):
+                folders_to_embed.append(folder_path)
+                config["folders_to_embed"] = folders_to_embed
+                save_config(config)
+                st.experimental_rerun()
+        
+        display_folder_tree(subfolders, folder_path, folders_to_embed, config, level+1)
+
