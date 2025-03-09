@@ -7,7 +7,7 @@ from ai import generate_npc, generate_shop , generate_location
 from pathlib import Path
 import requests
 import chromadb
-from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, get_all_folders
+from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
 import yaml
 
 VAULT_PATH = "obsidian_vault"  # Adjust this if needed
@@ -183,11 +183,8 @@ def render_main_menu_buttons():
         navigate_to("Worldbuilding")
     if st.button("🗒 Session Management", key="session_management"):
         navigate_to("Session Management")
-    if st.button("📋 Folder Embedding Management", key="embedding_management_sidebar"):
+    if st.button("📚 Folder Embedding Management", key="embedding_management_sidebar"):
         navigate_to("Folder Embedding Management")  
-    if st.button("📚 Embedding Process", key="embedding_sidebar"):
-        navigate_to("Embedding Process")
-
 
 # Apply custom styling to buttons
 st.markdown(
@@ -433,25 +430,18 @@ def render_folder_management_page():
     
     config = load_config()
     folders_to_embed = config.get("folders_to_embed", [])
-    all_folders = get_all_folders(VAULT_PATH)
+    folder_tree = build_folder_tree(VAULT_PATH)
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📂 Obsidian Vault (Not Saved for AI)")
-        for folder in all_folders:
-            if folder not in folders_to_embed:
-                with st.expander(folder, expanded=False):
-                    if st.button("➡ Add to AI", key=f"add_{folder}"):
-                        folders_to_embed.append(folder)
-                        config["folders_to_embed"] = folders_to_embed
-                        save_config(config)
-                        st.experimental_rerun()
+        display_folder_tree(folder_tree, VAULT_PATH, folders_to_embed, config)
     
     with col2:
         st.subheader("✅ Obsidian Vault (Saved for AI)")
         for folder in folders_to_embed:
-            with st.expander(folder, expanded=False):
+            with st.expander(os.path.relpath(folder, VAULT_PATH), expanded=False):
                 if st.button("❌ Remove", key=f"remove_{folder}"):
                     folders_to_embed.remove(folder)
                     config["folders_to_embed"] = folders_to_embed
