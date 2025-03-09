@@ -202,7 +202,7 @@ def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=
                 folders_to_embed.append(folder_path)
                 config["folders_to_embed"] = folders_to_embed
                 save_config(config)
-                st.experimental_rerun()
+                st.rerun()
         
         display_folder_tree(subfolders, folder_path, folders_to_embed, config, level+1)
 
