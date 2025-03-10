@@ -17,6 +17,8 @@ VAULT_PATH = "obsidian_vault"  # Adjust this if needed
 # Load the cart from JSON (ensure persistence)
 CART_FILE = Path("cart.json")
 CONFIG_PATH = "config.yaml"
+CHROMA_DB_PATH = "chroma_db"  # Path to store persistent embeddings
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
