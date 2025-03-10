@@ -7,10 +7,11 @@ import yaml
 from pathlib import Path
 import openai
 import pandas as pd
+import time
 
 CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
-CONFIG_PATH = "config.yaml"
+MODIFICATION_TRACKER = "modification_tracker.yaml"  # Store last modified timestamps
 
 # Load configuration from config.yaml
 def load_config():
@@ -231,6 +232,30 @@ def get_folder_structure(base_path):
         node["__files__"] = files
     return folder_tree
 
+def save_modification_tracker(data):
+    """Saves the modification tracker data."""
+    with open(MODIFICATION_TRACKER, "w") as file:
+        yaml.safe_dump(data, file)
+
+def get_folder_structure(base_path):
+    """Creates a nested dictionary representing the folder structure."""
+    folder_tree = {}
+    if not os.path.exists(base_path):
+        st.error(f"🚨 Error: Vault path '{base_path}' does not exist!")
+        return folder_tree
+    
+    for root, dirs, files in os.walk(base_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
+        rel_path = os.path.relpath(root, base_path)
+        parts = rel_path.split(os.sep) if rel_path != '.' else []
+        node = folder_tree
+        for part in parts:
+            node = node.setdefault(part, {})
+        
+        # Store filenames inside the structure for embedding
+        node["__files__"] = files
+    return folder_tree
+
 def flatten_folder_structure(folder_tree, parent_path="", depth=0):
     """Flattens the nested folder dictionary into a list with indentation levels and filenames."""
     folder_list = []
@@ -242,7 +267,29 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
         folder_list.append((full_path, indent + folder, depth))
         folder_list.extend(flatten_folder_structure(subfolders, full_path, depth + 1))
     return folder_list
+
+def check_folder_modifications(all_folders, storage_path):
+    """Checks if folders have been modified since last embedding."""
+    tracker = load_modification_tracker()
+    modified_folders = set()
     
+    for folder_path, _, _ in all_folders:
+        latest_mod_time = 0
+        for root, _, files in os.walk(os.path.join(VAULT_PATH, folder_path)):
+            for file in files:
+                file_path = os.path.join(root, file)
+                latest_mod_time = max(latest_mod_time, os.path.getmtime(file_path))
+        
+        if folder_path in tracker:
+            if latest_mod_time > tracker[folder_path]:
+                modified_folders.add(folder_path)
+        
+        tracker[folder_path] = latest_mod_time  # Update tracker
+    
+    save_modification_tracker(tracker)
+    return modified_folders
+
+
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
     node = tree
