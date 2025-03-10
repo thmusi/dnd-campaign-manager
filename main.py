@@ -13,6 +13,8 @@ import yaml
 import pandas as pd
 import time
 
+config = load_config()
+OBSIDIAN_VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 # Load the cart from JSON (ensure persistence)
 CART_FILE = Path("cart.json")
 CONFIG_PATH = "config.yaml"
@@ -474,10 +476,8 @@ def render_folder_management_page():
         config["folders_to_embed"] = list(updated_folders_to_embed)
         save_config(config)
     
-        # ✅ Automatically embed the files locally
         embed_selected_folders(updated_folders_to_embed)
     
-        # ✅ Save embeddings info to embeddings.json and push to GitHub
         embedding_data = {
             "folders": list(updated_folders_to_embed),
             "metadata": {"updated_at": time.time()}
