@@ -229,13 +229,14 @@ def get_folder_structure(base_path):
             node = node.setdefault(part, {})
     return folder_tree
 
-def flatten_folder_structure(folder_tree, parent_path=""):
-    """Flattens the nested folder dictionary into a list of paths for the data table."""
+def flatten_folder_structure(folder_tree, parent_path="", depth=0):
+    """Flattens the nested folder dictionary into a list with indentation levels."""
     folder_list = []
     for folder, subfolders in folder_tree.items():
         full_path = f"{parent_path}/{folder}" if parent_path else folder
-        folder_list.append(full_path)
-        folder_list.extend(flatten_folder_structure(subfolders, full_path))
+        indent = "➡️ " + "&nbsp;&nbsp;&nbsp;&nbsp;" * depth  # Indentation with arrows
+        folder_list.append((full_path, indent + folder, depth))
+        folder_list.extend(flatten_folder_structure(subfolders, full_path, depth + 1))
     return folder_list
     
 def get_subfolders(tree, path):
