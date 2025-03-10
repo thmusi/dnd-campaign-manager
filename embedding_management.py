@@ -234,7 +234,7 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
     folder_list = []
     for folder, subfolders in folder_tree.items():
         full_path = f"{parent_path}/{folder}" if parent_path else folder
-        indent = "➡️ " + "&nbsp;&nbsp;&nbsp;&nbsp;" * depth  # Indentation with arrows
+        indent = "➡️" * (depth + 1) + " "  # Indentation with arrows
         folder_list.append((full_path, indent + folder, depth))
         folder_list.extend(flatten_folder_structure(subfolders, full_path, depth + 1))
     return folder_list
