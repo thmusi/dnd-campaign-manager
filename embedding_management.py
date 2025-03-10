@@ -210,7 +210,8 @@ def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=
                         save_config(config)
                         st.rerun()
         
-        display_folder_tree(subfolders, folder_path, folders_to_embed, config, level+1)
+        # Recursively call for subfolders
+        display_folder_tree(subfolders, folder_path, folders_to_embed, config, level + 1)
 
 def get_folder_structure(base_path):
     """Creates a nested dictionary representing the folder structure."""
@@ -229,7 +230,7 @@ def get_folder_structure(base_path):
     
     st.write("📂 Debug: Folder Structure", folder_tree)  # Debugging output
     return folder_tree
-
+    
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
     node = tree
