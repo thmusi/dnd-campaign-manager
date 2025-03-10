@@ -34,6 +34,29 @@ def save_config(config):
     with open(CONFIG_PATH, "w") as file:
         yaml.safe_dump(config, file)
 
+########
+# Load config file
+config_path = "config.yaml"
+with open(config_path, "r") as file:
+    config = yaml.safe_load(file)
+
+vault_path = config["obsidian_vault_path"]
+
+# Check folders to embed
+print("Configured folders to embed:", config["folders_to_embed"])
+
+for folder in config["folders_to_embed"]:
+    full_path = os.path.join(vault_path, folder)
+    print(f"Checking folder: {full_path}")
+
+    if not os.path.exists(full_path):
+        print(f"❌ Folder does NOT exist: {full_path}")
+        continue  # Skip to next folder
+
+    files = os.listdir(full_path)
+    print(f"📂 Found files in {folder}: {files}")
+#######
+
 config = load_config()
 OBSIDIAN_VAULT_PATH = config["obsidian_vault_path"]
 FOLDERS_TO_EMBED = set(config["folders_to_embed"])
