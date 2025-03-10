@@ -422,7 +422,8 @@ def render_folder_management_page():
         st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
         return
     
-    selected_folders = st.session_state.get("selected_folders", "")
+    if "selected_folders" not in st.session_state:
+        st.session_state.selected_folders = ""
     
     columns = st.columns(5)  # Create multiple columns for nesting
     
@@ -435,18 +436,19 @@ def render_folder_management_page():
         with col:
             st.subheader(f"📂 Level {i+1}")
             for folder in subfolders:
-                folder_path = os.path.join(current_level, folder) if current_level else folder
+                folder_path = f"{current_level}/{folder}" if current_level else folder
                 checked = folder_path in folders_to_embed
                 
                 if st.checkbox(folder, checked=checked, key=folder_path):
                     # If checked, add all subfolders automatically and embed
                     if folder_path not in folders_to_embed:
                         folders_to_embed.add(folder_path)
-                        subfolder_paths = [os.path.join(folder_path, sub) for sub in get_subfolders(folder_tree, folder_path)]
+                        subfolder_paths = [f"{folder_path}/{sub}" for sub in get_subfolders(folder_tree, folder_path)]
                         folders_to_embed.update(subfolder_paths)
                         config["folders_to_embed"] = list(folders_to_embed)
                         save_config(config)
                         reembed_modified_files()  # Trigger embedding automatically
+                        st.session_state.selected_folders = folder_path  # Update state
                         st.rerun()
                 else:
                     if folder_path in folders_to_embed:
@@ -456,8 +458,7 @@ def render_folder_management_page():
                         st.rerun()
         
         # Update current level to navigate deeper
-        current_level = os.path.join(current_level, selected_folders) if selected_folders else ""
-
+        current_level = st.session_state.selected_folders
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
