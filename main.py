@@ -410,7 +410,6 @@ def render_generate_npc_page():
 
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
-    render_sidebar()
     
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
@@ -426,6 +425,9 @@ def render_folder_management_page():
     # Flatten folder structure for table view
     all_folders = flatten_folder_structure(folder_tree)
     
+    # Check modification status of folders
+    modified_folders = check_folder_modifications(all_folders, CHROMA_DB_PATH)
+    
     # Group folders by top-level category
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     
@@ -435,7 +437,8 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],  # Display with indentation
-            "Embed in AI": [f[0] in folders_to_embed for f in folder_subset]
+            "Embed in AI": [f[0] in folders_to_embed for f in folder_subset],
+            "Status": ["✅ Embedded" if f[0] in folders_to_embed and f[0] not in modified_folders else ("⚠️ Modified" if f[0] in modified_folders else "❌ Not Embedded") for f in folder_subset]
         })
         
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
@@ -449,7 +452,9 @@ def render_folder_management_page():
             config["folders_to_embed"] = list(new_folders_to_embed)
             save_config(config)
             reembed_modified_files()
+            save_embeddings_to_github(new_folders_to_embed, CHROMA_DB_PATH, store_filenames=True)  # Save embeddings persistently with filenames
             st.rerun()
+
 
 
 # Dynamic Page Rendering Dictionary
