@@ -213,6 +213,10 @@ def display_folder_tree(folder_tree, base_path, folders_to_embed, config, level=
 def get_folder_structure(base_path):
     """Creates a nested dictionary representing the folder structure."""
     folder_tree = {}
+    if not os.path.exists(base_path):
+        st.error(f"🚨 Error: Vault path '{base_path}' does not exist!")
+        return folder_tree
+    
     for root, dirs, _ in os.walk(base_path):
         dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
         rel_path = os.path.relpath(root, base_path)
@@ -220,6 +224,8 @@ def get_folder_structure(base_path):
         node = folder_tree
         for part in parts:
             node = node.setdefault(part, {})
+    
+    st.write("📂 Debug: Folder Structure", folder_tree)  # Debugging output
     return folder_tree
 
 def get_subfolders(tree, path):
