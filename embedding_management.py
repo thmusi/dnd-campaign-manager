@@ -67,6 +67,7 @@ with open(file_path, "r", encoding="utf-8") as f:
 
 print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a preview
 
+print(f"🔥 Preparing to embed: {file_path}")
 # Add document to ChromaDB
 collection.add(
     documents=[content], 
