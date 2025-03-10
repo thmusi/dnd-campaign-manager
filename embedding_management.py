@@ -56,8 +56,6 @@ for folder in config["folders_to_embed"]:
     files = os.listdir(full_path)
     print(f"📂 Found files in {folder}: {files}")
 
-print(f"🔥 Preparing to embed: {file_path}")
-
 # Ensure ChromaDB collection exists
 collection = db.get_or_create_collection("campaign_notes")  # Make sure this matches!
 
