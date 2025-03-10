@@ -67,15 +67,6 @@ with open(file_path, "r", encoding="utf-8") as f:
 
 print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a preview
 
-print(f"🔥 Preparing to embed: {file_path}")
-# Add document to ChromaDB
-collection.add(
-    documents=[content], 
-    ids=[file_path]  # Ensure unique ID
-)
-
-print("✅ Successfully added document to ChromaDB!")
-
 #######
 
 config = load_config()
@@ -415,3 +406,15 @@ def get_subfolders(tree, path):
     for part in path.split("/"):
         node = node.get(part, {}) if isinstance(node, dict) else {}
     return node
+
+#########
+print(f"🔥 Preparing to embed: {file_path}")
+
+# Add document to ChromaDB
+collection.add(
+    documents=[content], 
+    ids=[file_path]  # Ensure unique ID
+)
+
+print("✅ Successfully added document to ChromaDB!")
+
