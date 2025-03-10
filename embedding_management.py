@@ -245,10 +245,13 @@ def load_modification_tracker():
             return yaml.safe_load(file)
     return {}
 
-def save_modification_tracker(data):
-    """Saves the modification tracker data."""
-    with open(MODIFICATION_TRACKER, "w") as file:
-        yaml.safe_dump(data, file)
+def save_modification_tracker(modification_data):
+    """
+    Saves the modification timestamps of folders after embedding.
+    """
+    with open("modification_tracker.yaml", "w") as f:
+        yaml.dump(modification_data, f)
+
 
 def get_folder_structure(base_path):
     """Creates a nested dictionary representing the folder structure."""
@@ -282,26 +285,40 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
     return folder_list
 
 def check_folder_modifications(all_folders, chroma_db_path, vault_path):
-    """Checks if folders have been modified since last embedding."""
-    tracker = load_modification_tracker()
-    modified_folders = set()
+    """
+    Checks which folders have been modified based on last known modification timestamps.
+    Returns a dictionary of folder paths with their modification status.
+    """
+    mod_tracker_path = "modification_tracker.yaml"
     
-    for folder_path, _, _ in all_folders:
-        latest_mod_time = 0
-        for root, _, files in os.walk(os.path.join(VAULT_PATH, folder_path)):
-            for file in files:
-                file_path = os.path.join(root, file)
-                latest_mod_time = max(latest_mod_time, os.path.getmtime(file_path))
-        
-        if folder_path in tracker:
-            if latest_mod_time > tracker[folder_path]:
-                modified_folders.add(folder_path)
-        
-        tracker[folder_path] = latest_mod_time  # Update tracker
-    
-    save_modification_tracker(tracker)
-    return modified_folders
+    # Load previous modification data
+    if os.path.exists(mod_tracker_path):
+        with open(mod_tracker_path, "r") as f:
+            modification_data = yaml.safe_load(f) or {}
+    else:
+        modification_data = {}
 
+    modified_folders = {}
+
+    for folder_path, _, _ in all_folders:
+        full_path = os.path.join(vault_path, folder_path)
+        
+        # Get the latest modification time for all files inside the folder
+        latest_mod_time = max(
+            (os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(full_path) for f in files),
+            default=0
+        )
+
+        # Compare with stored modification time
+        last_tracked_time = modification_data.get(folder_path, 0)
+
+        if latest_mod_time > last_tracked_time:
+            modified_folders[folder_path] = "⚠️ Modified"
+        else:
+            modified_folders[folder_path] = "✅ Embedded"
+
+    return modified_folders
+    
 
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
