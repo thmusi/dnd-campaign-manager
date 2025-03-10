@@ -35,6 +35,12 @@ def save_config(config):
         yaml.safe_dump(config, file)
 
 ########
+
+import chromadb
+
+# Initialize ChromaDB client
+db = chromadb.PersistentClient(path="chroma_db/")
+
 # Load config file
 config_path = "config.yaml"
 with open(config_path, "r") as file:
