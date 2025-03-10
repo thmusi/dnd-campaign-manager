@@ -14,6 +14,11 @@ CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repoCONFIG_PATH =
 CONFIG_PATH = "config.yaml"
 MODIFICATION_TRACKER = "modification_tracker.yaml"  # Store last modified timestamps
 
+with open("config.yaml", "r") as config_file:
+    config = yaml.safe_load(config_file)
+
+VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
+
 # Load configuration from config.yaml
 def load_config():
     try:
