@@ -56,6 +56,21 @@ for folder in config.get("folders_to_embed", []):
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
+def embed_selected_folders(folders_to_embed):
+    for folder in folders_to_embed:
+        full_folder_path = os.path.join(OBSIDIAN_VAULT_PATH, folder)
+
+        if os.path.exists(full_folder_path):
+            for root, dirs, files in os.walk(full_folder_path):
+                for file in files:
+                    if file.endswith((".md", ".pdf", ".json")):
+                        file_path = os.path.join(root, file)
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        collection.upsert(documents=[content], ids=[file_path])
+        else:
+            st.warning(f"⚠️ Folder does not exist: {full_folder_path}")
+
 # Function to list stored embeddings
 def list_embeddings():
     docs = collection.get()
