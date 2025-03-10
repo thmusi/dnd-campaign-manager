@@ -433,8 +433,10 @@ def render_folder_management_page():
     all_folders = flatten_folder_structure(folder_tree)
     folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
 
+    # Load selected folders from config.yaml instead of resetting them
     if "selected_folders" not in st.session_state:
-        st.session_state.selected_folders = folders_to_embed.copy()
+        st.session_state.selected_folders = load_selected_folders()
+
 
     updated_folders_to_embed = set(st.session_state.selected_folders)
     change_detected = False
