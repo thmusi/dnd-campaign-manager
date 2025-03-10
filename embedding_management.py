@@ -8,7 +8,6 @@ from pathlib import Path
 import openai
 import pandas as pd
 
-
 CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
 CONFIG_PATH = "config.yaml"
