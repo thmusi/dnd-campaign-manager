@@ -233,6 +233,13 @@ def get_folder_structure(base_path):
         node["__files__"] = files
     return folder_tree
 
+def load_modification_tracker():
+    """Loads the modification tracker file to track folder updates."""
+    if os.path.exists(MODIFICATION_TRACKER):
+        with open(MODIFICATION_TRACKER, "r") as file:
+            return yaml.safe_load(file)
+    return {}
+
 def save_modification_tracker(data):
     """Saves the modification tracker data."""
     with open(MODIFICATION_TRACKER, "w") as file:
