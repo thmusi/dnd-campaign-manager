@@ -432,10 +432,15 @@ def render_folder_management_page():
 
     all_folders = flatten_folder_structure(folder_tree)
     folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
-
-    # Load selected folders from config.yaml instead of resetting them
+    
+    # Load stored folder selections correctly
+    stored_folders = load_selected_folders()
+    
     if "selected_folders" not in st.session_state:
-        st.session_state.selected_folders = load_selected_folders()
+        st.session_state.selected_folders = stored_folders.copy()  # Copy previous selection
+    
+    # Ensure only stored selections persist, avoid auto-selecting all
+    updated_folders_to_embed = set(st.session_state.selected_folders)
 
 
     updated_folders_to_embed = set(st.session_state.selected_folders)
@@ -448,7 +453,7 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],
-            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
+            "Embed in AI": [True if f[0] in stored_folders else False for f in folder_subset],
             "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
