@@ -8,7 +8,7 @@ from pathlib import Path
 import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding_and_push, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
-from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure, flatten_folder_structure, check_folder_modifications, load_modification_tracker, save_modification_tracker
+from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure, flatten_folder_structure, check_folder_modifications, load_modification_tracker, save_modification_tracker, embed_selected_folders
 import yaml
 import pandas as pd
 import time
@@ -419,51 +419,43 @@ def render_folder_management_page():
     render_sidebar()
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
-    
+
     config = load_config()
     folders_to_embed = set(config.get("folders_to_embed", []))
-    folder_tree = get_folder_structure(VAULT_PATH)
-    
+    folder_tree = get_folder_structure(OBSIDIAN_VAULT_PATH)
+
     if not folder_tree:
         st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
         return
-    
-    # Flatten folder structure for table view
-    all_folders = flatten_folder_structure(folder_tree)
-    
-    # Check modification status of folders
-    folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, VAULT_PATH)
 
-    # Initialize session state for tracking selections
+    all_folders = flatten_folder_structure(folder_tree)
+    folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+
     if "selected_folders" not in st.session_state:
         st.session_state.selected_folders = folders_to_embed.copy()
 
-    # Group folders by top-level category
-    top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
-    
     updated_folders_to_embed = set(st.session_state.selected_folders)
-    change_detected = False  # ✅ Fix: Initialize before the loop
+    change_detected = False
 
+    top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     for top_folder in top_level_folders:
         st.subheader(f"📂 {top_folder}")
-        
+
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
-            "Folder": [f[1] for f in folder_subset],  # Display with indentation
-            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],  # Checkbox state
-            "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]  # Green Tick / Orange Warning
+            "Folder": [f[1] for f in folder_subset],
+            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
+            "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
 
-        # Detect changes in selection
         for i in range(len(folder_subset)):
             folder_path = folder_subset[i][0]
             was_selected = folder_path in st.session_state.selected_folders
             is_selected = edited_df.iloc[i]["Embed in AI"]
 
             if is_selected and not was_selected:
-                # Add folder and all subfolders
                 updated_folders_to_embed.add(folder_path)
                 for subfolder, _, _ in all_folders:
                     if subfolder.startswith(folder_path):
@@ -471,33 +463,24 @@ def render_folder_management_page():
                 change_detected = True
 
             elif not is_selected and was_selected:
-                # Remove folder and its subfolders
                 updated_folders_to_embed.discard(folder_path)
                 for subfolder, _, _ in all_folders:
                     if subfolder.startswith(folder_path):
                         updated_folders_to_embed.discard(subfolder)
                 change_detected = True
 
-    # Only trigger embedding if there was a real change
     if change_detected:
         st.session_state.selected_folders = updated_folders_to_embed.copy()
         config["folders_to_embed"] = list(updated_folders_to_embed)
         save_config(config)
 
-        # **Re-embed modified files before updating embeddings**
-        reembed_modified_files()
+        # ✅ Call embedding logic here automatically
+        embed_selected_folders(updated_folders_to_embed)
 
-        # Update modification tracker (reset status to ✅ Embedded)
+        # Update modification tracker
         modification_tracker = {folder: time.time() for folder in updated_folders_to_embed}
         save_modification_tracker(modification_tracker)
 
-        # Format embeddings properly before saving
-        embedding_data = {
-            "folders": list(updated_folders_to_embed),
-            "metadata": {"source": "Obsidian Vault", "modified_folders": list(folder_statuses.keys())}
-        }
-
-        add_embedding_and_push(embedding_data, CHROMA_DB_PATH)  # Save embeddings persistently
         st.success("✅ Embeddings updated successfully!")
 
 
