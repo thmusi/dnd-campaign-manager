@@ -416,7 +416,7 @@ def render_generate_npc_page():
 
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
-    
+    render_sidebar()
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
     
