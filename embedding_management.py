@@ -38,7 +38,7 @@ OBSIDIAN_VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 
 # Iterate over folders and files, embedding only files
-for folder in folders_to_embed:
+for folder in config.get("folders_to_embed", []):
     full_folder_path = os.path.join(OBSIDIAN_VAULT_PATH, folder)
     if os.path.exists(full_folder_path):
         for root, dirs, files in os.walk(full_folder_path):
