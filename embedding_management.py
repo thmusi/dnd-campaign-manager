@@ -30,8 +30,6 @@ def save_config(config):
     with open("config.yaml", "w") as file:
         yaml.safe_dump(config, file)
 
-VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
-
 ########
 
 # Initialize ChromaDB client
@@ -89,6 +87,7 @@ print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a previe
 #######
 
 config = load_config()
+VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 OBSIDIAN_VAULT_PATH = config["obsidian_vault_path"]
 FOLDERS_TO_EMBED = set(config["folders_to_embed"])
 
