@@ -13,12 +13,15 @@ import yaml
 import pandas as pd
 
 
-VAULT_PATH = "obsidian_vault"  # Adjust this if needed
 # Load the cart from JSON (ensure persistence)
 CART_FILE = Path("cart.json")
 CONFIG_PATH = "config.yaml"
 CHROMA_DB_PATH = "chroma_db"  # Path to store persistent embeddings
 
+with open("config.yaml", "r") as config_file:
+    config = yaml.safe_load(config_file)
+
+VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -428,7 +431,7 @@ def render_folder_management_page():
     all_folders = flatten_folder_structure(folder_tree)
     
     # Check modification status of folders
-    modified_folders = check_folder_modifications(all_folders, CHROMA_DB_PATH)
+    modified_folders = check_folder_modifications(all_folders, CHROMA_DB_PATH, VAULT_PATH)
     
     # Group folders by top-level category
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
