@@ -37,39 +37,29 @@ config = load_config()
 OBSIDIAN_VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 
-# Iterate over folders and files, embedding only files
-for folder in config.get("folders_to_embed", []):
-    full_folder_path = os.path.join(OBSIDIAN_VAULT_PATH, folder)
-    if os.path.exists(full_folder_path):
-        for root, dirs, files in os.walk(full_folder_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if os.path.isfile(file_path):  # ✅ Check it's not a directory
-                    print(f"Embedding file: {file_path}")
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = f.read()
-                    collection.add(documents=[content], ids=[file_path])
-    else:
-        print(f"Folder does not exist: {full_folder_path}")
+
         
 # Ensure necessary directories exist
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
-def embed_selected_folders(folders_to_embed):
+def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
+    db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    collection = db.get_or_create_collection(name="campaign_notes")
+
     for folder in folders_to_embed:
-        full_folder_path = os.path.join(OBSIDIAN_VAULT_PATH, folder)
+        full_folder_path = os.path.join(vault_path, folder)
 
         if os.path.exists(full_folder_path):
-            for root, dirs, files in os.walk(full_folder_path):
+            for root, _, files in os.walk(full_folder_path):
                 for file in files:
-                    if file.endswith((".md", ".pdf", ".json")):
-                        file_path = os.path.join(root, file)
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            content = f.read()
-                        collection.upsert(documents=[content], ids=[file_path])
+                    file_path = os.path.join(root, file)
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                    collection.add(documents=[content], ids=[file_path])
+                    print(f"✅ Embedded: {file_path}")
         else:
-            st.warning(f"⚠️ Folder does not exist: {full_folder_path}")
+            print(f"⚠️ Folder does not exist: {full_folder_path}")
 
 # Function to list stored embeddings
 def list_embeddings():
