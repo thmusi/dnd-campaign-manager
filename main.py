@@ -410,14 +410,17 @@ def render_generate_npc_page():
 
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
-    render_sidebar()
-
+    
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
     
     config = load_config()
     folders_to_embed = set(config.get("folders_to_embed", []))
     folder_tree = get_folder_structure(VAULT_PATH)
+    
+    if not folder_tree:
+        st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
+        return
     
     selected_folders = st.session_state.get("selected_folders", "")
     
@@ -436,13 +439,14 @@ def render_folder_management_page():
                 checked = folder_path in folders_to_embed
                 
                 if st.checkbox(folder, checked=checked, key=folder_path):
-                    # If checked, add all subfolders automatically
+                    # If checked, add all subfolders automatically and embed
                     if folder_path not in folders_to_embed:
                         folders_to_embed.add(folder_path)
                         subfolder_paths = [os.path.join(folder_path, sub) for sub in get_subfolders(folder_tree, folder_path)]
                         folders_to_embed.update(subfolder_paths)
                         config["folders_to_embed"] = list(folders_to_embed)
                         save_config(config)
+                        reembed_modified_files()  # Trigger embedding automatically
                         st.rerun()
                 else:
                     if folder_path in folders_to_embed:
