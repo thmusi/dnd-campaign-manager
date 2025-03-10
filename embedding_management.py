@@ -233,6 +233,6 @@ def get_folder_structure(base_path):
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
     node = tree
-    for part in path.split(os.sep):
-        node = node.get(part, {})
+    for part in path.split("/"):
+        node = node.get(part, {}) if isinstance(node, dict) else {}
     return node
