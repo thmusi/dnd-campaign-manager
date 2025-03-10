@@ -422,25 +422,34 @@ def render_folder_management_page():
         st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
         return
     
-    # Flatten folder structure for the table
+    # Flatten folder structure for table view
     all_folders = flatten_folder_structure(folder_tree)
     
-    # Create DataFrame for display
-    df = pd.DataFrame({
-        "Folder": all_folders,
-        "Embed in AI": [folder in folders_to_embed for folder in all_folders]
-    })
+    # Group folders by top-level category
+    top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     
-    st.subheader("📂 Select Folders to Embed")
-    edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
-    
-    # Detect changes in selection
-    new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
-    if new_folders_to_embed != folders_to_embed:
-        config["folders_to_embed"] = list(new_folders_to_embed)
-        save_config(config)
-        reembed_modified_files()
-        st.rerun()
+    for top_folder in top_level_folders:
+        st.subheader(f"📂 {top_folder}")
+        
+        folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
+        df = pd.DataFrame({
+            "Folder": [f[1] for f in folder_subset],  # Display with indentation
+            "Embed in AI": [f[0] in folders_to_embed for f in folder_subset]
+        })
+        
+        edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
+        
+        # Detect changes in selection
+        new_folders_to_embed = set(
+            folder_subset[i][0] for i in range(len(folder_subset)) if edited_df.iloc[i]["Embed in AI"]
+        )
+        
+        if new_folders_to_embed != folders_to_embed:
+            config["folders_to_embed"] = list(new_folders_to_embed)
+            save_config(config)
+            reembed_modified_files()
+            st.rerun()
+
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
