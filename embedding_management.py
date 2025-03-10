@@ -10,7 +10,8 @@ import pandas as pd
 import time
 
 CHROMA_DB_PATH = "chroma_db/"
-CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repo
+CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repoCONFIG_PATH = "config.yaml"
+CONFIG_PATH = "config.yaml"
 MODIFICATION_TRACKER = "modification_tracker.yaml"  # Store last modified timestamps
 
 # Load configuration from config.yaml
