@@ -1,24 +1,22 @@
-
 import streamlit as st
 import chromadb
 import os
 import json
 import subprocess
 import yaml
-from pathlib import Path
 import openai
+from pathlib import Path
 import pandas as pd
 import time
 
 CHROMA_DB_PATH = "chroma_db/"
-CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repoCONFIG_PATH = "config.yaml"
 CONFIG_PATH = "config.yaml"
-MODIFICATION_TRACKER = "modification_tracker.yaml"  # Store last modified timestamps
+MODIFICATION_TRACKER = "modification_tracker.yaml"
 
 # Load configuration from config.yaml
 def load_config():
     try:
-        with open("config.yaml", "r") as file:
+        with open(CONFIG_PATH, "r") as file:
             return yaml.safe_load(file) or {}
     except FileNotFoundError:
         return {}
@@ -27,78 +25,21 @@ def load_config():
         return {}
 
 def save_config(config):
-    with open("config.yaml", "w") as file:
+    with open(CONFIG_PATH, "w") as file:
         yaml.safe_dump(config, file)
 
-########
-
 # Initialize ChromaDB client
-db = chromadb.PersistentClient(path="chroma_db/")
+db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+collection = db.get_or_create_collection("campaign_notes")
 
-# Load config file
-config_path = "config.yaml"
-with open(config_path, "r") as file:
-    config = yaml.safe_load(file)
-
-vault_path = config["obsidian_vault_path"]
-
-# Check folders to embed
-print("Configured folders to embed:", config["folders_to_embed"])
-
-for folder in config["folders_to_embed"]:
-    full_path = os.path.join(vault_path, folder)
-    print(f"Checking folder: {full_path}")
-
-    if not os.path.exists(full_path):
-        print(f"❌ Folder does NOT exist: {full_path}")
-        continue  # Skip to next folder
-
-    files = os.listdir(full_path)
-    
-    for file in files:  # ✅ FIXED INDENTATION HERE!
-        file_path = os.path.join(full_path, file)
-
-        print(f"🔥 Preparing to embed: {file_path}")
-
-        # Read the file content
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a preview
-
-        # Add document to ChromaDB
-        collection.add(
-            documents=[content], 
-            ids=[file_path]  # Ensure unique ID
-        )
-
-        print("✅ Successfully added document to ChromaDB!")
-
-
-# Ensure ChromaDB collection exists
-collection = db.get_or_create_collection("campaign_notes")  # Make sure this matches!
-
-# Read the file content
-with open(file_path, "r", encoding="utf-8") as f:
-    content = f.read()
-
-print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a preview
-
-#######
-
+# Load config
 config = load_config()
-VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
-OBSIDIAN_VAULT_PATH = config["obsidian_vault_path"]
-FOLDERS_TO_EMBED = set(config["folders_to_embed"])
+OBSIDIAN_VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
+FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 
 # Ensure necessary directories exist
-if not os.path.exists(CHROMA_DB_PATH):
-    os.makedirs(CHROMA_DB_PATH)
-if not os.path.exists(OBSIDIAN_VAULT_PATH):
-    os.makedirs(OBSIDIAN_VAULT_PATH)
-
-chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-collection = chroma_client.get_or_create_collection(name="campaign_notes")
+os.makedirs(CHROMA_DB_PATH, exist_ok=True)
+os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
 # Function to list stored embeddings
 def list_embeddings():
@@ -350,26 +291,6 @@ def save_modification_tracker(modification_data):
     with open("modification_tracker.yaml", "w") as f:
         yaml.dump(modification_data, f)
 
-
-def get_folder_structure(base_path):
-    """Creates a nested dictionary representing the folder structure."""
-    folder_tree = {}
-    if not os.path.exists(base_path):
-        st.error(f"🚨 Error: Vault path '{base_path}' does not exist!")
-        return folder_tree
-    
-    for root, dirs, files in os.walk(base_path):
-        dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
-        rel_path = os.path.relpath(root, base_path)
-        parts = rel_path.split(os.sep) if rel_path != '.' else []
-        node = folder_tree
-        for part in parts:
-            node = node.setdefault(part, {})
-        
-        # Store filenames inside the structure for embedding
-        node["__files__"] = files
-    return folder_tree
-
 def flatten_folder_structure(folder_tree, parent_path="", depth=0):
     """Flattens the nested folder dictionary into a list with indentation levels and filenames."""
     folder_list = []
@@ -424,15 +345,3 @@ def get_subfolders(tree, path):
     for part in path.split("/"):
         node = node.get(part, {}) if isinstance(node, dict) else {}
     return node
-
-#
-
-print(f"🔥 Preparing to embed: {file_path}")
-
-# Add document to ChromaDB
-collection.add(
-    documents=[content], 
-    ids=[file_path]  # Ensure unique ID
-)
-
-print("✅ Successfully added document to ChromaDB!")
