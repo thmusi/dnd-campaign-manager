@@ -227,9 +227,16 @@ def get_folder_structure(base_path):
         node = folder_tree
         for part in parts:
             node = node.setdefault(part, {})
-    
-    st.write("📂 Debug: Folder Structure", folder_tree)  # Debugging output
     return folder_tree
+
+def flatten_folder_structure(folder_tree, parent_path=""):
+    """Flattens the nested folder dictionary into a list of paths for the data table."""
+    folder_list = []
+    for folder, subfolders in folder_tree.items():
+        full_path = f"{parent_path}/{folder}" if parent_path else folder
+        folder_list.append(full_path)
+        folder_list.extend(flatten_folder_structure(subfolders, full_path))
+    return folder_list
     
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
