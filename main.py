@@ -8,7 +8,7 @@ from pathlib import Path
 import requests
 import chromadb
 from embedding_management import list_embeddings, remove_embedding, add_embedding, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree
-from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure
+from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure, flatten_folder_structure
 import yaml
 import pandas as pd
 
@@ -422,43 +422,25 @@ def render_folder_management_page():
         st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
         return
     
-    if "selected_folders" not in st.session_state:
-        st.session_state.selected_folders = ""
+    # Flatten folder structure for the table
+    all_folders = flatten_folder_structure(folder_tree)
     
-    columns = st.columns(5)  # Create multiple columns for nesting
+    # Create DataFrame for display
+    df = pd.DataFrame({
+        "Folder": all_folders,
+        "Embed in AI": [folder in folders_to_embed for folder in all_folders]
+    })
     
-    current_level = ""
-    for i, col in enumerate(columns):
-        subfolders = get_subfolders(folder_tree, current_level)
-        if not subfolders:
-            break  # Stop when there are no more nested levels
-        
-        with col:
-            st.subheader(f"📂 Level {i+1}")
-            for folder in subfolders:
-                folder_path = f"{current_level}/{folder}" if current_level else folder
-                checked = folder_path in folders_to_embed
-                
-                if st.checkbox(folder, checked=checked, key=folder_path):
-                    # If checked, add all subfolders automatically and embed
-                    if folder_path not in folders_to_embed:
-                        folders_to_embed.add(folder_path)
-                        subfolder_paths = [f"{folder_path}/{sub}" for sub in get_subfolders(folder_tree, folder_path)]
-                        folders_to_embed.update(subfolder_paths)
-                        config["folders_to_embed"] = list(folders_to_embed)
-                        save_config(config)
-                        reembed_modified_files()  # Trigger embedding automatically
-                        st.session_state.selected_folders = folder_path  # Update state
-                        st.rerun()
-                else:
-                    if folder_path in folders_to_embed:
-                        folders_to_embed.remove(folder_path)
-                        config["folders_to_embed"] = list(folders_to_embed)
-                        save_config(config)
-                        st.rerun()
-        
-        # Update current level to navigate deeper
-        current_level = st.session_state.selected_folders
+    st.subheader("📂 Select Folders to Embed")
+    edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
+    
+    # Detect changes in selection
+    new_folders_to_embed = set(edited_df[edited_df["Embed in AI"]]["Folder"])
+    if new_folders_to_embed != folders_to_embed:
+        config["folders_to_embed"] = list(new_folders_to_embed)
+        save_config(config)
+        reembed_modified_files()
+        st.rerun()
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
