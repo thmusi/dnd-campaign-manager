@@ -405,7 +405,8 @@ def get_subfolders(tree, path):
         node = node.get(part, {}) if isinstance(node, dict) else {}
     return node
 
-#########
+#
+
 print(f"🔥 Preparing to embed: {file_path}")
 
 # Add document to ChromaDB
