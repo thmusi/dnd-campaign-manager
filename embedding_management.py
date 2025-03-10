@@ -14,7 +14,6 @@ CHROMA_DB_PATH = "chroma_db/"
 CONFIG_FILE = "config.yaml"  # Now stored in your app's GitHub repoCONFIG_PATH = "config.yaml"
 CONFIG_PATH = "config.yaml"
 MODIFICATION_TRACKER = "modification_tracker.yaml"  # Store last modified timestamps
-VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 
 # Load configuration from config.yaml
 def load_config():
@@ -30,10 +29,10 @@ def load_config():
 def save_config(config):
     with open("config.yaml", "w") as file:
         yaml.safe_dump(config, file)
-        
-########
 
-import chromadb
+VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
+
+########
 
 # Initialize ChromaDB client
 db = chromadb.PersistentClient(path="chroma_db/")
