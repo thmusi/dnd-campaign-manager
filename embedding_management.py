@@ -55,6 +55,26 @@ for folder in config["folders_to_embed"]:
 
     files = os.listdir(full_path)
     print(f"📂 Found files in {folder}: {files}")
+
+print(f"🔥 Preparing to embed: {file_path}")
+
+# Ensure ChromaDB collection exists
+collection = db.get_or_create_collection("campaign_notes")  # Make sure this matches!
+
+# Read the file content
+with open(file_path, "r", encoding="utf-8") as f:
+    content = f.read()
+
+print(f"📌 File content (first 100 chars): {content[:100]}")  # Print a preview
+
+# Add document to ChromaDB
+collection.add(
+    documents=[content], 
+    ids=[file_path]  # Ensure unique ID
+)
+
+print("✅ Successfully added document to ChromaDB!")
+
 #######
 
 config = load_config()
