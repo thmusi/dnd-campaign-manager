@@ -473,15 +473,18 @@ def render_folder_management_page():
         st.session_state.selected_folders = updated_folders_to_embed.copy()
         config["folders_to_embed"] = list(updated_folders_to_embed)
         save_config(config)
-
-        # ✅ Call embedding logic here automatically
+    
+        # ✅ Automatically embed the files locally
         embed_selected_folders(updated_folders_to_embed)
-
-        # Update modification tracker
-        modification_tracker = {folder: time.time() for folder in updated_folders_to_embed}
-        save_modification_tracker(modification_tracker)
-
-        st.success("✅ Embeddings updated successfully!")
+    
+        # ✅ Save embeddings info to embeddings.json and push to GitHub
+        embedding_data = {
+            "folders": list(updated_folders_to_embed),
+            "metadata": {"updated_at": time.time()}
+        }
+        add_embedding_and_push(embedding_data=embedding_data)
+    
+        st.success("✅ Embeddings updated and pushed to GitHub successfully!")
 
 
 # Dynamic Page Rendering Dictionary
