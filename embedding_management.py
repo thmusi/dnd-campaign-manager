@@ -8,7 +8,7 @@ import openai
 from pathlib import Path
 import pandas as pd
 import time
-import chardet
+
 
 
 CHROMA_DB_PATH = "chroma_db/"
@@ -56,22 +56,14 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
             for root, _, files in os.walk(full_folder_path):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = read_file_safely(file_path)
+                    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                        content = f.read()
                     collection.add(documents=[content], ids=[file_path])
                     print(f"✅ Embedded: {file_path}")
         else:
             print(f"⚠️ Folder does not exist: {full_folder_path}")
 
-def read_file_safely(file_path):
-    """Detect encoding and read file safely."""
-    with open(file_path, "rb") as f:
-        raw_data = f.read()
-        result = chardet.detect(raw_data)
-        encoding = result["encoding"] if result["encoding"] else "utf-8"
 
-    with open(file_path, "r", encoding=encoding, errors="replace") as f:
-        return f.read()
 
 # Function to list stored embeddings
 def list_embeddings():
