@@ -276,7 +276,7 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
         folder_list.extend(flatten_folder_structure(subfolders, full_path, depth + 1))
     return folder_list
 
-def check_folder_modifications(all_folders, storage_path):
+def check_folder_modifications(all_folders, chroma_db_path, vault_path):
     """Checks if folders have been modified since last embedding."""
     tracker = load_modification_tracker()
     modified_folders = set()
