@@ -220,21 +220,26 @@ def get_folder_structure(base_path):
         st.error(f"🚨 Error: Vault path '{base_path}' does not exist!")
         return folder_tree
     
-    for root, dirs, _ in os.walk(base_path):
+    for root, dirs, files in os.walk(base_path):
         dirs[:] = [d for d in dirs if not d.startswith(".git")]  # Exclude .git folders
         rel_path = os.path.relpath(root, base_path)
         parts = rel_path.split(os.sep) if rel_path != '.' else []
         node = folder_tree
         for part in parts:
             node = node.setdefault(part, {})
+        
+        # Store filenames inside the structure for embedding
+        node["__files__"] = files
     return folder_tree
 
 def flatten_folder_structure(folder_tree, parent_path="", depth=0):
-    """Flattens the nested folder dictionary into a list with indentation levels."""
+    """Flattens the nested folder dictionary into a list with indentation levels and filenames."""
     folder_list = []
     for folder, subfolders in folder_tree.items():
+        if folder == "__files__":
+            continue  # Skip internal file storage key
         full_path = f"{parent_path}/{folder}" if parent_path else folder
-        indent = "➡️" * (depth + 1) + " "  # Indentation with arrows
+        indent = "➡️" * (depth + 1) + " "  # Arrows to indicate depth
         folder_list.append((full_path, indent + folder, depth))
         folder_list.extend(flatten_folder_structure(subfolders, full_path, depth + 1))
     return folder_list
