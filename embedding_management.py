@@ -162,7 +162,7 @@ def pull_github_vault():
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
-    """Lists all markdown files and allows manual selection for embedding."""
+    """Lists all markdown and PDF files and allows manual selection for embedding."""
     updated_files = []
 
     for root, _, files in os.walk(OBSIDIAN_VAULT_PATH):
@@ -171,7 +171,7 @@ def reembed_modified_files():
             continue  
 
         for file in files:
-            if file.endswith(".md"):
+            if file.endswith((".md", ".pdf", ".json")):  # Include PDFs & JSON
                 file_path = os.path.join(root, file)
                 updated_files.append(file_path)
 
@@ -181,9 +181,21 @@ def reembed_modified_files():
 
         if st.button("🔄 Re-Embed Selected Files"):
             for file_path in selected_files:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
+                ext = os.path.splitext(file_path)[1].lower()
+
+                if ext == ".pdf":
+                    try:
+                        content = extract_text(file_path).strip()  # Extract text from PDFs
+                    except Exception as e:
+                        st.error(f"Error extracting text from {file_path}: {e}")
+                        continue  # Skip problematic PDFs
+                else:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+
+                if content.strip():  # Ensure text is not empty
                     add_embedding(content, {"source": file_path})
+
             st.success(f"✅ Re-embedded {len(selected_files)} files!")
     else:
         st.info("No modified files to re-embed.")
