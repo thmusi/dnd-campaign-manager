@@ -413,6 +413,7 @@ def render_generate_npc_page():
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
+
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     
@@ -447,12 +448,19 @@ def render_folder_management_page():
         })
         
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
-        
+
         # Detect changes in selection
-        new_folders_to_embed = set(
-            folder_subset[i][0] for i in range(len(folder_subset)) if edited_df.iloc[i]["Embed in AI"]
-        )
-        
+        new_folders_to_embed = set()
+        for i in range(len(folder_subset)):
+            if edited_df.iloc[i]["Embed in AI"]:
+                folder_path = folder_subset[i][0]
+                new_folders_to_embed.add(folder_path)
+
+                # Automatically embed all subfolders and files within the selected folder
+                for subfolder, _, _ in all_folders:
+                    if subfolder.startswith(folder_path):  # If it's a subfolder of the selected one
+                        new_folders_to_embed.add(subfolder)
+
         if new_folders_to_embed != folders_to_embed:
             config["folders_to_embed"] = list(new_folders_to_embed)
             save_config(config)
