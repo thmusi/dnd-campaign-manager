@@ -442,6 +442,7 @@ def render_folder_management_page():
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     
     updated_folders_to_embed = set(st.session_state.selected_folders)
+    change_detected = False  # ✅ Fix: Initialize before the loop
 
     for top_folder in top_level_folders:
         st.subheader(f"📂 {top_folder}")
@@ -456,7 +457,6 @@ def render_folder_management_page():
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
 
         # Detect changes in selection
-        change_detected = False
         for i in range(len(folder_subset)):
             folder_path = folder_subset[i][0]
             was_selected = folder_path in st.session_state.selected_folders
