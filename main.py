@@ -431,7 +431,7 @@ def render_folder_management_page():
     all_folders = flatten_folder_structure(folder_tree)
     
     # Check modification status of folders
-    modified_folders = check_folder_modifications(all_folders, CHROMA_DB_PATH, VAULT_PATH)
+    folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, VAULT_PATH)
     
     # Group folders by top-level category
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
@@ -442,8 +442,8 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],  # Display with indentation
-            "Embed in AI": [f[0] in folders_to_embed for f in folder_subset],
-            "Status": ["✅ Embedded" if f[0] in folders_to_embed and f[0] not in modified_folders else ("⚠️ Modified" if f[0] in modified_folders else "❌ Not Embedded") for f in folder_subset]
+            "Embed in AI": [f[0] in folders_to_embed for f in folder_subset],  # Checkbox
+            "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]  # Green Tick / Orange Warning
         })
         
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
@@ -456,10 +456,22 @@ def render_folder_management_page():
         if new_folders_to_embed != folders_to_embed:
             config["folders_to_embed"] = list(new_folders_to_embed)
             save_config(config)
-            reembed_modified_files()
-            save_embeddings_to_github(new_folders_to_embed, CHROMA_DB_PATH, store_filenames=True)  # Save embeddings persistently with filenames
-            st.rerun()
 
+            # **Re-embed modified files before updating embeddings**
+            reembed_modified_files()
+
+            # Update modification tracker (reset status to ✅ Embedded)
+            modification_tracker = {folder: time.time() for folder in new_folders_to_embed}
+            save_modification_tracker(modification_tracker)
+
+            # Format embeddings properly before saving
+            embedding_data = {
+                "folders": list(new_folders_to_embed),
+                "metadata": {"source": "Obsidian Vault", "modified_folders": list(folder_statuses.keys())}
+            }
+
+            add_embedding_and_push(embedding_data, CHROMA_DB_PATH)  # Save embeddings persistently
+            st.rerun()
 
 
 # Dynamic Page Rendering Dictionary
