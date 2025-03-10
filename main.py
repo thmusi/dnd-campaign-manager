@@ -7,7 +7,7 @@ from ai import generate_npc, generate_shop , generate_location
 from pathlib import Path
 import requests
 import chromadb
-from embedding_management import list_embeddings, remove_embedding, add_embedding_and_push, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree, save_selected_folders, 
+from embedding_management import list_embeddings, remove_embedding, add_embedding_and_push, retrieve_relevant_embeddings, generate_ai_response, pull_github_vault, reembed_modified_files, build_folder_tree, display_folder_tree, save_selected_folders
 from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure, flatten_folder_structure, check_folder_modifications, load_modification_tracker, save_modification_tracker, embed_selected_folders, load_selected_folders
 import yaml
 import pandas as pd
