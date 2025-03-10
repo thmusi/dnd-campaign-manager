@@ -11,7 +11,7 @@ from embedding_management import list_embeddings, remove_embedding, add_embeddin
 from embedding_management import load_config, save_config, get_all_folders, get_subfolders, get_folder_structure, flatten_folder_structure, check_folder_modifications, load_modification_tracker, save_modification_tracker
 import yaml
 import pandas as pd
-
+import time
 
 # Load the cart from JSON (ensure persistence)
 CART_FILE = Path("cart.json")
