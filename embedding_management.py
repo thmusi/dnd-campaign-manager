@@ -329,23 +329,19 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
 
 def check_folder_modifications(all_folders, chroma_db_path, vault_path):
     """
-    Checks which folders have been modified based on last known modification timestamps.
-    Returns a dictionary of folder paths with their modification status.
+    Checks which folders have been modified based on last known timestamps.
+    Persists the modification status in `modification_tracker.yaml` to track across redeployments.
     """
     mod_tracker_path = "modification_tracker.yaml"
-    
-    # Load previous modification data
-    if os.path.exists(mod_tracker_path):
-        with open(mod_tracker_path, "r") as f:
-            modification_data = yaml.safe_load(f) or {}
-    else:
-        modification_data = {}
+
+    # Load stored modification data
+    modification_data = load_modification_tracker()  
 
     modified_folders = {}
 
     for folder_path, _, _ in all_folders:
         full_path = os.path.join(vault_path, folder_path)
-        
+
         # Get the latest modification time for all files inside the folder
         latest_mod_time = max(
             (os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(full_path) for f in files),
@@ -357,11 +353,14 @@ def check_folder_modifications(all_folders, chroma_db_path, vault_path):
 
         if latest_mod_time > last_tracked_time:
             modified_folders[folder_path] = "⚠️ Modified"
+            modification_data[folder_path] = latest_mod_time  # Update stored timestamp
         else:
             modified_folders[folder_path] = "✅ Embedded"
 
-    return modified_folders
-    
+    # Save the updated modification tracking data
+    save_modification_tracker(modification_data)
+
+    return modified_folders    
 
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
@@ -369,3 +368,14 @@ def get_subfolders(tree, path):
     for part in path.split("/"):
         node = node.get(part, {}) if isinstance(node, dict) else {}
     return node
+
+def load_selected_folders():
+    """Load stored selected folders from config.yaml to persist across deployments."""
+    config = load_config()
+    return set(config.get("folders_to_embed", []))  # Return as a set for easy updates
+
+def save_selected_folders(folders):
+    """Save the selected folders persistently to config.yaml."""
+    config = load_config()
+    config["folders_to_embed"] = list(folders)  # Convert back to list for YAML
+    save_config(config)
