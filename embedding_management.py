@@ -58,12 +58,45 @@ def remove_embedding(embedding_id):
     st.success(f"✅ Removed embedding {embedding_id}")
 
 # Function to manually add an embedding
-def add_embedding(text, metadata):
-    embedding_id = f"doc_{len(list_embeddings()['ids']) + 1}"
-    if not metadata:
-        metadata = {"source": "manual"}  # Ensure metadata is a valid dictionary
-    collection.add(ids=[embedding_id], documents=[text], metadatas=[metadata])
-    st.success("✅ Added embedding successfully!")
+import subprocess
+
+def add_embedding_and_push(embedding_data, embedding_file="embeddings.json", vault_path="obsidian_vault"):
+    """
+    Adds new embedding data and automatically saves it to GitHub.
+    """
+    try:
+        # Load existing embeddings
+        if os.path.exists(embedding_file):
+            with open(embedding_file, "r") as f:
+                embeddings = json.load(f)
+        else:
+            embeddings = []
+
+        # Add new embedding
+        embeddings.append(embedding_data)
+
+        # Save embeddings locally
+        with open(embedding_file, "w") as f:
+            json.dump(embeddings, f, indent=4)
+
+        # GitHub Operations
+        repo_path = os.path.join(vault_path, ".git")
+        if not os.path.exists(repo_path):
+            print("⚠️ Vault is not a Git repository. Cloning again...")
+            subprocess.run(["rm", "-rf", vault_path])  # Remove old folder
+            subprocess.run(["git", "clone", "GITHUB_REPO_URL", vault_path])  # Clone fresh copy
+
+        os.chdir(vault_path)
+        subprocess.run(["git", "pull"])  # Ensure latest updates
+        subprocess.run(["git", "add", embedding_file])
+        subprocess.run(["git", "commit", "-m", "Updated embeddings"])
+        subprocess.run(["git", "push"])
+        os.chdir("..")  # Return to previous directory
+
+        print("✅ Embeddings added and pushed to GitHub successfully!")
+
+    except Exception as e:
+        print(f"❌ Error handling embeddings: {e}")
 
 # Function to retrieve relevant embeddings
 def retrieve_relevant_embeddings(query, top_k=3):
