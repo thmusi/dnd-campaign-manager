@@ -419,6 +419,7 @@ def render_generate_npc_page():
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     render_sidebar()
+
     if st.button("🔄 Pull from GitHub Vault"):
         pull_github_vault()
 
@@ -435,16 +436,12 @@ def render_folder_management_page():
     
     # Load stored folder selections correctly
     stored_folders = load_selected_folders()
-    
+
     if "selected_folders" not in st.session_state:
         st.session_state.selected_folders = stored_folders.copy()  # Copy previous selection
     
     # Ensure only stored selections persist, avoid auto-selecting all
     updated_folders_to_embed = set(st.session_state.selected_folders)
-
-
-    updated_folders_to_embed = set(st.session_state.selected_folders)
-    change_detected = False
 
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     for top_folder in top_level_folders:
@@ -469,30 +466,38 @@ def render_folder_management_page():
                 for subfolder, _, _ in all_folders:
                     if subfolder.startswith(folder_path):
                         updated_folders_to_embed.add(subfolder)
-                change_detected = True
 
             elif not is_selected and was_selected:
                 updated_folders_to_embed.discard(folder_path)
                 for subfolder, _, _ in all_folders:
                     if subfolder.startswith(folder_path):
                         updated_folders_to_embed.discard(subfolder)
-                change_detected = True
 
-    if change_detected:
+    if st.button("🔍 Check for Changes"):  # ✅ FIXED INDENTATION
+        # Scan for modified files (without pulling from GitHub)
+        folder_statuses = check_folder_modifications(flatten_folder_structure(folder_tree), CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+
+        # Update UI to show correct status
+        st.session_state.folder_statuses = folder_statuses  # Store results in session
+
+        st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
+
+    if updated_folders_to_embed != set(st.session_state.selected_folders):  # Only run if something changed
         st.session_state.selected_folders = updated_folders_to_embed.copy()
         config["folders_to_embed"] = list(updated_folders_to_embed)
         save_config(config)
-    
+
         embed_selected_folders(updated_folders_to_embed)
-    
+
         embedding_data = {
             "folders": list(updated_folders_to_embed),
             "metadata": {"updated_at": time.time()}
         }
         add_embedding_and_push(embedding_data=embedding_data)
-    
+
         st.success("✅ Embeddings updated and pushed to GitHub successfully!")
 
+    
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
