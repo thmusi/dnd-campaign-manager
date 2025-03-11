@@ -155,9 +155,12 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
         else:
             metadata = {}  # Default empty dict if metadata is missing
 
-    folder = metadata.get("source_folder", "general")  # ✅ Now metadata is safely accessed
-    weight = weights.get(folder, 0)
-    weighted_docs.append((doc, weight))
+    for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
+        metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
+    
+        folder = metadata.get("source_folder", "general")  # ✅ Now metadata is always a dict
+        weight = weights.get(folder, 0)
+        weighted_docs.append((doc, weight))
 
     # ✅ FIXED: Sort documents by weight correctly
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
