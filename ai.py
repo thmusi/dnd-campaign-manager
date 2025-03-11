@@ -242,7 +242,6 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None, query_
 
     {f"- Instructions spécifiques : {custom_prompt}" if custom_prompt else ""}
     """
-    {shop_type}"
     return generate_ai_response(prompt, api_key, query_type=query_type)
 
 def generate_location(api_key, location_prompt=None, query_type="/c"):
