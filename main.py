@@ -523,17 +523,15 @@ def render_folder_management_page():
 
         if not st.session_state.get("embedding_in_progress", False):
             if "folder_statuses" not in st.session_state:
-    st.session_state.folder_statuses = {}
-        st.session_state.folder_statuses = {}
-    st.session_state.folder_statuses.update(modified_folders)
+                st.session_state.folder_statuses = {}
+            st.session_state.folder_statuses.update(modified_folders)
 
-        st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
+            st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
 
     if not st.session_state.get("embedding_in_progress", False):
         if "folder_statuses" not in st.session_state:
-    st.session_state.folder_statuses = {}
-        st.session_state.folder_statuses = {}
-    st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
+            st.session_state.folder_statuses = {}
+        st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
 
 
 # Dynamic Page Rendering Dictionary
