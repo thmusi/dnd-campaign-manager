@@ -440,7 +440,6 @@ def render_folder_management_page():
     if "selected_folders" not in st.session_state:
         st.session_state.selected_folders = stored_folders.copy()
 
-    # Ensure only stored selections persist, avoid auto-selecting all
     updated_folders_to_embed = set(st.session_state.selected_folders)
 
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
@@ -450,7 +449,7 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],
-            "Embed in AI": [f[0] in st.session_state.get("selected_folders", set()) for f in folder_subset],
+            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
             "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
@@ -466,15 +465,13 @@ def render_folder_management_page():
 
             if is_selected and not was_selected:
                 newly_selected.add(folder_path)
-                # Auto-select child folders when a folder is selected
-                for subfolder, _, _ in all_folders:
-                    if subfolder.startswith(folder_path) and subfolder not in updated_folders_to_embed:
-                        newly_selected.add(subfolder)
-
+                newly_selected.update(
+                    subfolder for subfolder, _, _ in all_folders 
+                    if subfolder.startswith(folder_path) and subfolder not in updated_folders_to_embed
+                )
             elif not is_selected and was_selected:
                 deselected.add(folder_path)
 
-        # Process newly selected folders
         if newly_selected:
             updated_folders_to_embed.update(newly_selected)
             st.session_state.selected_folders.update(newly_selected)
@@ -492,7 +489,6 @@ def render_folder_management_page():
 
             st.success("✅ Newly selected folders embedded successfully!")
 
-        # Process deselected folders
         if deselected:
             updated_folders_to_embed.difference_update(deselected)
             st.session_state.selected_folders.difference_update(deselected)
@@ -504,7 +500,6 @@ def render_folder_management_page():
 
             st.success("❌ Deselected folders removed from embeddings.")
 
-    # CHECK FOR MODIFIED FILES
     if st.button("🔍 Check for Changes"):
         modification_data = load_modification_tracker()
         modified_folders = {}
@@ -512,7 +507,6 @@ def render_folder_management_page():
         for folder_path, _, _ in all_folders:
             full_path = os.path.join(OBSIDIAN_VAULT_PATH, folder_path)
 
-            # Get latest modification time
             latest_mod_time = max(
                 (os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(full_path) for f in files),
                 default=0
@@ -528,22 +522,14 @@ def render_folder_management_page():
 
         save_modification_tracker(modification_data)
 
-        # Prevent updating visuals before embedding is done
         if not st.session_state.get("embedding_in_progress", False):
-            if "folder_statuses" not in st.session_state:
-                st.session_state.folder_statuses = {}
             st.session_state.folder_statuses.update(modified_folders)
 
         st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
 
-    # Only update visuals AFTER embedding actually runs
     if not st.session_state.get("embedding_in_progress", False):
-        if "folder_statuses" not in st.session_state:
-            st.session_state.folder_statuses = {}
-        st.session_state.folder_statuses.update(folder_statuses)
+        st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
 
-    # Reset the embedding in progress flag after processing
-    st.session_state["embedding_in_progress"] = False
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
