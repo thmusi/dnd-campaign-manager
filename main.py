@@ -450,7 +450,7 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],
-            "Embed in AI": [True if f[0] in stored_folders else False for f in folder_subset],
+            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
             "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
@@ -486,16 +486,21 @@ def render_folder_management_page():
         st.session_state.selected_folders = updated_folders_to_embed.copy()
         config["folders_to_embed"] = list(updated_folders_to_embed)
         save_config(config)
-
-        embed_selected_folders(updated_folders_to_embed)
-
-        embedding_data = {
-            "folders": list(updated_folders_to_embed),
-            "metadata": {"updated_at": time.time()}
-        }
-        add_embedding_and_push(embedding_data=embedding_data)
-
-        st.success("✅ Embeddings updated and pushed to GitHub successfully!")
+    
+        # Only start embedding if something was ACTUALLY selected
+        if updated_folders_to_embed:
+            st.session_state["embedding_in_progress"] = True  # Track that embedding is happening
+            embed_selected_folders(updated_folders_to_embed)
+    
+            embedding_data = {
+                "folders": list(updated_folders_to_embed),
+                "metadata": {"updated_at": time.time()}
+            }
+            add_embedding_and_push(embedding_data=embedding_data)
+    
+            st.success("✅ Embeddings updated and pushed to GitHub successfully!")
+        else:
+            st.info("📂 No new folders selected. No embedding needed.")
 
     
 
