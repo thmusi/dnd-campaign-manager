@@ -1,10 +1,146 @@
 import openai
-from utils import summarize_text
 import streamlit as st
+from embedding_management import retrieve_relevant_embeddings, chunk_text
 
-def generate_npc(api_key, occupation):
+
+def modify_campaign_chapter(existing_text, api_key, prompt=None):
+    """Modifies a campaign chapter with optional custom changes."""
     client = openai.OpenAI(api_key=api_key)
+    messages = [
+        {"role": "system", "content": "You are a skilled D&D campaign editor."},
+        {"role": "user", "content": f"{prompt if prompt else 'Rewrite this chapter to match past events and world changes:'}\n\n{existing_text}"}
+    ]
+    response = client.chat.completions.create(model="gpt-4o", messages=messages)
 
+    # Save modified chapter to Dropbox (Obsidian) with correct Markdown formatting
+    campaign_content = response.choices[0].message.content.strip()
+    markdown_content = f"# Modified Chapter\n\n{campaign_content}"
+    
+    return response.choices[0].message.content.strip()
+
+
+# Define your templates for different query types
+SPELL_TEMPLATE = """
+**Spell Name**: {spell_name_fr_and_eng}
+**Level**: {spell_level}
+**Effect**: {spell_effect_fr_and_eng}
+**Casting Time**: {casting_time}
+**Components**: {components_fr_and_eng}
+"""
+
+CAMPAIGN_TEMPLATE = """
+**Response**: {response}
+"""
+
+DEFAULT_TEMPLATE = """
+**Response**: {response}
+"""
+
+# Summarize text (if too long, optional but useful for large documents)
+def summarize_text(text, max_tokens=3000):
+    """Summarizes long text to fit within the token limit."""
+    prompt = f"Summarize the following text:\n{text}"
+    response = openai.Completion.create(
+        model="gpt-4o",
+        prompt=prompt,
+        max_tokens=max_tokens
+    )
+    return response.choices[0].text.strip()
+
+
+def chunk_text(text, max_tokens=3000):
+    """Splits text into smaller chunks of manageable size."""
+    chunks = []
+    while len(text) > max_tokens:
+        # Find the last space within the max token length
+        split_point = text.rfind(" ", 0, max_tokens)
+        chunks.append(text[:split_point])
+        text = text[split_point:].strip()
+    chunks.append(text)  # Append the final chunk
+    return chunks
+
+# Function to generate AI response and apply templates
+def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=None):
+    """Generate AI response using relevant embeddings from ChromaDB and adapt based on query/page type."""
+    # Retrieve relevant context
+    retrieved_docs = retrieve_relevant_embeddings(query, top_k=top_k, max_tokens=max_tokens, query_type=query_type)
+    context = "\n\n".join(retrieved_docs)
+
+    # Handle chunking of context if it's too large
+    context_chunks = chunk_text(context, max_tokens=max_tokens)
+
+    client = openai.OpenAI(api_key=api_key)
+    responses = []
+
+for chunk in context_chunks:
+    if query_type == "/s":  # Spell query (quick, minimal)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant providing bilingual (French/English) D&D spell details."},
+                {"role": "user", "content": f"Provide this spell's details in both French and English: {query}\n\nContext:\n{chunk}"}
+            ]
+        )
+        spell_data = response.choices[0].message.content.strip()
+        formatted_response = SPELL_TEMPLATE.format(
+            spell_name_fr_and_eng=query,
+            spell_level="3",
+            spell_effect_fr_and_eng=spell_data,
+            casting_time="1 action",
+            components_fr_and_eng="V, S"
+        )
+
+    elif query_type == "/c":  # Campaign query
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
+                {"role": "user", "content": f"Answer this campaign-related query: {query}\n\nContext:\n{chunk}"}
+            ]
+        )
+        campaign_data = response.choices[0].message.content.strip()
+        formatted_response = CAMPAIGN_TEMPLATE.format(response=campaign_data)
+
+    elif query_type == "/g":  # General queries
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
+                {"role": "user", "content": f"Answer this general query: {query}\n\nContext:\n{chunk}"}
+            ]
+        )
+        general_data = response.choices[0].message.content.strip()
+        formatted_response = DEFAULT_TEMPLATE.format(response=general_data)
+
+    elif query_type == "/r":  # Rules queries
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant for D&D 5e rules."},
+                {"role": "user", "content": f"Answer this DnD 5e Rules query: {query}\n\nContext:\n{chunk}"}
+            ]
+        )
+        rules_data = response.choices[0].message.content.strip()
+        formatted_response = DEFAULT_TEMPLATE.format(response=rules_data)  # Fix: Correct variable used
+
+    else:  # Default query type
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant."},
+                {"role": "user", "content": f"Answer this query: {query}\n\nContext:\n{chunk}"}
+            ]
+        )
+        default_data = response.choices[0].message.content.strip()
+        formatted_response = DEFAULT_TEMPLATE.format(response=default_data)
+
+    responses.append(formatted_response)
+
+    # Return combined responses
+    return " ".join(responses)
+
+# Add the context to existing functions (e.g., NPC, Shop, Location)
+def generate_npc(api_key, occupation, query_type="generate_npc"):
     prompt = f"""
     Crée un PNJ détaillé pour une campagne D&D en respectant les règles de la 5e édition.
     Adapte sa classe en fonction de son occupation : {occupation}. Si la classe n'est pas naturellement magique, ne lui attribue pas de sorts.
@@ -69,35 +205,9 @@ def generate_npc(api_key, occupation):
     🗣️ **Description à lire aux joueurs :**
     "Un texte immersif que le MJ peut lire à voix haute, décrivant l'apparence, le comportement et l'aura générale du PNJ lorsqu'il est rencontré par les joueurs."
     """
+    return generate_ai_response(prompt, api_key, query_type=query_type)
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-
-    npc_content = response.choices[0].message.content.strip()
-
-    if not npc_content:
-        return "❌ AI failed to generate NPC."
-    
-    return npc_content  # Just return NPC content, no Dropbox call
-
-def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
-    """Generates a detailed D&D shop description, including inventory, owner, security measures, and lore."""
-
-    # List of allowed shop types
-    allowed_shop_types = [
-        "General Store", "Blacksmith", "Alchemy Shop", "Magic Shop", "Tavern",
-        "Jewelry Store", "Weapon Shop", "Armorer", "Fletcher", "Tailor", "Enchanter"
-    ]
-
-    # Validate shop type
-    if shop_type not in allowed_shop_types:
-        return f"❌ Erreur : Le type de boutique '{shop_type}' n'est pas valide. Choisissez parmi {', '.join(allowed_shop_types)}."
-
-    client = openai.OpenAI(api_key=api_key)
-
+def generate_shop(api_key, shop_type="General Store", custom_prompt=None, query_type="/c"):
     prompt = f"""
     Crée une boutique immersive pour une campagne D&D en respectant les règles de la 5e édition.
     Décris les éléments suivants :
@@ -132,53 +242,11 @@ def generate_shop(api_key, shop_type="General Store", custom_prompt=None):
 
     {f"- Instructions spécifiques : {custom_prompt}" if custom_prompt else ""}
     """
+    {shop_type}"
+    return generate_ai_response(prompt, api_key, query_type=query_type)
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}]
-    )
+def generate_location(api_key, location_prompt=None, query_type="/c"):
+    prompt = f"Crée un lieu immersif pour une campagne D&D en respectant les règles de la 5e édition. {location_prompt if location_prompt else ''}"
+    return generate_ai_response(prompt, api_key, query_type=query_type)
 
-    shop_content = response.choices[0].message.content.strip()
-
-    if not shop_content:
-        return "❌ AI failed to generate Shop."
-
-    return shop_content
-
-def generate_location(api_key, prompt=None):
-    client = openai.OpenAI(api_key=api_key)
-
-    ai_prompt = "Crée un lieu immersif pour une campagne D&D en respectant les règles de la 5e édition."
-    if prompt:
-        ai_prompt += f" {prompt}"
-
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": ai_prompt}]
-    )
-
-    location_content = response.choices[0].message.content.strip()
-
-    if not location_content:
-        return "❌ AI failed to generate Location."
-    
-    return location_content
-
-
-def modify_campaign_chapter(existing_text, api_key, prompt=None):
-    """Modifies a campaign chapter with optional custom changes."""
-    client = openai.OpenAI(api_key=api_key)
-    messages = [
-        {"role": "system", "content": "You are a skilled D&D campaign editor."},
-        {"role": "user", "content": f"{prompt if prompt else 'Rewrite this chapter to match past events and world changes:'}\n\n{existing_text}"}
-    ]
-    response = client.chat.completions.create(model="gpt-4o", messages=messages)
-
-    # Save modified chapter to Dropbox (Obsidian) with correct Markdown formatting
-    campaign_content = response.choices[0].message.content.strip()
-    markdown_content = f"# Modified Chapter\n\n{campaign_content}"
-    obsidian.write_note("Modified_Campaign_Chapter.md", markdown_content)
-    print("✅ Modified campaign chapter saved to Obsidian via Dropbox.")
-
-    return response.choices[0].message.content.strip()
 
