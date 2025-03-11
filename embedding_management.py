@@ -328,36 +328,25 @@ def flatten_folder_structure(folder_tree, parent_path="", depth=0):
     return folder_list
 
 def check_folder_modifications(all_folders, chroma_db_path, vault_path):
-    """
-    Checks which folders have been modified based on last known timestamps.
-    Persists the modification status in `modification_tracker.yaml` to track across redeployments.
-    """
-    mod_tracker_path = "modification_tracker.yaml"
-
-    # Load stored modification data
     modification_data = load_modification_tracker()  
-
     modified_folders = {}
 
     for folder_path, _, _ in all_folders:
         full_path = os.path.join(vault_path, folder_path)
-
-        # Get the latest modification time for all files inside the folder
         latest_mod_time = max(
             (os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(full_path) for f in files),
             default=0
         )
 
-        # Compare with stored modification time
         last_tracked_time = modification_data.get(folder_path, 0)
 
         if latest_mod_time > last_tracked_time:
             modified_folders[folder_path] = "⚠️ Modified"
-            modification_data[folder_path] = latest_mod_time  # Update stored timestamp
+            modification_data[folder_path] = latest_mod_time  # Update timestamp
         else:
             modified_folders[folder_path] = "✅ Embedded"
 
-    # Save the updated modification tracking data
+    # Save updated modification tracker
     save_modification_tracker(modification_data)
 
     return modified_folders
@@ -379,4 +368,30 @@ def save_selected_folders(folders):
     """Save the selected folders persistently to config.yaml."""
     config = load_config()
     config["folders_to_embed"] = list(folders)  # Convert back to list for YAML
+    save_config(config)
+
+def reset_folder_status_on_pull(all_folders, config):
+    # Initialize all folders as "Not Embedded" if not in config.yaml
+    folder_statuses = {}
+    
+    for folder_path, _, _ in all_folders:
+        # Check if folder is in config.yaml
+        if folder_path not in config.get("folders_to_embed", []):
+            folder_statuses[folder_path] = "❌ Not Embedded"
+        else:
+            folder_statuses[folder_path] = "✅ Embedded"
+    
+    return folder_statuses
+
+def selection_loop(selected_folders, folder_statuses, config):
+    # Track newly selected folders and embed them
+    newly_selected = set(selected_folders) - set(config.get("folders_to_embed", []))
+    
+    for folder in newly_selected:
+        # Start embedding this folder (process it in the backend)
+        embed_folder(folder)
+        folder_statuses[folder] = "✅ Embedded"  # Update the status
+    
+    # Add to config.yaml
+    config["folders_to_embed"].extend(newly_selected)
     save_config(config)
