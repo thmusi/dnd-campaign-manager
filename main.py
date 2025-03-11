@@ -415,12 +415,6 @@ def render_generate_npc_page():
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
-
-import os
-import time
-import pandas as pd
-import streamlit as st
-
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     render_sidebar()
@@ -529,6 +523,7 @@ def render_folder_management_page():
 
         if not st.session_state.get("embedding_in_progress", False):
             if "folder_statuses" not in st.session_state:
+    st.session_state.folder_statuses = {}
         st.session_state.folder_statuses = {}
     st.session_state.folder_statuses.update(modified_folders)
 
@@ -536,8 +531,10 @@ def render_folder_management_page():
 
     if not st.session_state.get("embedding_in_progress", False):
         if "folder_statuses" not in st.session_state:
+    st.session_state.folder_statuses = {}
         st.session_state.folder_statuses = {}
     st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
+
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
