@@ -117,7 +117,7 @@ def add_embedding_and_push(embedding_data, embedding_file="embeddings.json", vau
         print(f"❌ Error handling embeddings: {e}")
 
 # Function to retrieve relevant embeddings
-from ai import summarize_text, chunk_text
+from utils import summarize_text, chunk_text
 
 def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=None):
     """Retrieve relevant embeddings with weighted folder importance and apply chunking & summarization if needed."""
