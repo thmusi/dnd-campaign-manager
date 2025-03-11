@@ -415,7 +415,6 @@ def render_generate_npc_page():
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
-
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     render_sidebar()
@@ -466,6 +465,10 @@ def render_folder_management_page():
 
             if is_selected and not was_selected:
                 newly_selected.add(folder_path)
+                # Auto-select child folders when a folder is selected
+                for subfolder, _, _ in all_folders:
+                    if subfolder.startswith(folder_path) and subfolder not in updated_folders_to_embed:
+                        newly_selected.add(subfolder)
 
             elif not is_selected and was_selected:
                 deselected.add(folder_path)
@@ -500,14 +503,40 @@ def render_folder_management_page():
 
             st.success("❌ Deselected folders removed from embeddings.")
 
+    # CHECK FOR MODIFIED FILES
     if st.button("🔍 Check for Changes"):
-        folder_statuses = check_folder_modifications(flatten_folder_structure(folder_tree), CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+        modification_data = load_modification_tracker()
+        modified_folders = {}
 
+        for folder_path, _, _ in all_folders:
+            full_path = os.path.join(OBSIDIAN_VAULT_PATH, folder_path)
+
+            # Get latest modification time
+            latest_mod_time = max(
+                (os.path.getmtime(os.path.join(root, f)) for root, _, files in os.walk(full_path) for f in files),
+                default=0
+            )
+
+            last_tracked_time = modification_data.get(folder_path, 0)
+
+            if latest_mod_time > last_tracked_time:
+                modified_folders[folder_path] = "⚠️ Modified"
+                modification_data[folder_path] = latest_mod_time  # Save new timestamp
+            else:
+                modified_folders[folder_path] = "✅ Embedded"  # Keep embedded if unchanged
+
+        save_modification_tracker(modification_data)
+
+        # Now update UI status based on actual modifications
         if st.session_state.get("embedding_in_progress", False) is False:
-            st.session_state.folder_statuses = folder_statuses
+            st.session_state.folder_statuses = modified_folders
 
         st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
-    
+
+    # Only update visuals *AFTER* embedding actually runs
+    if st.session_state.get("embedding_in_progress", False) is False:
+        st.session_state.folder_statuses = folder_statuses  # Store results in session
+
 
 # Dynamic Page Rendering Dictionary
 PAGES = {
