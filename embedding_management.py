@@ -360,7 +360,8 @@ def check_folder_modifications(all_folders, chroma_db_path, vault_path):
     # Save the updated modification tracking data
     save_modification_tracker(modification_data)
 
-    return modified_folders    
+    return modified_folders
+
 
 def get_subfolders(tree, path):
     """Returns the subfolder dictionary at a given path."""
