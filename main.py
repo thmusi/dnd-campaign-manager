@@ -438,7 +438,7 @@ def render_folder_management_page():
     stored_folders = load_selected_folders()
 
     if "selected_folders" not in st.session_state:
-        st.session_state.selected_folders = stored_folders.copy()  # Copy previous selection
+        st.session_state.selected_folders = stored_folders.copy()
 
     # Ensure only stored selections persist, avoid auto-selecting all
     updated_folders_to_embed = set(st.session_state.selected_folders)
@@ -522,21 +522,29 @@ def render_folder_management_page():
 
             if latest_mod_time > last_tracked_time:
                 modified_folders[folder_path] = "⚠️ Modified"
-                modification_data[folder_path] = latest_mod_time  # Save new timestamp
+                modification_data[folder_path] = latest_mod_time
             else:
-                modified_folders[folder_path] = "✅ Embedded"  # Keep embedded if unchanged
+                modified_folders[folder_path] = "✅ Embedded"
 
         save_modification_tracker(modification_data)
 
-        # Now update UI status based on actual modifications
+        # Prevent updating visuals before embedding is done
         if not st.session_state.get("embedding_in_progress", False):
+            if "folder_statuses" not in st.session_state:
+                st.session_state.folder_statuses = {}
             st.session_state.folder_statuses.update(modified_folders)
 
         st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
 
-    # Only update visuals *AFTER* embedding actually runs
+    # Only update visuals AFTER embedding actually runs
     if not st.session_state.get("embedding_in_progress", False):
-        st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
+        if "folder_statuses" not in st.session_state:
+            st.session_state.folder_statuses = {}
+        st.session_state.folder_statuses.update(folder_statuses)
+
+    # Reset the embedding in progress flag after processing
+    st.session_state["embedding_in_progress"] = False
+
 # Dynamic Page Rendering Dictionary
 PAGES = {
     "API Key": render_api_key_page,
