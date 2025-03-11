@@ -60,9 +60,13 @@ def chunk_text(text, max_tokens=3000):
     return chunks
 
 # Function to generate AI response and apply templates
+import openai
+import streamlit as st
+from embedding_management import retrieve_relevant_embeddings, chunk_text
+
 def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=None):
     """Generate AI response using relevant embeddings from ChromaDB and adapt based on query/page type."""
-    # Retrieve relevant context
+    
     retrieved_docs = retrieve_relevant_embeddings(query, top_k=top_k, max_tokens=max_tokens, query_type=query_type)
     context = "\n\n".join(retrieved_docs)
 
@@ -70,73 +74,63 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
     context_chunks = chunk_text(context, max_tokens=max_tokens)
 
     client = openai.OpenAI(api_key=api_key)
-    responses = []
+    responses = []  # ✅ Ensure this list is inside the function
 
-for chunk in context_chunks:
-    if query_type == "/s":  # Spell query (quick, minimal)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant providing bilingual (French/English) D&D spell details."},
-                {"role": "user", "content": f"Provide this spell's details in both French and English: {query}\n\nContext:\n{chunk}"}
-            ]
-        )
-        spell_data = response.choices[0].message.content.strip()
-        formatted_response = SPELL_TEMPLATE.format(
-            spell_name_fr_and_eng=query,
-            spell_level="3",
-            spell_effect_fr_and_eng=spell_data,
-            casting_time="1 action",
-            components_fr_and_eng="V, S"
-        )
+    for chunk in context_chunks:  # ✅ Ensure this is inside the function
+        if query_type == "/s":  
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an AI assistant providing bilingual (French/English) D&D spell details."},
+                    {"role": "user", "content": f"Provide this spell's details in both French and English: {query}\n\nContext:\n{chunk}"}
+                ]
+            )
+            spell_data = response.choices[0].message.content.strip()
+            formatted_response = SPELL_TEMPLATE.format(
+                spell_name_fr_and_eng=query,
+                spell_level="3",
+                spell_effect_fr_and_eng=spell_data,
+                casting_time="1 action",
+                components_fr_and_eng="V, S"
+            )
 
-    elif query_type == "/c":  # Campaign query
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
-                {"role": "user", "content": f"Answer this campaign-related query: {query}\n\nContext:\n{chunk}"}
-            ]
-        )
-        campaign_data = response.choices[0].message.content.strip()
-        formatted_response = CAMPAIGN_TEMPLATE.format(response=campaign_data)
+        elif query_type == "/c":  
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
+                    {"role": "user", "content": f"Answer this campaign-related query: {query}\n\nContext:\n{chunk}"}
+                ]
+            )
+            campaign_data = response.choices[0].message.content.strip()
+            formatted_response = CAMPAIGN_TEMPLATE.format(response=campaign_data)
 
-    elif query_type == "/g":  # General queries
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
-                {"role": "user", "content": f"Answer this general query: {query}\n\nContext:\n{chunk}"}
-            ]
-        )
-        general_data = response.choices[0].message.content.strip()
-        formatted_response = DEFAULT_TEMPLATE.format(response=general_data)
+        elif query_type == "/r":  
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an AI assistant for D&D 5e rules."},
+                    {"role": "user", "content": f"Answer this DnD 5e Rules query: {query}\n\nContext:\n{chunk}"}
+                ]
+            )
+            rules_data = response.choices[0].message.content.strip()
+            formatted_response = DEFAULT_TEMPLATE.format(response=rules_data)  # ✅ Fixed
 
-    elif query_type == "/r":  # Rules queries
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant for D&D 5e rules."},
-                {"role": "user", "content": f"Answer this DnD 5e Rules query: {query}\n\nContext:\n{chunk}"}
-            ]
-        )
-        rules_data = response.choices[0].message.content.strip()
-        formatted_response = DEFAULT_TEMPLATE.format(response=rules_data)  # Fix: Correct variable used
+        else:  
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an AI assistant."},
+                    {"role": "user", "content": f"Answer this query: {query}\n\nContext:\n{chunk}"}
+                ]
+            )
+            default_data = response.choices[0].message.content.strip()
+            formatted_response = DEFAULT_TEMPLATE.format(response=default_data)
 
-    else:  # Default query type
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant."},
-                {"role": "user", "content": f"Answer this query: {query}\n\nContext:\n{chunk}"}
-            ]
-        )
-        default_data = response.choices[0].message.content.strip()
-        formatted_response = DEFAULT_TEMPLATE.format(response=default_data)
+        responses.append(formatted_response)  # ✅ Ensure this is inside the function
 
-        responses.append(formatted_response)  # Ensure this is inside the function
+    return " ".join(responses)  # ✅ Ensure this is inside the function
 
-    return " ".join(responses)  # ✅ This must be inside the function
 
 # Add the context to existing functions (e.g., NPC, Shop, Location)
 def generate_npc(api_key, occupation, query_type="generate_npc"):
