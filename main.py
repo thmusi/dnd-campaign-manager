@@ -415,6 +415,7 @@ def render_generate_npc_page():
     # Use the reusable button
     add_to_cart_button("NPCs", "generated_npc", st.session_state["generated_npc"])
 
+
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     render_sidebar()
@@ -528,16 +529,14 @@ def render_folder_management_page():
         save_modification_tracker(modification_data)
 
         # Now update UI status based on actual modifications
-        if st.session_state.get("embedding_in_progress", False) is False:
-            st.session_state.folder_statuses = modified_folders
+        if not st.session_state.get("embedding_in_progress", False):
+            st.session_state.folder_statuses.update(modified_folders)
 
         st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
 
     # Only update visuals *AFTER* embedding actually runs
-    if st.session_state.get("embedding_in_progress", False) is False:
-        st.session_state.folder_statuses = folder_statuses  # Store results in session
-
-
+    if not st.session_state.get("embedding_in_progress", False):
+        st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
 # Dynamic Page Rendering Dictionary
 PAGES = {
     "API Key": render_api_key_page,
