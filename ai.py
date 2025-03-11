@@ -134,10 +134,9 @@ for chunk in context_chunks:
         default_data = response.choices[0].message.content.strip()
         formatted_response = DEFAULT_TEMPLATE.format(response=default_data)
 
-    responses.append(formatted_response)
+        responses.append(formatted_response)  # Ensure this is inside the function
 
-# Return combined responses
-return " ".join(responses)
+    return " ".join(responses)  # ✅ This must be inside the function
 
 # Add the context to existing functions (e.g., NPC, Shop, Location)
 def generate_npc(api_key, occupation, query_type="generate_npc"):
