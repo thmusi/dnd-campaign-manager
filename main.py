@@ -431,8 +431,10 @@ def render_folder_management_page():
         st.warning("⚠️ No folders detected in the vault. Ensure the vault is correctly synced and contains folders.")
         return
 
-    all_folders = flatten_folder_structure(folder_tree)  # Keep this from your previous code
-    folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)  # Use existing function
+    all_folders = flatten_folder_structure(folder_tree)
+
+    # Ensure that the folder statuses are initialized correctly after pull
+    folder_statuses = initialize_folder_statuses(all_folders, config)
 
     # Load stored folder selections correctly
     stored_folders = load_selected_folders()
@@ -444,26 +446,21 @@ def render_folder_management_page():
 
     top_level_folders = sorted(set(folder.split("/")[0] for folder, _, _ in all_folders))
     
-    # Iterate through each top-level folder and display it in the table format
     for top_folder in top_level_folders:
         st.subheader(f"📂 {top_folder}")
 
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
-        
-        # Create DataFrame for folder display
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],
             "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
             "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
-        # Render data editor (interactive table)
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
 
         newly_selected = set()
         deselected = set()
 
-        # Determine which folders were selected/deselected
         for i in range(len(folder_subset)):
             folder_path = folder_subset[i][0]
             was_selected = folder_path in st.session_state.selected_folders
@@ -543,6 +540,19 @@ def render_folder_management_page():
         if "folder_statuses" not in st.session_state:
             st.session_state.folder_statuses = {}
         st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
+
+def initialize_folder_statuses(all_folders, config):
+    # Initialize all folders to "❌ Not Embedded" if they are not in config.yaml
+    folder_statuses = {}
+
+    for folder_path, _, _ in all_folders:
+        # If the folder is not in config.yaml, it's marked as not embedded
+        if folder_path not in config.get("folders_to_embed", []):
+            folder_statuses[folder_path] = "❌ Not Embedded"
+        else:
+            folder_statuses[folder_path] = "✅ Embedded"
+
+    return folder_statuses
 
     
 # Dynamic Page Rendering Dictionary
