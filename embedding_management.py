@@ -147,10 +147,17 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
     # Sort documents based on their folder priority
     weighted_docs = []
-    for doc, metadata in zip(results.get("documents", []), results.get("metadatas", [])):
-        folder = metadata.get("source_folder", "general")
-        weight = weights.get(folder, 0)  # Default weight is 0 (least important)
-        weighted_docs.append((doc, weight))
+    for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
+        if isinstance(metadata_list, list) and metadata_list:  
+            metadata = metadata_list[0]  # Take the first metadata dictionary if a list
+        elif isinstance(metadata_list, dict):  
+            metadata = metadata_list  # Directly use it if it's already a dict
+        else:
+            metadata = {}  # Default empty dict if metadata is missing
+
+    folder = metadata.get("source_folder", "general")  # ✅ Now metadata is safely accessed
+    weight = weights.get(folder, 0)
+    weighted_docs.append((doc, weight))
 
     # ✅ FIXED: Sort documents by weight correctly
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
