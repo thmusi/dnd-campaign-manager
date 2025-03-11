@@ -136,8 +136,8 @@ for chunk in context_chunks:
 
     responses.append(formatted_response)
 
-    # Return combined responses
-    return " ".join(responses)
+# Return combined responses
+return " ".join(responses)
 
 # Add the context to existing functions (e.g., NPC, Shop, Location)
 def generate_npc(api_key, occupation, query_type="generate_npc"):
