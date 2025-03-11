@@ -433,13 +433,13 @@ def render_folder_management_page():
 
     all_folders = flatten_folder_structure(folder_tree)
     folder_statuses = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
-    
+
     # Load stored folder selections correctly
     stored_folders = load_selected_folders()
 
     if "selected_folders" not in st.session_state:
         st.session_state.selected_folders = stored_folders.copy()  # Copy previous selection
-    
+
     # Ensure only stored selections persist, avoid auto-selecting all
     updated_folders_to_embed = set(st.session_state.selected_folders)
 
@@ -450,11 +450,14 @@ def render_folder_management_page():
         folder_subset = [(path, display, depth) for path, display, depth in all_folders if path.startswith(top_folder)]
         df = pd.DataFrame({
             "Folder": [f[1] for f in folder_subset],
-            "Embed in AI": [f[0] in st.session_state.selected_folders for f in folder_subset],
+            "Embed in AI": [f[0] in st.session_state.get("selected_folders", set()) for f in folder_subset],
             "Status": [folder_statuses.get(f[0], "❌ Not Embedded") for f in folder_subset]
         })
 
         edited_df = st.data_editor(df, use_container_width=True, hide_index=True)
+
+        newly_selected = set()
+        deselected = set()
 
         for i in range(len(folder_subset)):
             folder_path = folder_subset[i][0]
@@ -462,46 +465,48 @@ def render_folder_management_page():
             is_selected = edited_df.iloc[i]["Embed in AI"]
 
             if is_selected and not was_selected:
-                updated_folders_to_embed.add(folder_path)
-                for subfolder, _, _ in all_folders:
-                    if subfolder.startswith(folder_path):
-                        updated_folders_to_embed.add(subfolder)
+                newly_selected.add(folder_path)
 
             elif not is_selected and was_selected:
-                updated_folders_to_embed.discard(folder_path)
-                for subfolder, _, _ in all_folders:
-                    if subfolder.startswith(folder_path):
-                        updated_folders_to_embed.discard(subfolder)
+                deselected.add(folder_path)
 
-    if st.button("🔍 Check for Changes"):  # ✅ FIXED INDENTATION
-        # Scan for modified files (without pulling from GitHub)
-        folder_statuses = check_folder_modifications(flatten_folder_structure(folder_tree), CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+        # Process newly selected folders
+        if newly_selected:
+            updated_folders_to_embed.update(newly_selected)
+            st.session_state.selected_folders.update(newly_selected)
+            config["folders_to_embed"] = list(updated_folders_to_embed)
+            save_config(config)
 
-        # Update UI to show correct status
-        st.session_state.folder_statuses = folder_statuses  # Store results in session
+            st.session_state["embedding_in_progress"] = True
+            embed_selected_folders(newly_selected)
 
-        st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
-
-    if updated_folders_to_embed != set(st.session_state.selected_folders):  # Only run if something changed
-        st.session_state.selected_folders = updated_folders_to_embed.copy()
-        config["folders_to_embed"] = list(updated_folders_to_embed)
-        save_config(config)
-    
-        # Only start embedding if something was ACTUALLY selected
-        if updated_folders_to_embed:
-            st.session_state["embedding_in_progress"] = True  # Track that embedding is happening
-            embed_selected_folders(updated_folders_to_embed)
-    
             embedding_data = {
-                "folders": list(updated_folders_to_embed),
+                "folders": list(newly_selected),
                 "metadata": {"updated_at": time.time()}
             }
             add_embedding_and_push(embedding_data=embedding_data)
-    
-            st.success("✅ Embeddings updated and pushed to GitHub successfully!")
-        else:
-            st.info("📂 No new folders selected. No embedding needed.")
 
+            st.success("✅ Newly selected folders embedded successfully!")
+
+        # Process deselected folders
+        if deselected:
+            updated_folders_to_embed.difference_update(deselected)
+            st.session_state.selected_folders.difference_update(deselected)
+            config["folders_to_embed"] = list(updated_folders_to_embed)
+            save_config(config)
+
+            st.session_state["embedding_in_progress"] = True
+            remove_embedding(deselected)
+
+            st.success("❌ Deselected folders removed from embeddings.")
+
+    if st.button("🔍 Check for Changes"):
+        folder_statuses = check_folder_modifications(flatten_folder_structure(folder_tree), CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+
+        if st.session_state.get("embedding_in_progress", False) is False:
+            st.session_state.folder_statuses = folder_statuses
+
+        st.success("🔄 Folder statuses updated! If any files changed, they will now show ⚠️ Modified.")
     
 
 # Dynamic Page Rendering Dictionary
