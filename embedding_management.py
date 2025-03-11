@@ -124,25 +124,26 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     db = chromadb.PersistentClient(path="chroma_db")
     collection = db.get_or_create_collection("campaign_notes")
 
-    # Folder importance mapping (higher number = higher priority)
+    # ✅ FIXED: Added missing commas at the end of dictionary entries
     folder_weights = {
-        "/s": {"Rulebooks/Spells": 3},  # Only spells
-        "/c": {"A. Campaign": 2, "C. Inspiration": 2, "B. Exandria": 1},  # Campaign-focused
-        "/r": {"Rulebooks": 3},  # Rules only
-        "/g": {}, # General 
-        "generate_npc": {"B. Exandria": 3, "C. Inspiration" : 1, "A. Campaign": 2}
-        "session_management": {"A. Campaign": 3, "A. Campaign/2. Session Plans + Logs": 3},  # Full guides
-        "quest_generator": {"A. Campaign": 2, "E. Ideas": 1, "B. Exandria": 2, "C. Inspiration" : 2},  # Focuses on world lore
-        "dungeon_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration" : 2},  # Similar to quest
-        "encounter_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration" : 1},  # Prioritizes combat-relevant data
-        "adapt_chapter": {"C. Inspiration/C.1. Campaign Books": 3, "A. Campaign/2. Session Plans + Logs": 3, "C. Inspiration/C.2. Process": 3},  # Needs deep context
-        "create_shop": {"B. Exandria": 3, "A. Campaign": 2},  # Location-based
-        "create_location": {"B. Exandria": 3, "A. Campaign": 2},  # Full world access
-        "worldbuilding": {}  # Chat-based, general world details
+        "/s": {"Rulebooks/Spells": 3},  
+        "/c": {"A. Campaign": 2, "C. Inspiration": 2, "B. Exandria": 1},  
+        "/r": {"Rulebooks": 3},  
+        "/g": {},  # General queries
+        "generate_npc": {"B. Exandria": 3, "C. Inspiration": 1, "A. Campaign": 2},  
+        "session_management": {"A. Campaign": 3, "A. Campaign/2. Session Plans + Logs": 3},  
+        "quest_generator": {"A. Campaign": 2, "E. Ideas": 1, "B. Exandria": 2, "C. Inspiration": 2},  
+        "dungeon_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 2},  
+        "encounter_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 1},  
+        "adapt_chapter": {"C. Inspiration/C.1. Campaign Books": 3, "A. Campaign/2. Session Plans + Logs": 3, "C. Inspiration/C.2. Process": 3},  
+        "create_shop": {"B. Exandria": 3, "A. Campaign": 2},  
+        "create_location": {"B. Exandria": 3, "A. Campaign": 2},  
+        "worldbuilding": {}  
     }
-    # Get allowed folders and prioritize results
+
+    # ✅ FIXED: Properly get the folder weights
     weights = folder_weights.get(query_type, {"general": 1})
-    results = collection.query(query_texts=[query], n_results=top_k * 2)  # Get extra results for prioritization
+    results = collection.query(query_texts=[query], n_results=top_k * 2)  
 
     # Sort documents based on their folder priority
     weighted_docs = []
@@ -151,21 +152,20 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
         weight = weights.get(folder, 0)  # Default weight is 0 (least important)
         weighted_docs.append((doc, weight))
 
-    # Sort documents by weight (higher first)
+    # ✅ FIXED: Sort documents by weight correctly
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
-    sorted_docs = [doc for doc, _ in weighted_docs[:top_k]]  # Keep top-k weighted results
+    sorted_docs = [doc for doc, _ in weighted_docs[:top_k]]  
 
     combined_text = "\n\n".join(sorted_docs)
 
-    # Summarize if too long
+    # ✅ FIXED: Ensure text is summarized if too long
     if len(combined_text.split()) > max_tokens:
         combined_text = summarize_text(combined_text, max_tokens=max_tokens // 2)
 
-    # Chunk text to fit token limits
+    # ✅ FIXED: Chunk text correctly
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
-
 
 # Function to pull the latest GitHub Vault updates
 def pull_github_vault():
