@@ -161,9 +161,8 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
     # ✅ FIXED: Sort documents by weight correctly
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
-    sorted_docs = [doc for doc, _ in weighted_docs[:top_k]]  
-
-    combined_text = "\n\n".join(sorted_docs)
+    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in weighted_docs[:top_k]]  # ✅ Convert lists to strings
+    combined_text = "\n\n".join(sorted_docs)  # ✅ Now all items are strings
 
     # ✅ FIXED: Ensure text is summarized if too long
     if len(combined_text.split()) > max_tokens:
