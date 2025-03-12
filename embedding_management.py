@@ -76,7 +76,11 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, con
                     content = f.read()
 
                 # ✅ Add embedding to ChromaDB
-                collection.add(documents=[content], ids=[file_path])
+                collection.add(
+                    documents=[content],
+                    ids=[file_path],
+                    metadatas=[{"source_folder": folder_path, "filename": file_path}]
+                )
                 embedded_files.append(file_path)
                 print(f"✅ Embedded: {file_path}")
 
