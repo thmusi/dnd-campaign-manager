@@ -489,7 +489,7 @@ def render_folder_management_page():
                 "folders": list(newly_selected),
                 "metadata": {"updated_at": time.time()}
             }
-            add_embedding_and_push()
+            add_embedding_and_push(vault_path="VAULT_PATH", chroma_db_path="your_chroma_db_path")
 
             st.success("✅ Newly selected folders embedded successfully!")
 
