@@ -121,7 +121,7 @@ import subprocess
 
 def add_embedding_and_push(vault_path="obsidian_vault", chroma_db_path="chroma_db"):
     """
-    Pushes embeddings to GitHub after updating ChromaDB.
+    Pushes ChromaDB embeddings to GitHub.
     """
     try:
         # Ensure ChromaDB has valid embeddings before pushing
@@ -141,12 +141,15 @@ def add_embedding_and_push(vault_path="obsidian_vault", chroma_db_path="chroma_d
 
         os.chdir(vault_path)
         subprocess.run(["git", "pull"])  # Ensure latest updates
-        subprocess.run(["git", "add", os.path.join(chroma_db_path, "chroma.sqlite3")])
-        subprocess.run(["git", "commit", "-m", "Updated embeddings"])
+
+        # ✅ Instead of embeddings.json, push chroma_db/
+        subprocess.run(["git", "add", chroma_db_path])
+        subprocess.run(["git", "commit", "-m", "Updated embeddings in ChromaDB"])
         subprocess.run(["git", "push"])
+
         os.chdir("..")  # Return to previous directory
 
-        print("✅ Embeddings added and pushed to GitHub successfully!")
+        print("✅ ChromaDB embeddings added and pushed to GitHub successfully!")
 
     except Exception as e:
         print(f"❌ Error handling embeddings: {e}")
