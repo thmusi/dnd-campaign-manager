@@ -15,20 +15,19 @@ CHROMA_DB_PATH = "chroma_db/"
 CONFIG_PATH = "config.yaml"
 MODIFICATION_TRACKER = "modification_tracker.yaml"
 
-# Load configuration from config.yaml
 def load_config():
-    try:
-        with open(CONFIG_PATH, "r") as file:
-            return yaml.safe_load(file) or {}
-    except FileNotFoundError:
-        return {}
-    except yaml.YAMLError:
-        st.error("⚠️ Error reading config.yaml. Check file format.")
-        return {}
+    db = chromadb.PersistentClient(path="chroma_db")
+    collection = db.get_or_create_collection("campaign_notes")
+    result = collection.get(ids=["folders_to_embed"])
+    return eval(result["documents"][0]) if result["documents"] else {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
 
 def save_config(config):
-    with open(CONFIG_PATH, "w") as file:
-        yaml.safe_dump(config, file)
+    db = chromadb.PersistentClient(path="chroma_db")
+    collection = db.get_or_create_collection("campaign_notes")
+    collection.upsert(
+        ids=["folders_to_embed"],
+        documents=[str(config)]
+    )
 
 # Initialize ChromaDB client
 db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
