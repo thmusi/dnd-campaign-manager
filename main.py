@@ -18,11 +18,8 @@ config = load_config()
 OBSIDIAN_VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 # Load the cart from JSON (ensure persistence)
 CART_FILE = Path("cart.json")
-CONFIG_PATH = "config.yaml"
 CHROMA_DB_PATH = "chroma_db"  # Path to store persistent embeddings
 
-with open("config.yaml", "r") as config_file:
-    config = yaml.safe_load(config_file)
 
 VAULT_PATH = config.get("obsidian_vault_path", "obsidian_vault")
 
