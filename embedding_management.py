@@ -45,23 +45,64 @@ FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
-def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
+def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, config_file="config.yaml"):
+    """
+    Embeds selected folders into ChromaDB and updates config.yaml.
+    """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
+
+    embedded_files = []
 
     for folder in folders_to_embed:
         full_folder_path = os.path.join(vault_path, folder)
 
-        if os.path.exists(full_folder_path):
-            for root, _, files in os.walk(full_folder_path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-                        content = f.read()
-                    collection.add(documents=[content], ids=[file_path])
-                    print(f"✅ Embedded: {file_path}")
-        else:
+        if not os.path.exists(full_folder_path):
             print(f"⚠️ Folder does not exist: {full_folder_path}")
+            continue
+
+        for root, _, files in os.walk(full_folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+
+                # ✅ Check if file is already embedded before processing
+                existing_docs = collection.get(ids=[file_path])
+                if existing_docs["ids"]:
+                    print(f"⚠️ Skipping duplicate embedding: {file_path}")
+                    continue  # Skip already embedded files
+
+                # ✅ Read file content
+                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+
+                # ✅ Add embedding to ChromaDB
+                collection.add(documents=[content], ids=[file_path])
+                embedded_files.append(file_path)
+                print(f"✅ Embedded: {file_path}")
+
+    # ✅ Update config.yaml with newly embedded files
+    update_config_yaml(embedded_files, config_file)
+
+def update_config_yaml(selected_files, config_path="config.yaml"):
+    """
+    Updates config.yaml to track embedded files.
+    """
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f) or {}
+        else:
+            config = {}
+
+        config["embedded_files"] = list(set(config.get("embedded_files", []) + selected_files))
+
+        with open(config_path, "w") as f:
+            yaml.dump(config, f)
+
+        print("✅ Updated config.yaml with new embedded files.")
+
+    except Exception as e:
+        print(f"❌ Error updating config.yaml: {e}")
 
 
 
@@ -78,35 +119,29 @@ def remove_embedding(embedding_id):
 # Function to manually add an embedding
 import subprocess
 
-def add_embedding_and_push(embedding_data, embedding_file="embeddings.json", vault_path="obsidian_vault"):
+def add_embedding_and_push(vault_path="obsidian_vault", chroma_db_path="chroma_db"):
     """
-    Adds new embedding data and automatically saves it to GitHub.
+    Pushes embeddings to GitHub after updating ChromaDB.
     """
     try:
-        # Load existing embeddings
-        if os.path.exists(embedding_file):
-            with open(embedding_file, "r") as f:
-                embeddings = json.load(f)
-        else:
-            embeddings = []
-
-        # Add new embedding
-        embeddings.append(embedding_data)
-
-        # Save embeddings locally
-        with open(embedding_file, "w") as f:
-            json.dump(embeddings, f, indent=4)
-
+        # Ensure ChromaDB has valid embeddings before pushing
+        embedding_file = os.path.join(chroma_db_path, "chroma.sqlite3")
+        if not os.path.exists(embedding_file):
+            print("❌ No embeddings found in ChromaDB. Skipping push.")
+            return
+        
         # GitHub Operations
         repo_path = os.path.join(vault_path, ".git")
         if not os.path.exists(repo_path):
             print("⚠️ Vault is not a Git repository. Cloning again...")
             subprocess.run(["rm", "-rf", vault_path])  # Remove old folder
             subprocess.run(["git", "clone", "GITHUB_REPO_URL", vault_path])  # Clone fresh copy
+            subprocess.run(["git", "config", "--global", "user.email", "theoesperet@gmail.com"])
+            subprocess.run(["git", "config", "--global", "user.name", "thmusi"])
 
         os.chdir(vault_path)
         subprocess.run(["git", "pull"])  # Ensure latest updates
-        subprocess.run(["git", "add", embedding_file])
+        subprocess.run(["git", "add", os.path.join(chroma_db_path, "chroma.sqlite3")])
         subprocess.run(["git", "commit", "-m", "Updated embeddings"])
         subprocess.run(["git", "push"])
         os.chdir("..")  # Return to previous directory
@@ -175,6 +210,56 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
+
+def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
+    """
+    Removes embeddings from ChromaDB and updates config.yaml.
+    """
+    db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    collection = db.get_or_create_collection(name="campaign_notes")
+
+    removed_files = []
+
+    for folder in folders_to_remove:
+        full_folder_path = os.path.join(vault_path, folder)
+
+        if os.path.exists(full_folder_path):
+            for root, _, files in os.walk(full_folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    
+                    # ✅ Check if file exists in ChromaDB before removing
+                    existing_docs = collection.get(ids=[file_path])
+                    if existing_docs["ids"]:
+                        collection.delete(ids=[file_path])
+                        removed_files.append(file_path)
+                        print(f"❌ Removed embedding: {file_path}")
+                    else:
+                        print(f"⚠️ File not found in embeddings: {file_path}")
+
+    if removed_files:
+        update_config_yaml_after_removal(removed_files)
+
+def update_config_yaml_after_removal(removed_files, config_path="config.yaml"):
+    """
+    Updates config.yaml after removing embeddings.
+    """
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f) or {}
+        else:
+            config = {}
+
+        config["embedded_files"] = [f for f in config.get("embedded_files", []) if f not in removed_files]
+
+        with open(config_path, "w") as f:
+            yaml.dump(config, f)
+
+        print("✅ Updated config.yaml after removing embeddings.")
+
+    except Exception as e:
+        print(f"❌ Error updating config.yaml: {e}")
 
 # Function to pull the latest GitHub Vault updates
 def pull_github_vault():
