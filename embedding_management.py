@@ -14,7 +14,6 @@ import ast
 
 
 CHROMA_DB_PATH = "chroma_db/"
-CONFIG_PATH = "config.yaml"
 MODIFICATION_TRACKER = "modification_tracker.yaml"
 
 def load_config():
@@ -103,7 +102,7 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, con
                 print(f"✅ Embedded: {file_path}")
 
     # ✅ Update config.yaml with newly embedded files
-    update_config_yaml(embedded_files, config_file)
+    save_config({"folders_to_embed": list(embedded_files)})
 
 def update_config_yaml(selected_files, config_path="config.yaml"):
     """
@@ -506,7 +505,7 @@ def reset_folder_status_on_pull(all_folders, config):
     
     for folder_path, _, _ in all_folders:
         # Check if folder is in config.yaml
-        if folder_path not in config.get("folders_to_embed", []):
+        if folder_path not in load_config().get("folders_to_embed", []):
             folder_statuses[folder_path] = "❌ Not Embedded"
         else:
             folder_statuses[folder_path] = "✅ Embedded"
@@ -523,5 +522,6 @@ def selection_loop(selected_folders, folder_statuses, config):
         folder_statuses[folder] = "✅ Embedded"  # Update the status
     
     # Add to config.yaml
-    config["folders_to_embed"].extend(newly_selected)
-    save_config(config)
+    new_config = load_config()
+    new_config["folders_to_embed"].extend(newly_selected)
+    save_config(new_config)
