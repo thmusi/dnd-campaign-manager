@@ -8,6 +8,8 @@ import openai
 from pathlib import Path
 import pandas as pd
 import time
+import ast
+
 
 
 
@@ -17,12 +19,26 @@ MODIFICATION_TRACKER = "modification_tracker.yaml"
 
 def load_config():
     db = chromadb.PersistentClient(path="chroma_db")
-    collection = ("campaign_notes")
+    collection = db.get_or_create_collection("campaign_notes")
+
+    # Fetch stored config
     result = collection.get(ids=["folders_to_embed"])
-    
-    if result and result.get("documents"):
-        return eval(result["documents"][0])  # Convert string back to dictionary
-    return {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
+
+    # Ensure the result contains valid data
+    if result and "documents" in result and result["documents"]:
+        stored_config = result["documents"][0]  # Retrieve stored value
+
+        if isinstance(stored_config, str):
+            try:
+                stored_config = ast.literal_eval(stored_config)  # Safe way to convert string to dictionary
+            except (SyntaxError, ValueError):
+                stored_config = {}  # Reset if conversion fails
+
+        if isinstance(stored_config, dict):
+            return stored_config  # ✅ Return parsed config if valid
+
+    return {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}  # Default config
+
 
 def save_config(config):
     db = chromadb.PersistentClient(path="chroma_db")
