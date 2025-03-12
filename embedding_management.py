@@ -62,9 +62,9 @@ FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
-def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, config_file="config.yaml"):
+def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
     """
-    Embeds selected folders into ChromaDB and updates config.yaml.
+    Embeds selected folders into ChromaDB.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
@@ -101,8 +101,10 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, con
                 embedded_files.append(file_path)
                 print(f"✅ Embedded: {file_path}")
 
-    # ✅ Update config.yaml with newly embedded files
-    save_config({"folders_to_embed": list(embedded_files)})
+    # ✅ Store embedded folders in ChromaDB instead of config.yaml
+    config = load_config()
+    config["folders_to_embed"] = list(set(config.get("folders_to_embed", []) + folders_to_embed))
+    save_config(config)
 
 def update_config_yaml(selected_files, config_path="config.yaml"):
     """
