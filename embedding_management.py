@@ -79,7 +79,7 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH, con
                 collection.add(
                     documents=[content],
                     ids=[file_path],
-                    metadatas=[{"source_folder": folder_path, "filename": file_path}]
+                    metadatas=[{"source_folder": folder, "filename": file_path}]
                 )
                 embedded_files.append(file_path)
                 print(f"✅ Embedded: {file_path}")
@@ -115,10 +115,6 @@ def list_embeddings():
     docs = collection.get()
     return docs if docs else {"ids": [], "documents": []}
 
-# Function to remove an embedding
-def remove_embedding(embedding_id):
-    collection.delete(ids=[embedding_id])
-    st.success(f"✅ Removed embedding {embedding_id}")
 
 # Function to manually add an embedding
 import subprocess
