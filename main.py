@@ -489,7 +489,7 @@ def render_folder_management_page():
                 "folders": list(newly_selected),
                 "metadata": {"updated_at": time.time()}
             }
-            add_embedding_and_push(embedding_data=embedding_data)
+            add_embedding_and_push()
 
             st.success("✅ Newly selected folders embedded successfully!")
 
