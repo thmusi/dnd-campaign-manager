@@ -4,7 +4,7 @@ import openai
 def summarize_text(text, max_tokens=3000):
     """Summarizes long text to fit within the token limit."""
     prompt = f"Summarize the following text:\n{text}"
-    response = openai.Completion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4o",
         prompt=prompt,
         max_tokens=max_tokens
