@@ -157,61 +157,53 @@ def add_embedding_and_push(vault_path="obsidian_vault", chroma_db_path="chroma_d
 from utils import summarize_text, chunk_text
 
 def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=None):
-    """Retrieve relevant embeddings with weighted folder importance and apply chunking & summarization if needed."""
     db = chromadb.PersistentClient(path="chroma_db")
     collection = db.get_or_create_collection("campaign_notes")
 
-    # ✅ FIXED: Added missing commas at the end of dictionary entries
     folder_weights = {
-        "/s": {"Rulebooks/Spells": 3},  
-        "/c": {"A. Campaign": 2, "C. Inspiration": 2, "B. Exandria": 1},  
-        "/r": {"Rulebooks": 3},  
-        "/g": {},  # General queries
-        "generate_npc": {"B. Exandria": 3, "C. Inspiration": 1, "A. Campaign": 2},  
-        "session_management": {"A. Campaign": 3, "A. Campaign/2. Session Plans + Logs": 3},  
-        "quest_generator": {"A. Campaign": 2, "E. Ideas": 1, "B. Exandria": 2, "C. Inspiration": 2},  
-        "dungeon_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 2},  
-        "encounter_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 1},  
-        "adapt_chapter": {"C. Inspiration/C.1. Campaign Books": 3, "A. Campaign/2. Session Plans + Logs": 3, "C. Inspiration/C.2. Process": 3},  
-        "create_shop": {"B. Exandria": 3, "A. Campaign": 2},  
-        "create_location": {"B. Exandria": 3, "A. Campaign": 2},  
-        "worldbuilding": {}  
+        "/s": {"Rulebooks/Spells": 3},
+        "/c": {"A. Campaign": 2, "C. Inspiration": 2, "B. Exandria": 1},
+        "/r": {"Rulebooks": 3},
+        "generate_npc": {"B. Exandria": 3, "C. Inspiration": 1, "A. Campaign": 2},
+        "session_management": {"A. Campaign": 3, "A. Campaign/2. Session Plans + Logs": 3},
+        "quest_generator": {"A. Campaign": 2, "E. Ideas": 1, "B. Exandria": 2, "C. Inspiration": 2},
+        "dungeon_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 2},
+        "encounter_generator": {"A. Campaign": 1, "E. Ideas": 1, "B. Exandria": 2, "Rulebooks": 2, "C. Inspiration": 1},
+        "adapt_chapter": {"C. Inspiration/C.1. Campaign Books": 3, "A. Campaign/2. Session Plans + Logs": 3, "C. Inspiration/C.2. Process": 3},
+        "create_shop": {"B. Exandria": 3, "A. Campaign": 2},
+        "create_location": {"B. Exandria": 3, "A. Campaign": 2},
+        "worldbuilding": {}
     }
 
-    # ✅ FIXED: Properly get the folder weights
     weights = folder_weights.get(query_type, {"general": 1})
-    results = collection.query(query_texts=[query], n_results=top_k * 2)  
+    results = collection.query(query_texts=[query], n_results=top_k * 2)
 
-    # Sort documents based on their folder priority
     weighted_docs = []
     for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
-        if isinstance(metadata_list, list) and metadata_list:  
-            metadata = metadata_list[0]  # Take the first metadata dictionary if a list
-        elif isinstance(metadata_list, dict):  
-            metadata = metadata_list  # Directly use it if it's already a dict
+        if not metadata_list or metadata_list is None:  # Handle missing metadata
+            metadata = {}
+        elif isinstance(metadata_list, list) and metadata_list:
+            metadata = metadata_list[0]
+        elif isinstance(metadata_list, dict):
+            metadata = metadata_list
         else:
-            metadata = {}  # Default empty dict if metadata is missing
+            metadata = {}
 
-    for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
-        metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
-    
-        folder = metadata.get("source_folder", "general")  # ✅ Now metadata is always a dict
+        folder = metadata.get("source_folder", "general")  # Default to "general" if missing
         weight = weights.get(folder, 0)
         weighted_docs.append((doc, weight))
 
-    # ✅ FIXED: Sort documents by weight correctly
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
-    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in weighted_docs[:top_k]]  # ✅ Convert lists to strings
-    combined_text = "\n\n".join(sorted_docs)  # ✅ Now all items are strings
+    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in weighted_docs[:top_k]]
+    combined_text = "\n\n".join(sorted_docs)
 
-    # ✅ FIXED: Ensure text is summarized if too long
     if len(combined_text.split()) > max_tokens:
         combined_text = summarize_text(combined_text, max_tokens=max_tokens // 2)
 
-    # ✅ FIXED: Chunk text correctly
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
+
 
 def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
     """
