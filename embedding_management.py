@@ -17,16 +17,19 @@ MODIFICATION_TRACKER = "modification_tracker.yaml"
 
 def load_config():
     db = chromadb.PersistentClient(path="chroma_db")
-    collection = db.get_or_create_collection("campaign_notes")
+    collection = ("campaign_notes")
     result = collection.get(ids=["folders_to_embed"])
-    return eval(result["documents"][0]) if result["documents"] else {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
+    
+    if result and result.get("documents"):
+        return eval(result["documents"][0])  # Convert string back to dictionary
+    return {"obsidian_vault_path": "obsidian_vault", "folders_to_embed": []}
 
 def save_config(config):
     db = chromadb.PersistentClient(path="chroma_db")
     collection = db.get_or_create_collection("campaign_notes")
     collection.upsert(
         ids=["folders_to_embed"],
-        documents=[str(config)]
+        documents=[str(config)]  # Store as string to avoid format issues
     )
 
 # Initialize ChromaDB client
