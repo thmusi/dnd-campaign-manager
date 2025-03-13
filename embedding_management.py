@@ -188,7 +188,8 @@ def add_embedding_and_push(vault_path="obsidian_vault", chroma_db_path="chroma_d
 from utils import summarize_text, chunk_text
 
 def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=None):
-    db = chromadb.PersistentClient(path="chroma_db")
+    """Retrieve relevant embeddings with weighted folder importance and apply chunking & summarization if needed."""
+    db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection("campaign_notes")
 
     folder_weights = {
