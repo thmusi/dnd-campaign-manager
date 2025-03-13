@@ -212,30 +212,29 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
     weighted_docs = []
     for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
-        if not metadata_list or metadata_list is None:  # Handle missing metadata
-            metadata = {}
-        elif isinstance(metadata_list, list) and metadata_list:
-            metadata = metadata_list[0]
-        elif isinstance(metadata_list, dict):
-            metadata = metadata_list
-        else:
-            metadata = {}
+        # ✅ Skip `folders_to_embed` to prevent it from interfering
+        if metadata_list and any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict)):
+            continue  
 
+        # ✅ Ensure metadata is properly checked
+        metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
         folder = metadata.get("source_folder", "general")  # Default to "general" if missing
         weight = weights.get(folder, 0)
+
         weighted_docs.append((doc, weight))
 
+    # ✅ Sort results based on relevance
     weighted_docs.sort(key=lambda x: x[1], reverse=True)
     sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in weighted_docs[:top_k]]
     combined_text = "\n\n".join(sorted_docs)
 
+    # ✅ Ensure text fits within max token limit
     if len(combined_text.split()) > max_tokens:
         combined_text = summarize_text(combined_text, max_tokens=max_tokens // 2)
 
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
-
 
 def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
     """
