@@ -193,29 +193,24 @@ st.markdown(
     
 # Page Functions
 def render_api_key_page():
-    st.title("Enter Your API Keys")
+    st.title("Enter Your API Key")
 
-    # OpenAI API Key input
+    # ✅ Secure OpenAI API Key Input
     openai_key = st.text_input("Enter OpenAI API Key:", type="password")
 
     if st.button("Login"):
         if openai_key:
-            st.session_state["openai_api_key"] = openai_key
-            st.session_state["authenticated"] = True  # Ensuring it's saved before rerun
-            st.session_state["page"] = "Main Menu"  # Redirect to Main Menu after login
-            st.success("✅ Access Granted!")
-            st.stop()  # Prevents execution from continuing before rerun
+            st.session_state["openai_api_key"] = openai_key  # ✅ Save key
+            st.session_state["authenticated"] = True  
+            st.session_state["page"] = "Main Menu"
+            st.success("✅ API Key Saved! Redirecting...")
+            st.rerun()  # ✅ Refresh to apply changes
         else:
-            st.error("❌ Please enter your OpenAI API Key.")
+            st.error("❌ Please enter a valid OpenAI API Key.")
 
 # Authentication & Navigation Check: Redirect to Main Menu if authenticated
-if "authenticated" not in st.session_state:
+if "openai_api_key" not in st.session_state or not st.session_state["openai_api_key"]:
     st.session_state["authenticated"] = False
-
-if "page" not in st.session_state:
-    st.session_state["page"] = "API Key"
-
-if not st.session_state["authenticated"]:
     render_api_key_page()
     st.stop()
 else:
