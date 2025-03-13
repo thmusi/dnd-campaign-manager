@@ -61,7 +61,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
                     {"role": "user", "content": f"Provide this spell's details in both French and English: {query}\n\nContext:\n{chunk}"}
                 ]
             )
-            spell_data = response.choices[0].message["content"].strip()
+            spell_data = response.choices[0].message.content.strip()
             formatted_response = SPELL_TEMPLATE.format(
                 spell_name_fr_and_eng=query,
                 spell_level="3",
@@ -78,7 +78,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
                     {"role": "user", "content": f"Answer this campaign-related query: {query}\n\nContext:\n{chunk}"}
                 ]
             )
-            campaign_data = response.choices[0].message["content"].strip()
+            campaign_data = response.choices[0].message.content.strip()
             formatted_response = CAMPAIGN_TEMPLATE.format(response=campaign_data)
 
         elif query_type == "/r":  
@@ -89,7 +89,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
                     {"role": "user", "content": f"Answer this DnD 5e Rules query: {query}\n\nContext:\n{chunk}"}
                 ]
             )
-            rules_data = response.choices[0].message["content"].strip()
+            rules_data = response.choices[0].message.content.strip()
             formatted_response = DEFAULT_TEMPLATE.format(response=rules_data)
 
         else:  
@@ -100,7 +100,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
                     {"role": "user", "content": f"Answer this query: {query}\n\nContext:\n{chunk}"}
                 ]
             )
-            default_data = response.choices[0].message["content"].strip()
+            default_data = response.choices[0].message.content.strip()
             formatted_response = DEFAULT_TEMPLATE.format(response=default_data)
 
         responses.append(formatted_response)  
