@@ -54,7 +54,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
 
     for chunk in context_chunks:
         if query_type == "/s":  
-            response = openai.ChatCompletion.create(  # ✅ No need for `client` object
+            response = openai.chat.completions.create( # ✅ No need for `client` object
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant providing bilingual (French/English) D&D spell details."},
@@ -71,7 +71,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
             )
 
         elif query_type == "/c":  
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant for D&D campaigns."},
@@ -82,7 +82,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
             formatted_response = CAMPAIGN_TEMPLATE.format(response=campaign_data)
 
         elif query_type == "/r":  
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant for D&D 5e rules."},
@@ -93,7 +93,7 @@ def generate_ai_response(query, api_key, top_k=3, max_tokens=3000, query_type=No
             formatted_response = DEFAULT_TEMPLATE.format(response=rules_data)
 
         else:  
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an AI assistant."},
