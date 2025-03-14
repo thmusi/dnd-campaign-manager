@@ -10,10 +10,7 @@ import pandas as pd
 import time
 import ast
 
-
-
-
-CHROMA_DB_PATH = "chroma_db/"
+CHROMA_DB_PATH = "chroma_db"
 MODIFICATION_TRACKER = "modification_tracker.yaml"
 
 def load_config():
@@ -62,12 +59,18 @@ FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction  # ✅ Use OpenAI for embeddings
+
+
+# ✅ Initialize OpenAI embeddings
+embedding_function = OpenAIEmbeddingFunction(api_key=os.getenv("OPENAI_API_KEY"))  # Ensure you have an API key set
+
 def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
     """
     Embeds selected folders into ChromaDB and updates folder tracking.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    collection = db.get_or_create_collection(name="campaign_notes")
+    collection = db.get_or_create_collection(name="campaign_notes", embedding_function=embedding_function)  # ✅ Use embedding function
 
     embedded_files = []
 
@@ -92,7 +95,12 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
                 with open(file_path, "r", encoding="utf-8", errors="replace") as f:
                     content = f.read()
 
-                # ✅ Add embedding to ChromaDB
+                # ✅ Ensure non-empty content
+                if not content.strip():
+                    print(f"⚠️ Skipping empty file: {file_path}")
+                    continue
+
+                # ✅ Generate embedding & store in ChromaDB
                 collection.add(
                     documents=[content],
                     ids=[file_path],
@@ -100,6 +108,8 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
                 )
                 embedded_files.append(file_path)
                 print(f"✅ Embedded: {file_path}")
+
+    print(f"🔄 Finished embedding {len(embedded_files)} files into ChromaDB.")
 
     # ✅ Ensure "folders_to_embed" is always a list before merging
     config = load_config()
