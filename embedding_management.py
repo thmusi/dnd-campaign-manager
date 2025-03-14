@@ -12,6 +12,8 @@ import ast
 
 CHROMA_DB_PATH = "chroma_db"
 MODIFICATION_TRACKER = "modification_tracker.yaml"
+VAULT_PATH = "obsidian_vault"
+
 
 def load_config():
     db = chromadb.PersistentClient(path="chroma_db")
