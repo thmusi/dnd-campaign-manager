@@ -88,10 +88,16 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
 
                 # ✅ Check if file is already embedded
                 existing_docs = collection.get(ids=[file_path])
-                if existing_docs["ids"]:
-                    print(f"⚠️ Skipping duplicate embedding: {file_path}")
-                    continue
 
+                # ✅ Check if the document exists but is missing an embedding
+                if existing_docs["ids"] and existing_docs["embeddings"] and existing_docs["embeddings"][0] is not None:
+                    print(f"⚠️ Skipping duplicate embedding: {file_path}")
+                    continue  # Skip if already correctly embedded
+
+                # ✅ If the document exists but has NO embedding, reprocess it
+                elif existing_docs["ids"] and (not existing_docs["embeddings"] or existing_docs["embeddings"][0] is None):
+                    print(f"🔄 Reprocessing missing embedding: {file_path}")
+                    
                 # ✅ Read file content
                 try:
                     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
