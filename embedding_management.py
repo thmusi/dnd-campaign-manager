@@ -61,18 +61,17 @@ os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction  # ✅ Use OpenAI for embeddings
 
-
 # ✅ Initialize OpenAI embeddings
 embedding_function = OpenAIEmbeddingFunction(api_key=os.getenv("OPENAI_API_KEY"))  # Ensure you have an API key set
 
-def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
+MAX_TOKENS = 8000  # Safe token limit for embedding
+
+def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
     """
-    Embeds selected folders into ChromaDB and updates folder tracking.
+    Embeds selected folders into ChromaDB, automatically handling large files.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    collection = db.get_or_create_collection(name="campaign_notes", embedding_function=embedding_function)  # ✅ Use embedding function
-
-    embedded_files = []
+    collection = db.get_or_create_collection(name="campaign_notes")
 
     for folder in folders_to_embed:
         full_folder_path = os.path.join(vault_path, folder)
@@ -85,47 +84,44 @@ def embed_selected_folders(folders_to_embed, vault_path=OBSIDIAN_VAULT_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
 
-                # ✅ Check if file is already embedded before processing
+                # ✅ Check if file is already embedded
                 existing_docs = collection.get(ids=[file_path])
                 if existing_docs["ids"]:
                     print(f"⚠️ Skipping duplicate embedding: {file_path}")
-                    continue  # Skip already embedded files
-
-                # ✅ Read file content
-                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-                    content = f.read()
-
-                # ✅ Ensure non-empty content
-                if not content.strip():
-                    print(f"⚠️ Skipping empty file: {file_path}")
                     continue
 
-                # ✅ Generate embedding & store in ChromaDB
-                collection.add(
-                    documents=[content],
-                    ids=[file_path],
-                    metadatas=[{"source_folder": folder, "filename": file_path}]
-                )
-                embedded_files.append(file_path)
-                print(f"✅ Embedded: {file_path}")
+                # ✅ Read file content
+                try:
+                    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                        content = f.read()
+                except Exception as e:
+                    print(f"❌ Error reading {file_path}: {e}")
+                    continue
 
-    print(f"🔄 Finished embedding {len(embedded_files)} files into ChromaDB.")
+                # ✅ Check token length and split if needed
+                token_count = len(content.split()) // 1.3  # Approximate token count
+                if token_count > MAX_TOKENS:
+                    print(f"⚠️ Large file detected ({token_count} tokens): {file_path} → Chunking...")
+                    chunks = chunk_text(content, max_tokens=MAX_TOKENS)
 
-    # ✅ Ensure "folders_to_embed" is always a list before merging
-    config = load_config()
-    existing_folders = config.get("folders_to_embed", [])
+                    for idx, chunk in enumerate(chunks):
+                        chunk_id = f"{file_path}_part{idx+1}"
+                        collection.add(
+                            documents=[chunk],
+                            ids=[chunk_id],
+                            metadatas=[{"source_folder": folder, "filename": file_path, "part": idx + 1}]
+                        )
+                        print(f"✅ Embedded chunk {idx+1} of {len(chunks)} for {file_path}")
+                else:
+                    # ✅ Normal embedding for small files
+                    collection.add(
+                        documents=[content],
+                        ids=[file_path],
+                        metadatas=[{"source_folder": folder, "filename": file_path}]
+                    )
+                    print(f"✅ Embedded: {file_path}")
 
-    if not isinstance(existing_folders, list):
-        existing_folders = []  # Reset to an empty list if it's not valid
-
-    if not isinstance(folders_to_embed, list):
-        folders_to_embed = list(folders_to_embed)  # Convert to a list if needed
-
-    # ✅ Merge lists safely
-    config["folders_to_embed"] = list(set(existing_folders + folders_to_embed))
-    
-    # ✅ Store updated config in ChromaDB
-    save_config(config)
+    print("🔄 Finished embedding process.")
 
 def update_config_yaml(selected_files, config_path="config.yaml"):
     """
