@@ -252,12 +252,14 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
 def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
     """
-    Removes embeddings from ChromaDB and updates config.yaml.
+    Removes embeddings from ChromaDB.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
 
     removed_files = []
+    stored_results = collection.get()  # Fetch all stored data once
+    stored_ids = set(stored_results.get("ids", []))  # Get stored document IDs
 
     for folder in folders_to_remove:
         full_folder_path = os.path.join(vault_path, folder)
@@ -266,10 +268,9 @@ def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
             for root, _, files in os.walk(full_folder_path):
                 for file in files:
                     file_path = os.path.join(root, file)
-                    
-                    # ✅ Check if file exists in ChromaDB before removing
-                    existing_docs = collection.get(ids=[file_path])
-                    if existing_docs["ids"]:
+
+                    # ✅ Check if file exists in ChromaDB by exact match
+                    if file_path in stored_ids:
                         collection.delete(ids=[file_path])
                         removed_files.append(file_path)
                         print(f"❌ Removed embedding: {file_path}")
@@ -277,7 +278,9 @@ def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
                         print(f"⚠️ File not found in embeddings: {file_path}")
 
     if removed_files:
-        update_config_yaml_after_removal(removed_files)
+        print("✅ Successfully removed embeddings from ChromaDB.")
+    else:
+        print("⚠️ No embeddings were removed.")
 
 def update_config_yaml_after_removal(removed_files, config_path="config.yaml"):
     """
