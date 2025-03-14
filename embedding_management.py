@@ -218,7 +218,7 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
         # ✅ Ensure metadata is properly checked
         metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
-        folder = metadata["source_folder"] if isinstance(metadata, dict) else "general"  # Default to "general" if missing
+        folder = metadata.get("source_folder", "general")  # Use .get() to avoid KeyError
         weight = weights.get(folder, 0)
 
         weighted_docs.append((doc, weight))
