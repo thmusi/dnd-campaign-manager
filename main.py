@@ -61,12 +61,13 @@ def initialize_session_state():
         }
         st.session_state.update(session_defaults)
 
-initialize_session_state()
+    # ✅ Ensure ChromaDB client and collection persist in session
+    if "db" not in st.session_state:
+        st.session_state["db"] = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    if "collection" not in st.session_state:
+        st.session_state["collection"] = st.session_state["db"].get_or_create_collection("campaign_notes")
 
-# ✅ Connect to ChromaDB on startup
-if "db" not in st.session_state:
-    st.session_state["db"] = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    st.session_state["collection"] = st.session_state["db"].get_or_create_collection("campaign_notes")
+initialize_session_state()
 
 # ✅ Ensure collection is always accessible
 collection = st.session_state["collection"]
