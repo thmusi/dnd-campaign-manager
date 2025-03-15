@@ -61,10 +61,27 @@ FOLDERS_TO_EMBED = set(config.get("folders_to_embed", []))
 os.makedirs(CHROMA_DB_PATH, exist_ok=True)
 os.makedirs(OBSIDIAN_VAULT_PATH, exist_ok=True)
 
-from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction  # ✅ Use OpenAI for embeddings
 
 # ✅ Initialize OpenAI embeddings
-embedding_function = OpenAIEmbeddingFunction(api_key=os.getenv("OPENAI_API_KEY"))  # Ensure you have an API key set
+import streamlit as st
+
+def get_openai_embedding_function():
+    """Fetch OpenAI API key from session state and initialize the embedding function."""
+    from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction  # ✅ Import inside the function
+
+    api_key = st.session_state.get("openai_api_key", None)
+    
+    if not api_key:
+        raise ValueError("❌ OpenAI API key not found. Please enter it on the API Key page.")
+
+    return OpenAIEmbeddingFunction(api_key=api_key)
+
+# ✅ Initialize embedding function dynamically
+embedding_function = None  # Initialize as None to avoid errors before the API key is set
+
+# ✅ Check if Streamlit session is active before setting it
+if "openai_api_key" in st.session_state:
+    embedding_function = get_openai_embedding_function()
 
 MAX_TOKENS = 8000  # Safe token limit for embedding
 
@@ -138,27 +155,6 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                 print("🔄 Finished embedding process.")  # ✅ Corrected indentation
 
 
-def update_config_yaml(selected_files, config_path="config.yaml"):
-    """
-    Updates config.yaml to track embedded files.
-    """
-    try:
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                config = yaml.safe_load(f) or {}
-        else:
-            config = {}
-
-        config["embedded_files"] = list(set(config.get("embedded_files", []) + selected_files))
-
-        with open(config_path, "w") as f:
-            yaml.dump(config, f)
-
-        print("✅ Updated config.yaml with new embedded files.")
-
-    except Exception as e:
-        print(f"❌ Error updating config.yaml: {e}")
-
 
 
 # Function to list stored embeddings
@@ -230,6 +226,12 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
 
     weights = folder_weights.get(query_type, {"general": 1})
     results = collection.query(query_texts=[query], n_results=top_k * 2)
+
+    # ✅ Exclude "folders_to_embed" from results
+    filtered_docs = [
+        doc for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", []))
+        if not any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict))
+    ]
 
     weighted_docs = []
     for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
