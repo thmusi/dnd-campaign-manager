@@ -103,17 +103,15 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
 
-                # ✅ Fetch existing document to check metadata
+                # ✅ Fetch existing document metadata safely
                 existing_docs = collection.get(ids=[file_path])
+                metadata_list = existing_docs.get("metadatas", [])
 
-                if existing_docs and existing_docs.get("metadatas"):
-                    metadata = existing_docs["metadatas"][0]  # Extract metadata
-                else:
-                    metadata = None  # Set as None if missing
+                metadata = metadata_list[0] if metadata_list and isinstance(metadata_list[0], dict) else {}
+                filename = metadata.get("filename", file_path)  # Use file path if filename is missing
 
-                # ✅ Debugging: Print metadata issue
-                if metadata is None or not isinstance(metadata, dict):
-                    print(f"⚠️ No metadata found for {file_path}. Reprocessing...")
+                # ✅ Debugging: Print metadata safely
+                print(f"📌 Document: {filename} (Metadata Found: {bool(metadata)})")
 
                 # ✅ Read file content
                 try:
@@ -123,27 +121,23 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                     print(f"❌ Error reading {file_path}: {e}")
                     continue
 
-                # ✅ Re-embed document with proper metadata
+                # ✅ Check if content exists
+                if not content.strip():
+                    print(f"⚠️ Skipping empty file: {file_path}")
+                    continue
+
+                # ✅ Embed document
                 try:
                     collection.upsert(
                         ids=[file_path],
                         documents=[content],
-                        metadatas=[{"source_folder": folder, "filename": file_path}],
+                        metadatas=[{"source_folder": folder, "filename": filename}]
                     )
                     print(f"✅ Successfully embedded: {file_path}")
-
                 except Exception as e:
                     print(f"❌ Error embedding {file_path}: {e}")
 
     print("🔄 Finished embedding process.")
-
-
-    # ✅ DEBUG: Check if the embeddings exist immediately after storing
-    stored_docs = collection.get(include=["documents", "metadatas"])
-    print("📂 Checking if embeddings were stored IMMEDIATELY after embedding...")
-    for idx, metadata in enumerate(stored_docs.get("metadatas", [])):
-        print(f"📌 Document {idx+1}: {metadata['filename']}")
-
 
 # Function to list stored embeddings
 def list_embeddings():
