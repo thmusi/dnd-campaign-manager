@@ -242,9 +242,9 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
         print(f"📌 Result {idx+1}: {metadata.get('filename', 'UNKNOWN')}\n🔎 Content Preview:\n{doc[:300]}\n")
 
     # ✅ Prepare final sorted & chunked response
-    sorted_docs = [doc for doc, _ in valid_results[:top_k]]
+    sorted_docs = [doc if isinstance(doc, str) else "\n".join(doc) for doc, _ in valid_results[:top_k]]
     combined_text = "\n\n".join(sorted_docs)
-
+    
     # ✅ Ensure text fits within max token limit
     if len(combined_text.split()) > max_tokens:
         combined_text = summarize_text(combined_text, max_tokens=max_tokens // 2)
