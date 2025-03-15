@@ -114,22 +114,28 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
 
                     for idx, chunk in enumerate(chunks):
                         chunk_id = f"{file_path}_part{idx+1}"
-                        collection.add(
-                            documents=[chunk],
-                            ids=[chunk_id],
-                            metadatas=[{"source_folder": folder, "filename": file_path, "part": idx + 1}]
-                        )
-                        print(f"✅ Embedded chunk {idx+1} of {len(chunks)} for {file_path}")
+                        try:
+                            collection.add(
+                                documents=[chunk],
+                                ids=[chunk_id],
+                                metadatas=[{"source_folder": folder, "filename": file_path, "part": idx + 1}]
+                            )
+                            print(f"✅ Successfully embedded chunk {idx+1} of {len(chunks)} for {file_path}")
+                        except Exception as e:
+                            print(f"❌ Error embedding chunk {idx+1} of {len(chunks)} for {file_path}: {e}")
+        
                 else:
-                    # ✅ Normal embedding for small files
-                    collection.add(
-                        documents=[content],
-                        ids=[file_path],
-                        metadatas=[{"source_folder": folder, "filename": file_path}]
-                    )
-                    print(f"✅ Embedded: {file_path}")
-
-    print("🔄 Finished embedding process.")
+                   try:
+                        collection.add(
+                            documents=[content],
+                            ids=[file_path],
+                            metadatas=[{"source_folder": folder, "filename": file_path}]
+                        )
+                        print(f"✅ Successfully embedded: {file_path}")
+                    except Exception as e:
+                        print(f"❌ Error embedding {file_path}: {e}")
+                    
+                        print("🔄 Finished embedding process.")
 
 def update_config_yaml(selected_files, config_path="config.yaml"):
     """
