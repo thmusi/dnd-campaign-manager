@@ -87,7 +87,7 @@ MAX_TOKENS = 8000  # Safe token limit for embedding
 
 def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
     """
-    Embeds selected folders into ChromaDB and immediately verifies the stored data.
+    Embeds selected folders into ChromaDB, automatically handling large files.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
@@ -103,6 +103,18 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
 
+                # ✅ Fetch existing document to check metadata
+                existing_docs = collection.get(ids=[file_path])
+
+                if existing_docs and existing_docs.get("metadatas"):
+                    metadata = existing_docs["metadatas"][0]  # Extract metadata
+                else:
+                    metadata = None  # Set as None if missing
+
+                # ✅ Debugging: Print metadata issue
+                if metadata is None or not isinstance(metadata, dict):
+                    print(f"⚠️ No metadata found for {file_path}. Reprocessing...")
+
                 # ✅ Read file content
                 try:
                     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
@@ -111,18 +123,20 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                     print(f"❌ Error reading {file_path}: {e}")
                     continue
 
-                # ✅ Embed the file into ChromaDB
+                # ✅ Re-embed document with proper metadata
                 try:
-                    collection.add(
-                        documents=[content],
+                    collection.upsert(
                         ids=[file_path],
-                        metadatas=[{"source_folder": folder, "filename": file_path}]
+                        documents=[content],
+                        metadatas=[{"source_folder": folder, "filename": file_path}],
                     )
                     print(f"✅ Successfully embedded: {file_path}")
+
                 except Exception as e:
                     print(f"❌ Error embedding {file_path}: {e}")
 
-        print("🔄 Finished embedding process.")
+    print("🔄 Finished embedding process.")
+
 
     # ✅ DEBUG: Check if the embeddings exist immediately after storing
     stored_docs = collection.get(include=["documents", "metadatas"])
