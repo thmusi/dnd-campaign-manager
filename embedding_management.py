@@ -87,7 +87,7 @@ MAX_TOKENS = 8000  # Safe token limit for embedding
 
 def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
     """
-    Embeds selected folders into ChromaDB, automatically handling large files.
+    Embeds selected folders into ChromaDB and ensures embeddings are stored correctly.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
@@ -206,13 +206,14 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
         "worldbuilding": {}
     }
 
-    weights = folder_weights.get(query_type, {"general": 1})
-
-    # ✅ Print stored document filenames BEFORE querying
+    # ✅ Debug: Print stored document filenames BEFORE querying
     stored_docs = collection.get(include=["metadatas"])
     print("📂 Checking stored document file paths BEFORE retrieval...")
     for idx, metadata in enumerate(stored_docs.get("metadatas", [])):
-        print(f"📌 Stored Document {idx+1}: {metadata['filename']}")
+        if metadata:
+            print(f"📌 Stored Document {idx+1}: {metadata.get('filename', 'UNKNOWN')}")
+        else:
+            print(f"⚠️ Warning: Metadata missing for document {idx+1}")
 
     # ✅ Run the query
     results = collection.query(query_texts=[query], n_results=top_k * 2)
@@ -225,25 +226,23 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     # ✅ Exclude "folders_to_embed" and invalid results
     valid_results = []
     for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
-        if not metadata_list or any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict)):
-            continue  # Skip folders_to_embed
+        if metadata_list and isinstance(metadata_list, list) and metadata_list:
+            metadata = metadata_list[0]  # ✅ Ensure metadata is not None
+            if not isinstance(metadata, dict):
+                metadata = {}  # ✅ Fallback to an empty dict
 
-        metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
-        folder = metadata.get("source_folder", "general")
-        weight = weights.get(folder, 0)
-
-        valid_results.append((doc, weight))
-
-    # ✅ Sort valid results by weight
-    valid_results.sort(key=lambda x: x[1], reverse=True)
+            if metadata.get("filename") != "folders_to_embed":
+                valid_results.append((doc, metadata))
+        else:
+            print(f"⚠️ Warning: Skipping document due to missing metadata.")
 
     # ✅ Print valid results
     print("✅ Valid Retrieved Documents AFTER Filtering:")
-    for idx, (doc, weight) in enumerate(valid_results[:top_k]):
-        print(f"📌 Result {idx+1} (Filtered):\n{doc[:300]} (Weight: {weight})\n")  # Print first 300 characters
+    for idx, (doc, metadata) in enumerate(valid_results[:top_k]):
+        print(f"📌 Result {idx+1}: {metadata.get('filename', 'UNKNOWN')}\n🔎 Content Preview:\n{doc[:300]}\n")
 
     # ✅ Prepare final sorted & chunked response
-    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in valid_results[:top_k]]
+    sorted_docs = [doc for doc, _ in valid_results[:top_k]]
     combined_text = "\n\n".join(sorted_docs)
 
     # ✅ Ensure text fits within max token limit
@@ -253,7 +252,6 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
-
 
 def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
     """
