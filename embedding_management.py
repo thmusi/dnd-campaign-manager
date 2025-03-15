@@ -348,47 +348,51 @@ def pull_github_vault():
 
 # Function to detect modified files and re-embed them
 def reembed_modified_files():
-    """Lists all markdown and PDF files and allows manual selection for embedding."""
-    updated_files = []
+    """Lists all markdown and PDF files per folder and allows manual selection for embedding."""
+    
+    if not FOLDERS_TO_EMBED:
+        st.info("No folders are selected for embedding. Choose folders in the Folder Embedding Management page.")
+        return
+    
+    for folder in FOLDERS_TO_EMBED:  # Iterate over selected folders
+        full_folder_path = os.path.join(OBSIDIAN_VAULT_PATH, folder)
+        
+        updated_files = []
+        for root, _, files in os.walk(full_folder_path):
+            for file in files:
+                if file.endswith((".md", ".pdf", ".json")):  # Include PDFs & JSON
+                    updated_files.append(os.path.join(root, file))
+        
+        if updated_files:
+            st.subheader(f"📂 {folder} - Select Files to Re-Embed")
+            
+            selected_files = st.multiselect(
+                f"Choose files to embed in {folder}:",  # Use folder name dynamically
+                updated_files, 
+                key=f"multiselect_{folder}"  # Ensure a unique key per folder
+            )
 
-    for root, _, files in os.walk(OBSIDIAN_VAULT_PATH):
-        # If folders_to_embed is empty, allow all files
-        if FOLDERS_TO_EMBED and not any(folder in root for folder in FOLDERS_TO_EMBED):
-            continue  
+            if selected_files and st.button(f"🔄 Re-Embed Selected Files in {folder}", key=f"reembed_{folder}"):
+                for file_path in selected_files:
+                    ext = os.path.splitext(file_path)[1].lower()
 
-        for file in files:
-            if file.endswith((".md", ".pdf", ".json")):  # Include PDFs & JSON
-                file_path = os.path.join(root, file)
-                updated_files.append(file_path)
+                    if ext == ".pdf":
+                        try:
+                            content = extract_text(file_path).strip()  # Extract text from PDFs
+                        except Exception as e:
+                            st.error(f"Error extracting text from {file_path}: {e}")
+                            continue  # Skip problematic PDFs
+                    else:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
 
-    if updated_files:
-        st.subheader("📂 Select Files to Re-Embed")
-        selected_files = st.multiselect(
-            f"Choose files to embed in {folder}:",  # Unique folder name in UI
-            updated_files, 
-            key=f"multiselect_{folder}"  # Unique key per folder
-        )
+                    if content.strip():  # Ensure text is not empty
+                        add_embedding(content, {"source": file_path})
 
-        if st.button("🔄 Re-Embed Selected Files"):
-            for file_path in selected_files:
-                ext = os.path.splitext(file_path)[1].lower()
+                st.success(f"✅ Re-embedded {len(selected_files)} files in {folder}!")
+        else:
+            st.info(f"📁 No modified files detected in {folder}.")
 
-                if ext == ".pdf":
-                    try:
-                        content = extract_text(file_path).strip()  # Extract text from PDFs
-                    except Exception as e:
-                        st.error(f"Error extracting text from {file_path}: {e}")
-                        continue  # Skip problematic PDFs
-                else:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        content = f.read()
-
-                if content.strip():  # Ensure text is not empty
-                    add_embedding(content, {"source": file_path})
-
-            st.success(f"✅ Re-embedded {len(selected_files)} files!")
-    else:
-        st.info("No modified files to re-embed.")
 
 # Function to load last update timestamp
 def load_last_update():
