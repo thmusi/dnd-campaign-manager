@@ -87,7 +87,7 @@ MAX_TOKENS = 8000  # Safe token limit for embedding
 
 def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
     """
-    Embeds selected folders into ChromaDB, automatically handling large files.
+    Embeds selected folders into ChromaDB and immediately verifies the stored data.
     """
     db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
     collection = db.get_or_create_collection(name="campaign_notes")
@@ -103,18 +103,6 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
 
-                # ✅ Check if file is already embedded
-                existing_docs = collection.get(ids=[file_path])
-
-                # ✅ Check if the document exists but is missing an embedding
-                if existing_docs["ids"] and existing_docs["embeddings"] and existing_docs["embeddings"][0] is not None:
-                    print(f"⚠️ Skipping duplicate embedding: {file_path}")
-                    continue  # Skip if already correctly embedded
-
-                # ✅ If the document exists but has NO embedding, reprocess it
-                elif existing_docs["ids"] and (not existing_docs["embeddings"] or existing_docs["embeddings"][0] is None):
-                    print(f"🔄 Reprocessing missing embedding: {file_path}")
-                    
                 # ✅ Read file content
                 try:
                     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
@@ -123,38 +111,24 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                     print(f"❌ Error reading {file_path}: {e}")
                     continue
 
-                # ✅ Check token length and split if needed
-                token_count = len(content.split()) // 1.3  # Approximate token count
-                if token_count > MAX_TOKENS:
-                    print(f"⚠️ Large file detected ({token_count} tokens): {file_path} → Chunking...")
-                    chunks = chunk_text(content, max_tokens=MAX_TOKENS)
+                # ✅ Embed the file into ChromaDB
+                try:
+                    collection.add(
+                        documents=[content],
+                        ids=[file_path],
+                        metadatas=[{"source_folder": folder, "filename": file_path}]
+                    )
+                    print(f"✅ Successfully embedded: {file_path}")
+                except Exception as e:
+                    print(f"❌ Error embedding {file_path}: {e}")
 
-                    for idx, chunk in enumerate(chunks):
-                        chunk_id = f"{file_path}_part{idx+1}"
-                        try:
-                            collection.add(
-                                documents=[chunk],
-                                ids=[chunk_id],
-                                metadatas=[{"source_folder": folder, "filename": file_path, "part": idx + 1}]
-                            )
-                            print(f"✅ Successfully embedded chunk {idx+1} of {len(chunks)} for {file_path}")
-                        except Exception as e:
-                            print(f"❌ Error embedding chunk {idx+1} of {len(chunks)} for {file_path}: {e}")
+        print("🔄 Finished embedding process.")
 
-                else:
-                    try:
-                        collection.add(
-                            documents=[content],
-                            ids=[file_path],
-                            metadatas=[{"source_folder": folder, "filename": file_path}]
-                        )
-                        print(f"✅ Successfully embedded: {file_path}")
-                    except Exception as e:
-                        print(f"❌ Error: {e}")  # ✅ Corrected indentation
-
-                print("🔄 Finished embedding process.")  # ✅ Corrected indentation
-
-
+    # ✅ DEBUG: Check if the embeddings exist immediately after storing
+    stored_docs = collection.get(include=["documents", "metadatas"])
+    print("📂 Checking if embeddings were stored IMMEDIATELY after embedding...")
+    for idx, metadata in enumerate(stored_docs.get("metadatas", [])):
+        print(f"📌 Document {idx+1}: {metadata['filename']}")
 
 
 # Function to list stored embeddings
@@ -225,30 +199,43 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     }
 
     weights = folder_weights.get(query_type, {"general": 1})
+
+    # ✅ Print stored document filenames BEFORE querying
+    stored_docs = collection.get(include=["metadatas"])
+    print("📂 Checking stored document file paths BEFORE retrieval...")
+    for idx, metadata in enumerate(stored_docs.get("metadatas", [])):
+        print(f"📌 Stored Document {idx+1}: {metadata['filename']}")
+
+    # ✅ Run the query
     results = collection.query(query_texts=[query], n_results=top_k * 2)
 
-    # ✅ Exclude "folders_to_embed" from results
-    filtered_docs = [
-        doc for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", []))
-        if not any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict))
-    ]
+    # ✅ Print raw retrieved results
+    print("🔍 Raw Retrieved Documents:")
+    for idx, doc in enumerate(results.get("documents", [])):
+        print(f"📌 Result {idx+1} (Unfiltered):\n{doc[:300]}\n")  # Print first 300 characters
 
-    weighted_docs = []
+    # ✅ Exclude "folders_to_embed" and invalid results
+    valid_results = []
     for doc, metadata_list in zip(results.get("documents", []), results.get("metadatas", [])):
-        # ✅ Skip `folders_to_embed` to prevent it from interfering
-        if metadata_list and any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict)):
-            continue  
+        if not metadata_list or any(m.get("filename") == "folders_to_embed" for m in metadata_list if isinstance(m, dict)):
+            continue  # Skip folders_to_embed
 
-        # ✅ Ensure metadata is properly checked
         metadata = metadata_list[0] if isinstance(metadata_list, list) and metadata_list else {}
-        folder = metadata.get("source_folder", "general")  # Use .get() to avoid KeyError
+        folder = metadata.get("source_folder", "general")
         weight = weights.get(folder, 0)
 
-        weighted_docs.append((doc, weight))
+        valid_results.append((doc, weight))
 
-    # ✅ Sort results based on relevance
-    weighted_docs.sort(key=lambda x: x[1], reverse=True)
-    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in weighted_docs[:top_k]]
+    # ✅ Sort valid results by weight
+    valid_results.sort(key=lambda x: x[1], reverse=True)
+
+    # ✅ Print valid results
+    print("✅ Valid Retrieved Documents AFTER Filtering:")
+    for idx, (doc, weight) in enumerate(valid_results[:top_k]):
+        print(f"📌 Result {idx+1} (Filtered):\n{doc[:300]} (Weight: {weight})\n")  # Print first 300 characters
+
+    # ✅ Prepare final sorted & chunked response
+    sorted_docs = [str(doc) if isinstance(doc, list) else doc for doc, _ in valid_results[:top_k]]
     combined_text = "\n\n".join(sorted_docs)
 
     # ✅ Ensure text fits within max token limit
@@ -258,6 +245,7 @@ def retrieve_relevant_embeddings(query, top_k=3, max_tokens=3000, query_type=Non
     final_docs = chunk_text(combined_text, max_tokens=max_tokens)
 
     return final_docs
+
 
 def remove_embedding(folders_to_remove, vault_path=OBSIDIAN_VAULT_PATH):
     """
