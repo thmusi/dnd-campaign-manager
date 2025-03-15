@@ -538,17 +538,30 @@ def render_folder_management_page():
         st.session_state.folder_statuses.update(folder_statuses)  # Store results in session
 
 def initialize_folder_statuses(all_folders, config):
-    # Initialize all folders to "❌ Not Embedded" if they are not in config.yaml
+    """Ensure all folders track their embedding status correctly, propagating subfolder status to parents."""
     folder_statuses = {}
 
+    # First, mark everything as "Not Embedded" by default
     for folder_path, _, _ in all_folders:
-        # If the folder is not in config.yaml, it's marked as not embedded
-        if folder_path not in config.get("folders_to_embed", []):
-            folder_statuses[folder_path] = "❌ Not Embedded"
-        else:
-            folder_statuses[folder_path] = "✅ Embedded"
+        folder_statuses[folder_path] = "❌ Not Embedded"
+
+    # Load selected embedded folders
+    embedded_folders = set(config.get("folders_to_embed", []))
+
+    # Mark directly embedded folders ✅
+    for folder in embedded_folders:
+        folder_statuses[folder] = "✅ Embedded"
+
+    # Propagate "Embedded" status **upwards** to parent folders
+    for folder_path in embedded_folders:
+        parts = folder_path.split("/")
+        for i in range(1, len(parts)):  
+            parent_folder = "/".join(parts[:i])
+            if parent_folder in folder_statuses:
+                folder_statuses[parent_folder] = "✅ Embedded"
 
     return folder_statuses
+
 
     
 # Dynamic Page Rendering Dictionary
