@@ -364,9 +364,9 @@ def reembed_modified_files():
     if updated_files:
         st.subheader("📂 Select Files to Re-Embed")
         selected_files = st.multiselect(
-            f"Choose files to embed in {OBSIDIAN_VAULT_PATH}:", 
+            f"Choose files to embed in {folder}:",  # Unique folder name in UI
             updated_files, 
-            key=f"multiselect_{OBSIDIAN_VAULT_PATH}"
+            key=f"multiselect_{folder}"  # Unique key per folder
         )
 
         if st.button("🔄 Re-Embed Selected Files"):
