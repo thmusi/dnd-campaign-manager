@@ -524,16 +524,34 @@ def get_subfolders(tree, path):
     return node
 
 def load_selected_folders():
-    """Load stored selected folders from config.yaml to persist across deployments."""
-    config = load_config()
-    return set(config.get("folders_to_embed", []))  # Return as a set for easy updates
+    """Load stored selected folders from ChromaDB."""
+    db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    collection = db.get_or_create_collection("campaign_notes")
+
+    try:
+        result = collection.get(ids=["selected_folders"])
+        if result and "documents" in result and result["documents"]:
+            stored_folders = json.loads(result["documents"][0])  # Convert back to list
+            print(f"✅ Loaded selected folders: {stored_folders}")  # Debugging
+            return set(stored_folders)
+    except Exception as e:
+        print(f"❌ Error loading selected folders: {e}")
+
+    return set()  # Return empty set if nothing found
+
 
 def save_selected_folders(folders):
-    """Save the selected folders persistently to config.yaml."""
-    config = load_config()
-    config["folders_to_embed"] = list(folders)  # Convert back to list for YAML
-    save_config(config)
+    """Save the selected folders persistently to ChromaDB instead of config.yaml."""
+    db = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    collection = db.get_or_create_collection("campaign_notes")
 
+    # Store selected folders in ChromaDB
+    collection.upsert(
+        ids=["selected_folders"],
+        documents=[json.dumps(list(folders))],  # Store as JSON string
+    )
+
+    print(f"✅ Saved selected folders: {folders}")  # Debugging
 def reset_folder_status_on_pull(all_folders, config):
     # Initialize all folders as "Not Embedded" if not in config.yaml
     folder_statuses = {}
