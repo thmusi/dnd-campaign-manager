@@ -363,7 +363,7 @@ def reembed_modified_files():
 
     if updated_files:
         st.subheader("📂 Select Files to Re-Embed")
-        selected_files = st.multiselect("Choose files to embed:", updated_files)
+        selected_files = st.multiselect(f"Choose files to embed in {vault_path}:", updated_files, key=f"multiselect_{vault_path}")
 
         if st.button("🔄 Re-Embed Selected Files"):
             for file_path in selected_files:
