@@ -411,9 +411,7 @@ def render_generate_npc_page():
 def render_folder_management_page():
     st.title("📁 Folder Embedding Management")
     render_sidebar()
-
-    if st.button("🔄 Pull from GitHub Vault"):
-        pull_github_vault()
+    pull_github_vault()
 
     config = load_config()
     folders_to_embed = set(config.get("folders_to_embed", []))
@@ -471,31 +469,37 @@ def render_folder_management_page():
         if newly_selected:
             updated_folders_to_embed.update(newly_selected)
             st.session_state.selected_folders.update(newly_selected)
-            config["folders_to_embed"] = list(updated_folders_to_embed)
-            save_config(config)
-
+            save_selected_folders(updated_folders_to_embed)  # ✅ Save to ChromaDB
+        
             st.session_state["embedding_in_progress"] = True
             embed_selected_folders(newly_selected)
-
-            embedding_data = {
-                "folders": list(newly_selected),
-                "metadata": {"updated_at": time.time()}
-            }
-            add_embedding_and_push(vault_path="VAULT_PATH", chroma_db_path="your_chroma_db_path")
-
+        
+            add_embedding_and_push(vault_path="VAULT_PATH", chroma_db_path="chroma_db")  # ✅ Push changes
+        
             st.success("✅ Newly selected folders embedded successfully!")
+        
+        # ✅ Auto-detect modified folders and re-embed them
+        modified_folders = check_folder_modifications(all_folders, CHROMA_DB_PATH, OBSIDIAN_VAULT_PATH)
+        
+        if modified_folders:
+            st.session_state["embedding_in_progress"] = True
+            reembed_modified_files()
+            st.success("🔄 Modified files have been re-embedded!")
+
 
         # Process deselected folders
         if deselected:
             updated_folders_to_embed.difference_update(deselected)
             st.session_state.selected_folders.difference_update(deselected)
-            config["folders_to_embed"] = list(updated_folders_to_embed)
-            save_config(config)
-
+            save_selected_folders(updated_folders_to_embed)  # ✅ Save changes in ChromaDB
+        
             st.session_state["embedding_in_progress"] = True
-            remove_embedding(deselected)
-
+            remove_embedding(deselected)  # ✅ Remove from ChromaDB
+        
             st.success("❌ Deselected folders removed from embeddings.")
+        
+            # ✅ Ensure UI reflects updated folder statuses
+            st.rerun()
 
     # Check for changes in folder statuses (e.g., modifications)
     if st.button("🔍 Check for Changes"):
