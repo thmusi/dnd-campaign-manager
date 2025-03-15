@@ -123,9 +123,9 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                             print(f"✅ Successfully embedded chunk {idx+1} of {len(chunks)} for {file_path}")
                         except Exception as e:
                             print(f"❌ Error embedding chunk {idx+1} of {len(chunks)} for {file_path}: {e}")
-        
+
                 else:
-                   try:
+                    try:
                         collection.add(
                             documents=[content],
                             ids=[file_path],
@@ -133,9 +133,10 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                         )
                         print(f"✅ Successfully embedded: {file_path}")
                     except Exception as e:
-                        print(f"❌ Error: {e}")  # Ensure this is properly indented
-                    
-                        print("🔄 Finished embedding process.")
+                        print(f"❌ Error: {e}")  # ✅ Corrected indentation
+
+                print("🔄 Finished embedding process.")  # ✅ Corrected indentation
+
 
 def update_config_yaml(selected_files, config_path="config.yaml"):
     """
