@@ -133,7 +133,7 @@ def embed_selected_folders(folders_to_embed, vault_path=VAULT_PATH):
                         )
                         print(f"✅ Successfully embedded: {file_path}")
                     except Exception as e:
-                        print(f"❌ Error embedding {file_path}: {e}")
+                        print(f"❌ Error: {e}")  # Ensure this is properly indented
                     
                         print("🔄 Finished embedding process.")
 
